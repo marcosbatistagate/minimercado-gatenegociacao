@@ -60,7 +60,7 @@ export function PDVView() {
             ) : (
               cart.map((item) => (
                 <div key={item.product.id} className="grid grid-cols-12 gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl items-center transition-colors border border-transparent hover:border-white/5">
-                  <div className="col-span-1 font-mono text-white/60">{item.product.code}</div>
+                  <div className="col-span-1 font-mono text-white/60">{item.product.barcode}</div>
                   <div className="col-span-5 font-inter font-medium truncate">{item.product.name}</div>
                   <div className="col-span-2 flex items-center justify-center gap-2">
                     <button onClick={() => updateQuantity(item.product.id, -1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">

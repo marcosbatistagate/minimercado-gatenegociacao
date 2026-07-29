@@ -35,7 +35,7 @@ export const supabaseService = {
       .from('products')
       .select(`
         id, 
-        code, 
+        barcode, 
         name, 
         cost_price, 
         price, 
@@ -52,7 +52,7 @@ export const supabaseService = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data as any[]).map(p => ({
       id: p.id,
-      code: p.code,
+      barcode: p.barcode,
       name: p.name,
       costPrice: p.cost_price,
       price: p.price,
@@ -67,7 +67,7 @@ export const supabaseService = {
       const categoryId = await this.getOrCreateCategory(product.category);
       
       const payload: any = {
-        code: product.code,
+        barcode: product.barcode,
         name: product.name,
         cost_price: product.costPrice,
         price: product.price,
@@ -86,7 +86,7 @@ export const supabaseService = {
         .upsert(payload)
         .select(`
           id, 
-          code, 
+          barcode, 
           name, 
           cost_price, 
           price, 
@@ -100,7 +100,7 @@ export const supabaseService = {
 
       return {
         id: data.id,
-        code: data.code,
+        barcode: data.barcode,
         name: data.name,
         costPrice: data.cost_price,
         price: data.price,

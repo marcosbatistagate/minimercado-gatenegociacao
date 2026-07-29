@@ -37,7 +37,8 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Atualização visual no Header da gestão (Inclusão do logo em SVG e atualização dos textos para Gremio Negociação e Minimercado).
 - Adição de efeitos responsivos de hover (`scale` e `glow`) nos cards de métricas e formas de pagamento.
 - Build de produção verificado com sucesso.
+- Implantação na Netlify configurada e rotas SPA criadas via `public/_redirects`.
+- Refatoração completa da estrutura de dados para garantir uso estrito da coluna `barcode` na tabela `products` em toda a aplicação (BD, store e views), garantindo a integridade dos dados, sem inserção de dados especulativos em scripts.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
-- Deploy no servidor de hospedagem (Vercel ou similar).
 - Testes em produção e homologação final com os usuários.

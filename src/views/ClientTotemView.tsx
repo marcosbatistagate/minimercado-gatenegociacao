@@ -269,7 +269,7 @@ export const ClientTotemView: React.FC = () => {
           <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-6 flex-1 justify-center">
             <div className="text-center space-y-1">
               <h3 className="font-bold text-white text-lg">Pague com PIX</h3>
-              <p className="text-white/60 text-sm">Escaneie o QR Code abaixo</p>
+              <p className="text-white/60 text-sm">Escaneie o QR barcode abaixo</p>
             </div>
             
             <div className="bg-white p-4 rounded-xl flex items-center justify-center">

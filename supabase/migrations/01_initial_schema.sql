@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
 -- 2. Tabela de Produtos
 CREATE TABLE IF NOT EXISTS public.products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) NOT NULL UNIQUE,
+    barcode VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(150) NOT NULL,
     cost_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,

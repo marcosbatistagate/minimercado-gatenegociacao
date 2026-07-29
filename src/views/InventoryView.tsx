@@ -15,7 +15,7 @@ export const InventoryView: React.FC = () => {
 
   // Modal form state
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
-    code: '',
+    barcode: '',
     name: '',
     category: '',
     costPrice: 0,
@@ -32,7 +32,7 @@ export const InventoryView: React.FC = () => {
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.code.toLowerCase().includes(searchTerm.toLowerCase());
+                          p.barcode.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = categoryFilter ? p.category === categoryFilter : true;
       return matchSearch && matchCategory;
     });
@@ -53,7 +53,7 @@ export const InventoryView: React.FC = () => {
     if (product) {
       setEditingProduct(product);
       setFormData({
-        code: product.code,
+        barcode: product.barcode,
         name: product.name,
         category: product.category,
         costPrice: product.costPrice,
@@ -64,7 +64,7 @@ export const InventoryView: React.FC = () => {
     } else {
       setEditingProduct(null);
       setFormData({
-        code: '',
+        barcode: '',
         name: '',
         category: '',
         costPrice: 0,
@@ -159,7 +159,7 @@ export const InventoryView: React.FC = () => {
               const margin = calculateMargin(product.price, product.costPrice);
               return (
                 <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 text-white/80">{product.code}</td>
+                  <td className="p-4 text-white/80">{product.barcode}</td>
                   <td className="p-4 text-white font-medium">{product.name}</td>
                   <td className="p-4 text-white/80">{product.category}</td>
                   <td className="p-4 text-white/80">R$ {product.costPrice.toFixed(2)}</td>
@@ -210,7 +210,7 @@ export const InventoryView: React.FC = () => {
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Código</label>
-                  <input autoFocus required type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input autoFocus required type="text" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Nome do Produto</label>
