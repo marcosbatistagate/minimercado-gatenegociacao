@@ -13,7 +13,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - **Package Manager:** npm
 
 ## 📌 Estado Atual do Projeto
-- **Status:** Fase 3.0 - Nova Arquitetura de Duas Instâncias (Cliente/Totem e Gestão/Admin) com autenticação por RE (Registro de Empregado) e suporte à leitura por código de barras.
+- **Status:** Fase 10 (Final) - Sincronização e Persistência Supabase Realtime concluída. Arquitetura de duas instâncias (Totem do Cliente com PIX/RE e Área de Gestão com filtro e leitor de código de barras) registrada e finalizada. Preparação para versão de produção em andamento.
 
 ## ✅ Tarefas Concluídas
 - Instalação de dependências principais (`lucide-react`, `zustand`, utilitários para Shadcn).
@@ -33,11 +33,11 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Aplicação de identidade visual no Totem (background `bg.png` com degradê e logotipo `negociacao.png`).
 - Atualização da Instância Administrativa com suporte otimizado a leitor de código de barras, botão de retorno ao Totem na Sidebar, e auditoria de vendas com filtro e exibição por RE no Dashboard.
 - Integração completa da persistência via Supabase (`supabaseService`), RPC para processamento atômico de vendas, e sincronização `Realtime` na store Zustand.
+- Criação da migration RPC de vendas em `supabase/migrations/02_create_sale_rpc.sql`.
 - Atualização visual no Header da gestão (Inclusão do logo em SVG e atualização dos textos para Gremio Negociação e Minimercado).
 - Adição de efeitos responsivos de hover (`scale` e `glow`) nos cards de métricas e formas de pagamento.
+- Build de produção verificado com sucesso.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
-2. Configurar a estrutura básica de diretórios em `src/` (components, pages, store, etc.).
-3. Testar a inicialização do projeto e renderização básica.
-
-Aguardando auditoria e validação para prosseguir com os próximos passos.
+- Deploy no servidor de hospedagem (Vercel ou similar).
+- Testes em produção e homologação final com os usuários.
