@@ -62,7 +62,7 @@ export const DashboardView: React.FC = () => {
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Faturamento Total */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2">
+        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
           <div className="flex items-center gap-2 text-white/60">
             <TrendingUp size={20} />
             <span className="font-medium">Faturamento Total</span>
@@ -73,7 +73,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Total de Vendas */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2">
+        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
           <div className="flex items-center gap-2 text-white/60">
             <ShoppingBag size={20} />
             <span className="font-medium">Total de Vendas</span>
@@ -84,7 +84,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Ticket Médio */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2">
+        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
           <div className="flex items-center gap-2 text-white/60">
             <Receipt size={20} />
             <span className="font-medium">Ticket Médio</span>
@@ -95,7 +95,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Itens em Estoque Crítico */}
-        <div className={`glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30' : ''}`}>
+        <div className={`glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30 hover:shadow-[0_0_20px_rgba(251,191,36,0.2)]' : ''}`}>
           <div className="flex items-center gap-2 text-white/60">
             <AlertTriangle size={20} className={criticalStockItems > 0 ? 'text-amber-400' : ''} />
             <span className="font-medium">Estoque Crítico</span>

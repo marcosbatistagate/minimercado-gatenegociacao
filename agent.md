@@ -32,9 +32,11 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Criação e integração da Instância 1: Totem do Cliente (`ClientTotemView.tsx`) com fluxo de identificação por RE, bipagem rápida e pagamento PIX.
 - Aplicação de identidade visual no Totem (background `bg.png` com degradê e logotipo `negociacao.png`).
 - Atualização da Instância Administrativa com suporte otimizado a leitor de código de barras, botão de retorno ao Totem na Sidebar, e auditoria de vendas com filtro e exibição por RE no Dashboard.
+- Integração completa da persistência via Supabase (`supabaseService`), RPC para processamento atômico de vendas, e sincronização `Realtime` na store Zustand.
+- Atualização visual no Header da gestão (Inclusão do logo em SVG e atualização dos textos para Gremio Negociação e Minimercado).
+- Adição de efeitos responsivos de hover (`scale` e `glow`) nos cards de métricas e formas de pagamento.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
-1. Inicializar o Shadcn UI (`npx shadcn@latest init`).
 2. Configurar a estrutura básica de diretórios em `src/` (components, pages, store, etc.).
 3. Testar a inicialização do projeto e renderização básica.
 

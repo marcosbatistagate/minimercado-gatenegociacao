@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { UserCustomer } from '../types';
+import { supabaseService } from '../services/supabaseService';
+import { supabase } from '../lib/supabase';
 
 export interface Product {
   id: string;
@@ -39,63 +41,60 @@ interface MarketState {
   currentCustomer: UserCustomer | null;
   customers: UserCustomer[];
   activeInstance: 'client' | 'admin';
+  initData: () => Promise<void>;
   addToCartByCode: (codeOrName: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
   removeFromCart: (productId: string) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
   setReceivedAmount: (amount: number) => void;
   clearCart: () => void;
-  checkout: () => void;
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  updateProduct: (id: string, updatedProduct: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  registerCustomer: (re: string, name: string) => void;
+  checkout: () => Promise<void>;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: string, updatedProduct: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  registerCustomer: (re: string, name: string) => Promise<void>;
   loginCustomer: (re: string) => void;
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
-  completePixSale: () => void;
+  completePixSale: () => Promise<void>;
 }
 
-// Temporary mock products
-const mockProducts: Product[] = [
-  { id: '1', code: '123', name: 'Arroz 5kg', price: 25.90, category: 'Alimentos', costPrice: 18.00, stock: 50, minStock: 20 },
-  { id: '2', code: '456', name: 'Feijão 1kg', price: 8.50, category: 'Alimentos', costPrice: 5.00, stock: 15, minStock: 20 },
-  { id: '3', code: '789', name: 'Óleo de Soja', price: 7.20, category: 'Alimentos', costPrice: 5.50, stock: 0, minStock: 10 },
-];
-
-const mockSales: Sale[] = [
-  { 
-    id: 's1', 
-    created_at: new Date(Date.now() - 86400000).toISOString(), 
-    payment_method: 'credit_card', 
-    total_amount: 34.40, 
-    status: 'completed', 
-    items: [
-      { product: mockProducts[0], quantity: 1, subtotal: 25.90 },
-      { product: mockProducts[1], quantity: 1, subtotal: 8.50 }
-    ] 
-  },
-  { 
-    id: 's2', 
-    created_at: new Date(Date.now() - 3600000).toISOString(), 
-    payment_method: 'pix', 
-    total_amount: 25.90, 
-    status: 'completed', 
-    items: [
-      { product: mockProducts[0], quantity: 1, subtotal: 25.90 }
-    ] 
-  },
-];
-
 export const useMarketStore = create<MarketState>((set, get) => ({
-  products: mockProducts,
+  products: [],
   cart: [],
-  sales: mockSales,
+  sales: [],
   paymentMethod: null,
   receivedAmount: 0,
   currentCustomer: null,
-  customers: [{ re: '123456', name: 'João Silva' }],
+  customers: [],
   activeInstance: 'client',
+
+  initData: async () => {
+    try {
+      const [fetchedProducts, fetchedCustomers] = await Promise.all([
+        supabaseService.fetchProducts(),
+        supabaseService.fetchCustomers()
+      ]);
+      
+      set({ 
+        products: fetchedProducts, 
+        customers: fetchedCustomers 
+      });
+
+      // Setup Realtime for products
+      supabase
+        .channel('public:products')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async () => {
+          // Quando houver mudança na tabela products, buscamos novamente para atualizar o estado
+          const updatedProducts = await supabaseService.fetchProducts();
+          set({ products: updatedProducts });
+        })
+        .subscribe();
+        
+    } catch (err) {
+      console.error('Error fetching initial data:', err);
+    }
+  },
 
   addToCartByCode: (codeOrName) => {
     const state = get();
@@ -104,9 +103,19 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     );
 
     if (product) {
+      if (product.stock <= 0) {
+        alert('Produto fora de estoque!');
+        return;
+      }
+      
       const existingItem = state.cart.find(item => item.product.id === product.id);
       
       if (existingItem) {
+        if (existingItem.quantity >= product.stock) {
+          alert('Quantidade máxima em estoque atingida!');
+          return;
+        }
+        
         set({
           cart: state.cart.map(item =>
             item.product.id === product.id
@@ -127,7 +136,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({
       cart: state.cart.map(item => {
         if (item.product.id === productId) {
-          const newQuantity = Math.max(1, item.quantity + delta);
+          const newQuantity = Math.max(1, Math.min(item.quantity + delta, item.product.stock));
           return { ...item, quantity: newQuantity, subtotal: newQuantity * item.product.price };
         }
         return item;
@@ -146,7 +155,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   clearCart: () => set({ cart: [], paymentMethod: null, receivedAmount: 0 }),
 
-  checkout: () => {
+  checkout: async () => {
     const state = get();
     if (state.cart.length === 0 || !state.paymentMethod) {
       alert('Carrinho vazio ou método de pagamento não selecionado!');
@@ -155,49 +164,76 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     
     const total_amount = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
     
-    const newSale: Sale = {
-      id: Math.random().toString(36).substring(2, 9),
-      created_at: new Date().toISOString(),
-      payment_method: state.paymentMethod,
-      total_amount,
-      status: 'completed',
-      items: [...state.cart],
-      customerRe: state.currentCustomer?.re
-    };
+    try {
+      const saleId = await supabaseService.createSale(
+        total_amount,
+        state.paymentMethod,
+        state.currentCustomer?.re,
+        state.cart
+      );
+      
+      const newSale: Sale = {
+        id: saleId || Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+        payment_method: state.paymentMethod,
+        total_amount,
+        status: 'completed',
+        items: [...state.cart],
+        customerRe: state.currentCustomer?.re
+      };
 
-    set({
-      sales: [newSale, ...state.sales],
-      cart: [],
-      paymentMethod: null,
-      receivedAmount: 0
-    });
+      set({
+        sales: [newSale, ...state.sales],
+        cart: [],
+        paymentMethod: null,
+        receivedAmount: 0
+      });
+      
+      alert('Venda finalizada com sucesso!');
+    } catch (err) {
+      alert('Erro ao finalizar venda.');
+    }
+  },
+
+  addProduct: async (product) => {
+    // Optimistic UI could be done here, but we'll wait for the real result or realtime
+    const saved = await supabaseService.saveProduct(product);
+    if (saved) {
+      const state = get();
+      set({ products: [...state.products.filter(p => p.id !== saved.id), saved] });
+    }
+  },
+
+  updateProduct: async (id, updatedProduct) => {
+    const state = get();
+    const current = state.products.find(p => p.id === id);
+    if (!current) return;
     
-    alert('Venda finalizada com sucesso!');
+    const saved = await supabaseService.saveProduct({ ...current, ...updatedProduct });
+    if (saved) {
+      set({ products: get().products.map(p => p.id === id ? saved : p) });
+    }
   },
 
-  addProduct: (product) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    set(state => ({
-      products: [...state.products, { ...product, id }]
-    }));
+  deleteProduct: async (id) => {
+    const success = await supabaseService.deleteProduct(id);
+    if (success) {
+      set(state => ({
+        products: state.products.filter(p => p.id !== id)
+      }));
+    }
   },
 
-  updateProduct: (id, updatedProduct) => {
-    set(state => ({
-      products: state.products.map(p => p.id === id ? { ...p, ...updatedProduct } : p)
-    }));
-  },
-
-  deleteProduct: (id) => {
-    set(state => ({
-      products: state.products.filter(p => p.id !== id)
-    }));
-  },
-
-  registerCustomer: (re, name) => {
-    set(state => ({
-      customers: [...state.customers, { re, name }]
-    }));
+  registerCustomer: async (re, name) => {
+    const saved = await supabaseService.saveCustomer(re, name);
+    if (saved) {
+      set(state => ({
+        customers: [...state.customers.filter(c => c.re !== re), saved]
+      }));
+      alert('Cliente cadastrado com sucesso!');
+    } else {
+      alert('Erro ao cadastrar cliente.');
+    }
   },
 
   loginCustomer: (re) => {
@@ -215,7 +251,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   switchInstance: (instance) => set({ activeInstance: instance }),
 
-  completePixSale: () => {
+  completePixSale: async () => {
     const state = get();
     if (state.cart.length === 0) {
       alert('Carrinho vazio!');
@@ -224,23 +260,34 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     
     const total_amount = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
     
-    const newSale: Sale = {
-      id: Math.random().toString(36).substring(2, 9),
-      created_at: new Date().toISOString(),
-      payment_method: 'pix',
-      total_amount,
-      status: 'completed',
-      items: [...state.cart],
-      customerRe: state.currentCustomer?.re
-    };
+    try {
+      const saleId = await supabaseService.createSale(
+        total_amount,
+        'pix',
+        state.currentCustomer?.re,
+        state.cart
+      );
+      
+      const newSale: Sale = {
+        id: saleId || Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+        payment_method: 'pix',
+        total_amount,
+        status: 'completed',
+        items: [...state.cart],
+        customerRe: state.currentCustomer?.re
+      };
 
-    set({
-      sales: [newSale, ...state.sales],
-      cart: [],
-      paymentMethod: null,
-      receivedAmount: 0
-    });
-    
-    alert('Venda PIX finalizada com sucesso!');
+      set({
+        sales: [newSale, ...state.sales],
+        cart: [],
+        paymentMethod: null,
+        receivedAmount: 0
+      });
+      
+      alert('Venda PIX finalizada com sucesso!');
+    } catch (err) {
+      alert('Erro ao processar venda PIX.');
+    }
   }
 }));

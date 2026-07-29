@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import type { TabType } from './components/layout/Sidebar';
 import { PDVView } from './views/PDVView';
@@ -9,7 +9,11 @@ import { useMarketStore } from './store/useMarketStore';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pdv');
-  const { activeInstance } = useMarketStore();
+  const { activeInstance, initData } = useMarketStore();
+
+  useEffect(() => {
+    initData();
+  }, [initData]);
 
   if (activeInstance === 'client') {
     return <ClientTotemView />;

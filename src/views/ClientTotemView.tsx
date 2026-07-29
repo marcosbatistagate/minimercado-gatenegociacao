@@ -276,12 +276,7 @@ export const ClientTotemView: React.FC = () => {
               <QrCode size={180} className="text-black" />
             </div>
 
-            <div className="w-full text-center">
-              <p className="text-xs text-white/40 mb-1">Ou use a chave (Copia e Cola)</p>
-              <div className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 font-mono break-all select-all">
-                00020126580014br.gov.bcb.pix0136pix@minimercado.com.br5204000053039865802BR5911MiniMercado6009SAO PAULO62140510MINIMERCAD6304ABCD
-              </div>
-            </div>
+
 
             <button 
               disabled={cart.length === 0}

@@ -104,28 +104,28 @@ export function PDVView() {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button 
               onClick={() => setPaymentMethod('money')}
-              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all active:scale-95 ${paymentMethod === 'money' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 active:scale-95 ${paymentMethod === 'money' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'}`}
             >
               <Banknote size={24} className={paymentMethod === 'money' ? 'text-violet-400' : 'text-white/60'} />
               <span className="font-inter text-sm">Dinheiro</span>
             </button>
             <button 
               onClick={() => setPaymentMethod('pix')}
-              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all active:scale-95 ${paymentMethod === 'pix' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 active:scale-95 ${paymentMethod === 'pix' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'}`}
             >
               <Landmark size={24} className={paymentMethod === 'pix' ? 'text-violet-400' : 'text-white/60'} />
               <span className="font-inter text-sm">PIX</span>
             </button>
             <button 
               onClick={() => setPaymentMethod('credit_card')}
-              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all active:scale-95 ${paymentMethod === 'credit_card' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 active:scale-95 ${paymentMethod === 'credit_card' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'}`}
             >
               <CreditCard size={24} className={paymentMethod === 'credit_card' ? 'text-violet-400' : 'text-white/60'} />
               <span className="font-inter text-sm">Crédito</span>
             </button>
             <button 
               onClick={() => setPaymentMethod('debit_card')}
-              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all active:scale-95 ${paymentMethod === 'debit_card' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 active:scale-95 ${paymentMethod === 'debit_card' ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'}`}
             >
               <CreditCard size={24} className={paymentMethod === 'debit_card' ? 'text-violet-400' : 'text-white/60'} />
               <span className="font-inter text-sm">Débito</span>
