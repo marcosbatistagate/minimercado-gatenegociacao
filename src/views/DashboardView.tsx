@@ -23,26 +23,41 @@ const paymentMethodLabels: Record<NonNullable<PaymentMethod>, string> = {
 export const DashboardView: React.FC = () => {
   const { sales, products } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [reFilter, setReFilter] = useState('');
 
-  const totalRevenue = useMemo(() => sales.reduce((sum, sale) => sum + sale.total_amount, 0), [sales]);
-  const totalSales = sales.length;
+  const filteredSales = useMemo(() => {
+    if (!reFilter) return sales;
+    return sales.filter(s => s.customerRe?.includes(reFilter));
+  }, [sales, reFilter]);
+
+  const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
+  const totalSales = filteredSales.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
   
   const criticalStockItems = useMemo(() => products.filter(p => p.stock <= p.minStock).length, [products]);
 
   const paymentDistribution = useMemo(() => {
     const dist: Record<string, number> = { money: 0, credit_card: 0, debit_card: 0, pix: 0 };
-    sales.forEach(s => {
+    filteredSales.forEach(s => {
       if (s.payment_method) {
         dist[s.payment_method] += s.total_amount;
       }
     });
     return dist;
-  }, [sales]);
+  }, [filteredSales]);
 
   return (
     <div className="flex flex-col h-full gap-6 p-6 overflow-auto">
-      <h1 className="text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
+        <input 
+          type="text" 
+          placeholder="Filtrar por RE..." 
+          value={reFilter}
+          onChange={e => setReFilter(e.target.value)}
+          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 min-w-[200px]"
+        />
+      </div>
       
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -128,6 +143,7 @@ export const DashboardView: React.FC = () => {
                 <tr className="border-b border-white/10">
                   <th className="p-4 text-white/60 font-medium text-sm">ID</th>
                   <th className="p-4 text-white/60 font-medium text-sm">Data/Hora</th>
+                  <th className="p-4 text-white/60 font-medium text-sm">Cliente (RE)</th>
                   <th className="p-4 text-white/60 font-medium text-sm">Método</th>
                   <th className="p-4 text-white/60 font-medium text-sm">Total</th>
                   <th className="p-4 text-white/60 font-medium text-sm">Status</th>
@@ -135,10 +151,19 @@ export const DashboardView: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {sales.map(sale => (
+                {filteredSales.map(sale => (
                   <tr key={sale.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="p-4 text-white/80">#{sale.id}</td>
                     <td className="p-4 text-white/80">{formatDate(sale.created_at)}</td>
+                    <td className="p-4">
+                      {sale.customerRe ? (
+                        <span className="bg-primary-500/20 text-primary-300 border border-primary-500/30 px-2 py-1 rounded-md text-xs font-medium">
+                          RE: {sale.customerRe}
+                        </span>
+                      ) : (
+                        <span className="text-white/40 text-xs font-medium">Caixa Avulso</span>
+                      )}
+                    </td>
                     <td className="p-4 text-white/80">{sale.payment_method ? paymentMethodLabels[sale.payment_method] : '-'}</td>
                     <td className="p-4 text-white font-medium">{formatCurrency(sale.total_amount)}</td>
                     <td className="p-4">
@@ -156,10 +181,10 @@ export const DashboardView: React.FC = () => {
                     </td>
                   </tr>
                 ))}
-                {sales.length === 0 && (
+                {filteredSales.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-white/50">
-                      Nenhuma venda registrada ainda.
+                    <td colSpan={7} className="p-8 text-center text-white/50">
+                      Nenhuma venda encontrada.
                     </td>
                   </tr>
                 )}

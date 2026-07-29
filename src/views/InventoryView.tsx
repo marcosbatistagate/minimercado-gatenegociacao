@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useMarketStore, type Product } from '../store/useMarketStore';
 import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 
@@ -11,6 +11,8 @@ export const InventoryView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   // Modal form state
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
     code: '',
@@ -92,6 +94,13 @@ export const InventoryView: React.FC = () => {
   const handleDelete = (id: string) => {
     if (confirm('Tem certeza que deseja remover este produto?')) {
       deleteProduct(id);
+    }
+  };
+
+  const handleCodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      nameInputRef.current?.focus();
     }
   };
 
@@ -201,11 +210,11 @@ export const InventoryView: React.FC = () => {
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Código</label>
-                  <input required type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input autoFocus required type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Nome do Produto</label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input ref={nameInputRef} required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Categoria</label>

@@ -31,6 +31,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Reestruturação da arquitetura para suportar duas instâncias (Cliente/Totem e Gestão/Admin) e autenticação por RE.
 - Criação e integração da Instância 1: Totem do Cliente (`ClientTotemView.tsx`) com fluxo de identificação por RE, bipagem rápida e pagamento PIX.
 - Aplicação de identidade visual no Totem (background `bg.png` com degradê e logotipo `negociacao.png`).
+- Atualização da Instância Administrativa com suporte otimizado a leitor de código de barras, botão de retorno ao Totem na Sidebar, e auditoria de vendas com filtro e exibição por RE no Dashboard.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
 1. Inicializar o Shadcn UI (`npx shadcn@latest init`).
