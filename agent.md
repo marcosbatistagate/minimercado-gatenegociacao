@@ -13,7 +13,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - **Package Manager:** npm
 
 ## 📌 Estado Atual do Projeto
-- **Status:** Fase 2.3 - Atualização Arquitetural (Supabase + Vercel) e preparação da Store do Zustand
+- **Status:** Fase 3.0 - Nova Arquitetura de Duas Instâncias (Cliente/Totem e Gestão/Admin) com autenticação por RE (Registro de Empregado) e suporte à leitura por código de barras.
 
 ## ✅ Tarefas Concluídas
 - Instalação de dependências principais (`lucide-react`, `zustand`, utilitários para Shadcn).
@@ -25,6 +25,12 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Criação do arquivo de ambiente de exemplo `.env.example`.
 - Implementação do Layout Base Glassmorphic: `Sidebar.tsx`, `Header.tsx` e `MainLayout.tsx`.
 - Integração do `MainLayout` no `App.tsx` e customização do `tailwind.config.js` com diretrizes visuais.
+- Criação e integração do Módulo PDV (Caixa Rápido) com interface Glass UI (`PDVView.tsx`) e lógica Zustand (`useMarketStore.ts`).
+- Criação e integração do Módulo de Gestão de Estoque (`InventoryView.tsx`) e atualização da lógica no Zustand (`useMarketStore.ts`).
+- Criação e integração do Módulo Dashboard e Métricas Gerenciais (`DashboardView.tsx`) com registro histórico de vendas.
+- Reestruturação da arquitetura para suportar duas instâncias (Cliente/Totem e Gestão/Admin) e autenticação por RE.
+- Criação e integração da Instância 1: Totem do Cliente (`ClientTotemView.tsx`) com fluxo de identificação por RE, bipagem rápida e pagamento PIX.
+- Aplicação de identidade visual no Totem (background `bg.png` com degradê e logotipo `negociacao.png`).
 
 ## ⏳ Próximos Passos (Aguardando Validação)
 1. Inicializar o Shadcn UI (`npx shadcn@latest init`).

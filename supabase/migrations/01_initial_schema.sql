@@ -38,14 +38,26 @@ CREATE TABLE IF NOT EXISTS public.sale_items (
     total_price DECIMAL(10, 2) NOT NULL
 );
 
+-- 5. Tabela de Clientes (Instância Totem/Cliente)
+CREATE TABLE IF NOT EXISTS public.customers (
+    re VARCHAR(30) PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 
 -- Políticas Permissivas para Desenvolvimento
 CREATE POLICY "Permitir leitura para todos" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Permitir leitura para todos" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Permitir leitura para todos" ON public.customers FOR SELECT USING (true);
 CREATE POLICY "Permitir insercao de vendas" ON public.sales FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir insercao de itens" ON public.sale_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir insercao de clientes" ON public.customers FOR INSERT WITH CHECK (true);
+
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS customer_re VARCHAR(30) REFERENCES public.customers(re);
