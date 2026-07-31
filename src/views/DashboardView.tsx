@@ -83,7 +83,7 @@ export const DashboardView: React.FC = () => {
         </FadeIn>
 
         {/* Custo Total */}
-        <FadeIn delay="150">
+        <FadeIn delay="200">
           <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Receipt size={64} className="text-rose-500" />
@@ -99,7 +99,7 @@ export const DashboardView: React.FC = () => {
         </FadeIn>
 
         {/* Lucro Bruto */}
-        <FadeIn delay="175">
+        <FadeIn delay="200">
           <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <TrendingUp size={64} className="text-emerald-500" />

@@ -1,4 +1,4 @@
-import { ShoppingCart, Package, BarChart3, Store, MonitorSmartphone } from 'lucide-react';
+import { Package, BarChart3, Store, MonitorSmartphone } from 'lucide-react';
 import { useMarketStore } from '../../store/useMarketStore';
 
 export type TabType = 'inventory' | 'dashboard';
