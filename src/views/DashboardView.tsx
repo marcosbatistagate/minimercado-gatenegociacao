@@ -31,7 +31,7 @@ export const DashboardView: React.FC = () => {
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
   const totalCost = useMemo(() => filteredSales.reduce((sum, sale) => {
-    return sum + sale.items.reduce((itemSum, item) => itemSum + ((item.product?.costPrice || 0) * item.quantity), 0);
+    return sum + sale.items.reduce((itemSum, item) => itemSum + ((item.product?.cost_price || 0) * item.quantity), 0);
   }, 0), [filteredSales]);
 
   const totalProfit = totalRevenue - totalCost;
@@ -39,7 +39,7 @@ export const DashboardView: React.FC = () => {
   const totalSales = filteredSales.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
   
-  const criticalStockItems = useMemo(() => products.filter(p => p.stock <= p.minStock).length, [products]);
+  const criticalStockItems = useMemo(() => products.filter(p => p.stock <= p.min_stock).length, [products]);
 
   const paymentDistribution = useMemo(() => {
     const dist: Record<string, number> = { money: 0, credit_card: 0, debit_card: 0, pix: 0 };

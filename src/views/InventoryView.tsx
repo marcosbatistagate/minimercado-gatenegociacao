@@ -17,13 +17,13 @@ export const InventoryView: React.FC = () => {
 
   // Modal form state
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
-    barcode: '',
+    code: '',
     name: '',
     category: '',
-    costPrice: 0,
+    cost_price: 0,
     price: 0,
     stock: 0,
-    minStock: 0,
+    min_stock: 0,
   });
 
   const categories = useMemo(() => {
@@ -34,7 +34,7 @@ export const InventoryView: React.FC = () => {
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.barcode.toLowerCase().includes(searchTerm.toLowerCase());
+                          p.code.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = categoryFilter ? p.category === categoryFilter : true;
       return matchSearch && matchCategory;
     });
@@ -55,24 +55,24 @@ export const InventoryView: React.FC = () => {
     if (product) {
       setEditingProduct(product);
       setFormData({
-        barcode: product.barcode,
+        code: product.code,
         name: product.name,
         category: product.category,
-        costPrice: product.costPrice,
+        cost_price: product.cost_price,
         price: product.price,
         stock: product.stock,
-        minStock: product.minStock,
+        min_stock: product.min_stock,
       });
     } else {
       setEditingProduct(null);
       setFormData({
-        barcode: '',
+        code: '',
         name: '',
         category: '',
-        costPrice: 0,
+        cost_price: 0,
         price: 0,
         stock: 0,
-        minStock: 0,
+        min_stock: 0,
       });
     }
     setIsModalOpen(true);
@@ -95,12 +95,12 @@ export const InventoryView: React.FC = () => {
       }
       
       const payload = {
-        barcode: formData.barcode.trim(),
+        code: formData.code.trim(),
         name: formData.name.trim(),
         category: formData.category,
         stock: Number(formData.stock) || 0,
-        minStock: Number(formData.minStock) || 0,
-        costPrice: Number(formData.costPrice) || 0,
+        min_stock: Number(formData.min_stock) || 0,
+        cost_price: Number(formData.cost_price) || 0,
         price: Number(formData.price) || 0,
       };
 
@@ -188,17 +188,17 @@ export const InventoryView: React.FC = () => {
           </thead>
           <tbody>
             {filteredProducts.map(product => {
-              const margin = calculateMargin(product.price, product.costPrice);
+              const margin = calculateMargin(product.price, product.cost_price);
               return (
                 <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 text-white/80">{product.barcode}</td>
+                  <td className="p-4 text-white/80">{product.code}</td>
                   <td className="p-4 text-white font-medium">{product.name}</td>
                   <td className="p-4 text-white/80">{product.category}</td>
-                  <td className="p-4 text-white/80">R$ {product.costPrice.toFixed(2)}</td>
+                  <td className="p-4 text-white/80">R$ {product.cost_price.toFixed(2)}</td>
                   <td className="p-4 text-white/80">R$ {product.price.toFixed(2)}</td>
                   <td className="p-4 text-white/80">{margin.toFixed(2)}%</td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getStockBadgeClass(product.stock, product.minStock)}`}>
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getStockBadgeClass(product.stock, product.min_stock)}`}>
                       {product.stock}
                     </span>
                   </td>
@@ -243,7 +243,7 @@ export const InventoryView: React.FC = () => {
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Código</label>
-                  <input autoFocus required type="text" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input autoFocus required type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Nome do Produto</label>
@@ -269,11 +269,11 @@ export const InventoryView: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Estoque Mínimo</label>
-                  <input required type="number" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input required type="number" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Preço de Custo (R$)</label>
-                  <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <input required type="number" step="0.01" value={formData.cost_price} onChange={e => setFormData({...formData, cost_price: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Preço de Venda (R$)</label>
@@ -282,7 +282,7 @@ export const InventoryView: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Margem (%)</label>
                   <div className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white/60 cursor-not-allowed">
-                    {calculateMargin(formData.price, formData.costPrice).toFixed(2)}%
+                    {calculateMargin(formData.price, formData.cost_price).toFixed(2)}%
                   </div>
                 </div>
               </div>

@@ -53,12 +53,12 @@ export const supabaseService = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data as any[]).map(p => ({
       id: p.id,
-      barcode: p.code,
+      code: p.code,
       name: p.name,
-      costPrice: p.cost_price,
+      cost_price: p.cost_price,
       price: p.price,
       stock: p.stock,
-      minStock: p.min_stock,
+      min_stock: p.min_stock,
       category: p.categories?.name || 'Sem Categoria',
       categoryId: p.category_id || (p.categories ? p.categories.id : undefined)
     }));
@@ -79,12 +79,12 @@ export const supabaseService = {
       const finalCategoryId = categoryId || await this.getOrCreateCategory(product.category);
       
       const payload: any = {
-        code: product.barcode,
+        code: product.code,
         name: product.name,
-        cost_price: product.costPrice,
+        cost_price: product.cost_price,
         price: product.price,
         stock: product.stock,
-        min_stock: product.minStock,
+        min_stock: product.min_stock,
         category_id: finalCategoryId,
         updated_at: new Date().toISOString()
       };
@@ -115,12 +115,12 @@ export const supabaseService = {
 
       return {
         id: data.id,
-        barcode: data.code,
+        code: data.code,
         name: data.name,
-        costPrice: data.cost_price,
+        cost_price: data.cost_price,
         price: data.price,
         stock: data.stock,
-        minStock: data.min_stock,
+        min_stock: data.min_stock,
         category: (data as any).categories?.name || 'Sem Categoria',
         categoryId: data.category_id
       };

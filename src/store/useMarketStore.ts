@@ -5,14 +5,14 @@ import { supabase } from '../lib/supabase';
 
 export interface Product {
   id: string;
-  barcode: string;
+  code: string;
   name: string;
   price: number;
   category: string;
   categoryId?: string;
-  costPrice: number;
+  cost_price: number;
   stock: number;
-  minStock: number;
+  min_stock: number;
 }
 
 export interface CartItem {
@@ -104,7 +104,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   addToCartByCode: (codeOrName) => {
     const state = get();
     const product = state.products.find(
-      p => p.barcode === codeOrName || p.name.toLowerCase() === codeOrName.toLowerCase()
+      p => p.code === codeOrName || p.name.toLowerCase() === codeOrName.toLowerCase()
     );
 
     if (product) {

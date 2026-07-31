@@ -38,7 +38,7 @@ export function PDVView() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Código de barras ou nome do produto [F2]"
+            placeholder="Código ou nome do produto [F2]"
             className="w-full bg-black/20 border border-white/10 focus:border-violet-500/50 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/30 font-mono text-lg outline-none transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)] focus:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
           />
         </form>
@@ -62,7 +62,7 @@ export function PDVView() {
               cart.map((item, index) => (
                 <FadeIn key={item.product.id} delay={index < 3 ? `${(index + 1) * 100}` as any : '300'}>
                   <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl items-center transition-colors border border-transparent hover:border-white/5">
-                    <div className="col-span-1 font-mono text-white/60">{item.product.barcode}</div>
+                    <div className="col-span-1 font-mono text-white/60">{item.product.code}</div>
                     <div className="col-span-5 font-inter font-medium truncate">{item.product.name}</div>
                     <div className="col-span-2 flex items-center justify-center gap-2">
                       <button onClick={() => updateQuantity(item.product.id, -1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">
