@@ -9,6 +9,7 @@ export interface Product {
   name: string;
   price: number;
   category: string;
+  categoryId?: string;
   costPrice: number;
   stock: number;
   minStock: number;
@@ -40,6 +41,7 @@ interface MarketState {
   receivedAmount: number;
   currentCustomer: UserCustomer | null;
   customers: UserCustomer[];
+  dbCategories: {id: string, name: string}[];
   activeInstance: 'client' | 'admin';
   initData: () => Promise<void>;
   addToCartByCode: (codeOrName: string) => void;
@@ -49,8 +51,8 @@ interface MarketState {
   setReceivedAmount: (amount: number) => void;
   clearCart: () => void;
   checkout: () => Promise<void>;
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
-  updateProduct: (id: string, updatedProduct: Partial<Product>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id'>, categoryId?: string) => Promise<void>;
+  updateProduct: (id: string, updatedProduct: Partial<Product>, categoryId?: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   registerCustomer: (re: string, name: string) => Promise<void>;
   loginCustomer: (re: string) => Promise<boolean>;
@@ -67,18 +69,21 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   receivedAmount: 0,
   currentCustomer: null,
   customers: [],
+  dbCategories: [],
   activeInstance: 'client',
 
   initData: async () => {
     try {
-      const [fetchedProducts, fetchedCustomers] = await Promise.all([
+      const [fetchedProducts, fetchedCustomers, fetchedCategories] = await Promise.all([
         supabaseService.fetchProducts(),
-        supabaseService.fetchCustomers()
+        supabaseService.fetchCustomers(),
+        supabaseService.fetchCategories()
       ]);
       
       set({ 
         products: fetchedProducts, 
-        customers: fetchedCustomers 
+        customers: fetchedCustomers,
+        dbCategories: fetchedCategories
       });
 
       // Setup Realtime for products
@@ -195,23 +200,33 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  addProduct: async (product) => {
-    // Optimistic UI could be done here, but we'll wait for the real result or realtime
-    const saved = await supabaseService.saveProduct(product);
-    if (saved) {
-      const state = get();
-      set({ products: [...state.products.filter(p => p.id !== saved.id), saved] });
+  addProduct: async (product, categoryId) => {
+    try {
+      const saved = await supabaseService.saveProduct(product, categoryId);
+      if (saved) {
+        const state = get();
+        set({ products: [...state.products, saved] });
+      }
+    } catch (err) {
+      throw err;
     }
   },
 
-  updateProduct: async (id, updatedProduct) => {
-    const state = get();
-    const current = state.products.find(p => p.id === id);
-    if (!current) return;
-    
-    const saved = await supabaseService.saveProduct({ ...current, ...updatedProduct });
-    if (saved) {
-      set({ products: get().products.map(p => p.id === id ? saved : p) });
+  updateProduct: async (id, updatedProduct, categoryId) => {
+    try {
+      const state = get();
+      const productToUpdate = state.products.find(p => p.id === id);
+      if (productToUpdate) {
+        const payload = { ...productToUpdate, ...updatedProduct };
+        const saved = await supabaseService.saveProduct(payload, categoryId);
+        if (saved) {
+          set({
+            products: state.products.map(p => p.id === id ? saved : p)
+          });
+        }
+      }
+    } catch (err) {
+      throw err;
     }
   },
 

@@ -4,13 +4,14 @@ import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 
 export const InventoryView: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useMarketStore();
+  const { products, addProduct, updateProduct, deleteProduct, dbCategories, initData } = useMarketStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,16 +81,45 @@ export const InventoryView: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+    setSaveError(null);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingProduct) {
-      updateProduct(editingProduct.id, formData);
-    } else {
-      addProduct(formData);
+    setSaveError(null);
+    try {
+      // Find category ID or default to first category
+      let categoryId = dbCategories.find(c => c.name === formData.category)?.id;
+      if (!categoryId && dbCategories.length > 0) {
+        categoryId = dbCategories[0].id;
+      }
+      
+      const payload = {
+        barcode: formData.barcode.trim(),
+        name: formData.name.trim(),
+        category: formData.category,
+        stock: Number(formData.stock) || 0,
+        minStock: Number(formData.minStock) || 0,
+        costPrice: Number(formData.costPrice) || 0,
+        price: Number(formData.price) || 0,
+      };
+
+      console.log('Enviando produto:', payload);
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, payload, categoryId);
+        alert('Produto atualizado com sucesso!');
+      } else {
+        await addProduct(payload, categoryId);
+        alert('Produto cadastrado com sucesso!');
+      }
+      
+      handleCloseModal();
+      await initData();
+    } catch (err: any) {
+      alert('Erro ao cadastrar produto: ' + err.message);
+      setSaveError(err.message || 'Erro ao salvar produto no banco de dados.');
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id: string) => {
@@ -221,7 +251,17 @@ export const InventoryView: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Categoria</label>
-                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
+                  <select 
+                    required 
+                    value={formData.category} 
+                    onChange={e => setFormData({...formData, category: e.target.value})} 
+                    className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50"
+                  >
+                    <option value="">Selecione uma categoria...</option>
+                    {dbCategories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Estoque Atual</label>
@@ -246,6 +286,12 @@ export const InventoryView: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {saveError && (
+                <div className="px-6 py-3 mx-6 mt-4 bg-rose-500/20 border border-rose-500/30 rounded-xl text-rose-300 text-sm">
+                  {saveError}
+                </div>
+              )}
               
               <div className="p-6 border-t border-white/10 flex justify-end gap-3 mt-auto">
                 <button type="button" onClick={handleCloseModal} className="px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium">

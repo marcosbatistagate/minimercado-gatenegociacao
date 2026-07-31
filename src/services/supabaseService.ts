@@ -35,13 +35,14 @@ export const supabaseService = {
       .from('products')
       .select(`
         id, 
-        barcode, 
+        code, 
         name, 
         cost_price, 
         price, 
         stock, 
         min_stock, 
-        categories (name)
+        category_id,
+        categories (id, name)
       `);
 
     if (error) {
@@ -52,28 +53,39 @@ export const supabaseService = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data as any[]).map(p => ({
       id: p.id,
-      barcode: p.barcode,
+      barcode: p.code,
       name: p.name,
       costPrice: p.cost_price,
       price: p.price,
       stock: p.stock,
       minStock: p.min_stock,
-      category: p.categories?.name || 'Sem Categoria'
+      category: p.categories?.name || 'Sem Categoria',
+      categoryId: p.category_id || (p.categories ? p.categories.id : undefined)
     }));
   },
 
-  async saveProduct(product: Omit<Product, 'id'> | Product): Promise<Product | null> {
+  async fetchCategories(): Promise<{id: string, name: string}[]> {
+    const { data, error } = await supabase.from('categories').select('id, name');
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+    return data;
+  },
+
+  async saveProduct(product: Omit<Product, 'id'> | Product, categoryId?: string): Promise<Product | null> {
     try {
-      const categoryId = await this.getOrCreateCategory(product.category);
+      // Usa categoryId passado ou cria/busca a categoria se apenas o nome for passado (fallback)
+      const finalCategoryId = categoryId || await this.getOrCreateCategory(product.category);
       
       const payload: any = {
-        barcode: product.barcode,
+        code: product.barcode,
         name: product.name,
         cost_price: product.costPrice,
         price: product.price,
         stock: product.stock,
         min_stock: product.minStock,
-        category_id: categoryId,
+        category_id: finalCategoryId,
         updated_at: new Date().toISOString()
       };
 
@@ -86,31 +98,36 @@ export const supabaseService = {
         .upsert(payload)
         .select(`
           id, 
-          barcode, 
+          code, 
           name, 
           cost_price, 
           price, 
           stock, 
           min_stock, 
-          categories (name)
+          category_id,
+          categories (id, name)
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return {
         id: data.id,
-        barcode: data.barcode,
+        barcode: data.code,
         name: data.name,
         costPrice: data.cost_price,
         price: data.price,
         stock: data.stock,
         minStock: data.min_stock,
-        category: (data as any).categories?.name || product.category
+        category: (data as any).categories?.name || 'Sem Categoria',
+        categoryId: data.category_id
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving product:', err);
-      return null;
+      // Propaga o erro para o componente UI tratar
+      throw err;
     }
   },
 
