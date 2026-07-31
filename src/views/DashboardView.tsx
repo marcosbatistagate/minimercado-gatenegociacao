@@ -19,14 +19,20 @@ const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> =
 };
 
 export const DashboardView: React.FC = () => {
-  const { sales, products } = useMarketStore();
+  const { sales, products, customers } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-  const [reFilter, setReFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
 
   const filteredSales = useMemo(() => {
-    if (!reFilter) return sales;
-    return sales.filter(s => s.customerRe?.includes(reFilter));
-  }, [sales, reFilter]);
+    if (!searchFilter) return sales;
+    const lowerSearch = searchFilter.toLowerCase();
+    return sales.filter(s => {
+      const matchRe = s.customerRe?.toLowerCase().includes(lowerSearch);
+      const customer = customers.find(c => c.re === s.customerRe);
+      const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+      return matchRe || matchName;
+    });
+  }, [sales, searchFilter, customers]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -57,10 +63,10 @@ export const DashboardView: React.FC = () => {
         <h1 className="text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
         <input 
           type="text" 
-          placeholder="Filtrar por RE..." 
-          value={reFilter}
-          onChange={e => setReFilter(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 min-w-[200px]"
+          placeholder="Filtrar por RE ou Nome..." 
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 min-w-[240px]"
         />
       </div>
       
