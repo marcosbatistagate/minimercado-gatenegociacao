@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useMarketStore, type Product } from '../store/useMarketStore';
 import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { FadeIn } from '../components/ui/FadeIn';
 
 export const InventoryView: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useMarketStore();
@@ -110,9 +111,9 @@ export const InventoryView: React.FC = () => {
         <h1 className="text-2xl font-bold text-white font-jakarta">Gestão de Estoque</h1>
         <button 
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-primary-300 font-medium glow bg-primary-500/30 hover:bg-primary-500/40 transition-colors"
+          className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-black/60 border border-violet-500 rounded-full text-sm font-medium text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.4),inset_0_0_10px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Novo Produto
         </button>
       </div>
@@ -140,7 +141,8 @@ export const InventoryView: React.FC = () => {
         </select>
       </div>
 
-      <div className="flex-1 overflow-auto glass-effect bg-white/5 border border-white/10 rounded-2xl">
+      <FadeIn delay="100" className="flex-1 min-h-0 flex flex-col w-full">
+        <div className="flex-1 overflow-auto glass-effect bg-white/5 border border-white/10 rounded-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/10">
@@ -192,7 +194,8 @@ export const InventoryView: React.FC = () => {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </FadeIn>
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

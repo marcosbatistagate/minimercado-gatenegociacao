@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Barcode, Search, Plus, Minus, Trash2, CreditCard, Banknote, Landmark } from 'lucide-react';
 import { useMarketStore } from '../store/useMarketStore';
+import { FadeIn } from '../components/ui/FadeIn';
 
 export function PDVView() {
   const { cart, addToCartByCode, updateQuantity, removeFromCart, paymentMethod, setPaymentMethod, receivedAmount, setReceivedAmount, checkout } = useMarketStore();
@@ -58,31 +59,33 @@ export function PDVView() {
                 <p className="font-inter">Nenhum produto adicionado</p>
               </div>
             ) : (
-              cart.map((item) => (
-                <div key={item.product.id} className="grid grid-cols-12 gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl items-center transition-colors border border-transparent hover:border-white/5">
-                  <div className="col-span-1 font-mono text-white/60">{item.product.barcode}</div>
-                  <div className="col-span-5 font-inter font-medium truncate">{item.product.name}</div>
-                  <div className="col-span-2 flex items-center justify-center gap-2">
-                    <button onClick={() => updateQuantity(item.product.id, -1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">
-                      <Minus size={14} />
-                    </button>
-                    <span className="font-mono w-8 text-center">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.product.id, 1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">
-                      <Plus size={14} />
-                    </button>
+              cart.map((item, index) => (
+                <FadeIn key={item.product.id} delay={index < 3 ? `${(index + 1) * 100}` as any : '300'}>
+                  <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl items-center transition-colors border border-transparent hover:border-white/5">
+                    <div className="col-span-1 font-mono text-white/60">{item.product.barcode}</div>
+                    <div className="col-span-5 font-inter font-medium truncate">{item.product.name}</div>
+                    <div className="col-span-2 flex items-center justify-center gap-2">
+                      <button onClick={() => updateQuantity(item.product.id, -1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">
+                        <Minus size={14} />
+                      </button>
+                      <span className="font-mono w-8 text-center">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.product.id, 1)} className="p-1 bg-white/5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors active:scale-95">
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <div className="col-span-2 text-right font-mono text-white/80">
+                      {item.product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                    <div className="col-span-2 flex items-center justify-end gap-3">
+                      <span className="font-mono font-medium">
+                        {item.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                      <button onClick={() => removeFromCart(item.product.id)} className="text-red-400/60 hover:text-red-400 p-1.5 hover:bg-red-400/10 rounded-lg transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="col-span-2 text-right font-mono text-white/80">
-                    {item.product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end gap-3">
-                    <span className="font-mono font-medium">
-                      {item.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                    <button onClick={() => removeFromCart(item.product.id)} className="text-red-400/60 hover:text-red-400 p-1.5 hover:bg-red-400/10 rounded-lg transition-colors">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+                </FadeIn>
               ))
             )}
           </div>
@@ -161,10 +164,10 @@ export function PDVView() {
             <button 
               onClick={checkout}
               disabled={cart.length === 0}
-              className="w-full py-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-jakarta font-bold text-lg shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_35px_rgba(139,92,246,0.8)] transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex items-center justify-center gap-2 glow border border-violet-500/50"
+              className="w-full py-4 rounded-xl font-jakarta font-bold text-lg text-white bg-black/60 border border-violet-500 hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_35px_rgba(139,92,246,0.6),inset_0_0_20px_rgba(139,92,246,0.4)] hover:scale-[1.02] transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none shadow-[0_0_20px_rgba(139,92,246,0.5),inset_0_0_10px_rgba(139,92,246,0.2)] flex items-center justify-center gap-2 group"
             >
-              Finalizar Venda
-              <span className="bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-md ml-2 font-mono">F4</span>
+              <span className="group-hover:text-white transition-colors">Finalizar Venda</span>
+              <span className="bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-md ml-2 font-mono border border-white/10 backdrop-blur-md">F4</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type PaymentMethod } from '../store/useMarketStore';
 import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X } from 'lucide-react';
+import { FadeIn } from '../components/ui/FadeIn';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -13,10 +14,7 @@ const formatDate = (isoString: string) => {
   }).format(new Date(isoString));
 };
 
-const paymentMethodLabels: Record<NonNullable<PaymentMethod>, string> = {
-  money: 'Dinheiro',
-  credit_card: 'Crédito',
-  debit_card: 'Débito',
+const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> = {
   pix: 'PIX',
 };
 
@@ -31,6 +29,13 @@ export const DashboardView: React.FC = () => {
   }, [sales, reFilter]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
+  
+  const totalCost = useMemo(() => filteredSales.reduce((sum, sale) => {
+    return sum + sale.items.reduce((itemSum, item) => itemSum + ((item.product?.costPrice || 0) * item.quantity), 0);
+  }, 0), [filteredSales]);
+
+  const totalProfit = totalRevenue - totalCost;
+
   const totalSales = filteredSales.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
   
@@ -60,50 +65,102 @@ export const DashboardView: React.FC = () => {
       </div>
       
       {/* KPIs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Faturamento Total */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-          <div className="flex items-center gap-2 text-white/60">
-            <TrendingUp size={20} />
-            <span className="font-medium">Faturamento Total</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+        {/* Preço de Venda (Faturamento) */}
+        <FadeIn delay="100">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <TrendingUp size={64} className="text-violet-500" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <TrendingUp size={20} />
+              <span className="font-medium">Total Vendido (Preço de Venda)</span>
+            </div>
+            <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 relative z-10">
+              {formatCurrency(totalRevenue)}
+            </span>
           </div>
-          <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400">
-            {formatCurrency(totalRevenue)}
-          </span>
-        </div>
+        </FadeIn>
+
+        {/* Custo Total */}
+        <FadeIn delay="150">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Receipt size={64} className="text-rose-500" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <Receipt size={20} className="text-rose-400" />
+              <span className="font-medium">Custo Total das Vendas</span>
+            </div>
+            <span className="text-3xl font-bold text-rose-400 relative z-10">
+              {formatCurrency(totalCost)}
+            </span>
+          </div>
+        </FadeIn>
+
+        {/* Lucro Bruto */}
+        <FadeIn delay="175">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <TrendingUp size={64} className="text-emerald-500" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <TrendingUp size={20} className="text-emerald-400" />
+              <span className="font-medium">Lucro Bruto Estimado</span>
+            </div>
+            <span className="text-3xl font-bold text-emerald-400 relative z-10">
+              {formatCurrency(totalProfit)}
+            </span>
+          </div>
+        </FadeIn>
 
         {/* Total de Vendas */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-          <div className="flex items-center gap-2 text-white/60">
-            <ShoppingBag size={20} />
-            <span className="font-medium">Total de Vendas</span>
+        <FadeIn delay="200">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <ShoppingBag size={64} className="text-white" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <ShoppingBag size={20} />
+              <span className="font-medium">Total de Vendas</span>
+            </div>
+            <span className="text-3xl font-bold text-white relative z-10">
+              {totalSales}
+            </span>
           </div>
-          <span className="text-3xl font-bold text-white">
-            {totalSales}
-          </span>
-        </div>
+        </FadeIn>
 
         {/* Ticket Médio */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-          <div className="flex items-center gap-2 text-white/60">
-            <Receipt size={20} />
-            <span className="font-medium">Ticket Médio</span>
+        <FadeIn delay="300">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Receipt size={64} className="text-white" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <Receipt size={20} />
+              <span className="font-medium">Ticket Médio</span>
+            </div>
+            <span className="text-3xl font-bold text-white relative z-10">
+              {formatCurrency(averageTicket)}
+            </span>
           </div>
-          <span className="text-3xl font-bold text-white">
-            {formatCurrency(averageTicket)}
-          </span>
-        </div>
+        </FadeIn>
 
         {/* Itens em Estoque Crítico */}
-        <div className={`glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30 hover:shadow-[0_0_20px_rgba(251,191,36,0.2)]' : ''}`}>
-          <div className="flex items-center gap-2 text-white/60">
-            <AlertTriangle size={20} className={criticalStockItems > 0 ? 'text-amber-400' : ''} />
+        <FadeIn delay="500">
+          <div className={`glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden group ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]' : 'hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]'}`}>
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <AlertTriangle size={64} className={criticalStockItems > 0 ? 'text-amber-500' : 'text-white'} />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <AlertTriangle size={20} className={criticalStockItems > 0 ? 'text-amber-400' : ''} />
             <span className="font-medium">Estoque Crítico</span>
           </div>
-          <span className={`text-3xl font-bold ${criticalStockItems > 0 ? 'text-amber-400' : 'text-white'}`}>
+          <span className={`text-3xl font-bold relative z-10 ${criticalStockItems > 0 ? 'text-amber-400' : 'text-white'}`}>
             {criticalStockItems}
           </span>
         </div>
+        </FadeIn>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

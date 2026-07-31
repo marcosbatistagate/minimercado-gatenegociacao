@@ -11,16 +11,12 @@ export function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl mb-6 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <img src="/negociacao-icon.svg" alt="Grêmio Negociação" className="h-8 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+        <div className="flex items-center gap-4">
+          <img src="/negociacao.png" alt="Grêmio Negociação" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
           <h1 className="text-2xl font-jakarta font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            Gremio Negociação
+            Minimercado Gremio Negociação
           </h1>
         </div>
-        <div className="h-6 w-[1px] bg-white/20"></div>
-        <h2 className="text-lg font-inter text-white/80">
-          Minimercado
-        </h2>
       </div>
 
       <div className="flex items-center gap-6">

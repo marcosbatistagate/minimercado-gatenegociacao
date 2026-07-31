@@ -107,25 +107,28 @@ export const ClientTotemView: React.FC = () => {
   if (!currentCustomer) {
     return (
       <div 
-        className="flex flex-col h-full relative overflow-hidden"
+        className="flex flex-col min-h-screen relative overflow-hidden bg-black"
         style={{
-          backgroundImage: 'url(/bg.png)',
+          backgroundImage: 'url(/mobile.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
       >
-        {/* Degradê na parte inferior */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent pointer-events-none"></div>
+        {/* Degradê preto nas bordas (Vignette) */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none"></div>
+        {/* Degradê extra na parte inferior para garantir contraste */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"></div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <img src="/negociacao.png" alt="Logo Negociação" className="h-12 sm:h-16 w-auto object-contain" />
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-blue-400 to-purple-500 font-jakarta drop-shadow-sm">
-              Grêmio Negociação
+        <div className="flex-none p-6 sm:p-8 relative z-20">
+          <div className="inline-flex items-center gap-5 glass-effect bg-slate-900/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-3xl px-6 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300">
+            <img src="/negociacao.png" alt="Logo Negociação" className="h-12 sm:h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 font-jakarta drop-shadow-md pr-2">
+              Minimercado Gremio Negociação
             </h1>
           </div>
+        </div>
 
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
           <div className="glass-effect bg-slate-900/50 backdrop-blur-md border border-white/20 rounded-3xl p-8 max-w-md w-full flex flex-col gap-6 shadow-2xl">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
@@ -146,22 +149,21 @@ export const ClientTotemView: React.FC = () => {
               </div>
               <button 
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors glow mt-2"
+                className="w-full py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.5),inset_0_0_15px_rgba(139,92,246,0.3)] hover:scale-[1.02] transition-all duration-300 mt-2"
               >
-                Acessar Totem
+                Acessar Terminal
               </button>
             </form>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 flex justify-end relative z-10">
+        <div className="p-6 sm:p-8 flex justify-end relative z-10">
           <button 
             onClick={handleAdminAccess}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm px-4 py-2 rounded-lg hover:bg-white/10"
+            className="flex items-center gap-2 px-5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300"
           >
-            <Shield size={16} />
-            Área de Gestão
+            <Shield size={18} />
+            <span className="font-medium">Área de Gestão</span>
           </button>
         </div>
 
@@ -198,7 +200,7 @@ export const ClientTotemView: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col min-h-screen bg-slate-900">
       {/* Header */}
       <header className="glass-effect bg-white/5 border-b border-white/10 px-8 py-4 flex justify-between items-center">
         <div>

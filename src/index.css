@@ -72,3 +72,44 @@
     color: hsl(var(--foreground));
   }
 }
+
+@layer utilities {
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blurIn {
+    0% { opacity: 0; filter: blur(15px); transform: scale(0.95); }
+    100% { opacity: 1; filter: blur(0); transform: scale(1); }
+  }
+  .scroll-item {
+    animation-duration: 0.8s;
+    animation-fill-mode: both;
+    animation-play-state: paused;
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .scroll-fade-up {
+    animation-name: fadeInUp;
+  }
+  .scroll-blur-in {
+    animation-name: blurIn;
+  }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+  
+  /* Additional animations for glowing buttons */
+  @keyframes beam-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes lines-slide {
+    0% { background-position: 0 0; }
+    100% { background-position: 24px 0; }
+  }
+  
+  /* Glassmorphism panel base */
+  .glass-effect {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+}
