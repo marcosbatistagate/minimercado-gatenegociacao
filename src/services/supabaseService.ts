@@ -132,6 +132,20 @@ export const supabaseService = {
     return data;
   },
 
+  async fetchCustomerByRe(re: string): Promise<UserCustomer | null> {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('re, name')
+      .eq('re', re)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error fetching customer by RE:', error);
+      return null;
+    }
+    return data;
+  },
+
   async saveCustomer(re: string, name: string): Promise<UserCustomer | null> {
     const { data, error } = await supabase
       .from('customers')

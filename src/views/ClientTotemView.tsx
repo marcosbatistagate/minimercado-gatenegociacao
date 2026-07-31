@@ -1,31 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
-import { QrCode, Search, Trash2, Shield, X } from 'lucide-react';
+import { QrCode, Search, Trash2, Shield } from 'lucide-react';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { 
-    currentCustomer, 
-    customers, 
-    loginCustomer, 
-    registerCustomer, 
-    switchInstance,
-    sales,
-    cart,
-    addToCartByCode,
-    removeFromCart,
-    completePixSale,
-    logoutCustomer
-  } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, logoutCustomer, switchInstance, sales } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [newRe, setNewRe] = useState('');
   const [newName, setNewName] = useState('');
-
   const [barcodeInput, setBarcodeInput] = useState('');
 
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
@@ -45,25 +32,23 @@ export const ClientTotemView: React.FC = () => {
       .reduce((sum, s) => sum + s.total_amount, 0);
   }, [sales, currentCustomer]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reInput.trim()) return;
-    
-    const exists = customers.some(c => c.re === reInput);
-    if (exists) {
-      loginCustomer(reInput);
-    } else {
-      setNewRe(reInput);
-      setNewName('');
-      setShowRegisterModal(true);
+    if (reInput.trim().length >= 1) {
+      const logged = await loginCustomer(reInput);
+      if (!logged) {
+        setNewRe(reInput);
+        setNewName('');
+        setShowRegisterModal(true);
+      }
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newRe && newName) {
-      registerCustomer(newRe, newName);
-      loginCustomer(newRe);
+      await registerCustomer(newRe, newName);
+      await loginCustomer(newRe);
       setShowRegisterModal(false);
     }
   };
@@ -172,12 +157,12 @@ export const ClientTotemView: React.FC = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 gap-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso</h2>
+                <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso Detectado</h2>
                 <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white">
-                  <X size={24} />
+                  <span className="text-xl">X</span>
                 </button>
               </div>
-              <p className="text-white/80 text-sm">Seu RE ({newRe}) não foi encontrado. Por favor, informe seu nome para cadastro.</p>
+              <p className="text-white/80 text-sm">Seu RE ({newRe}) não foi encontrado. Por favor, informe seu nome completo.</p>
               <form onSubmit={handleRegister} className="flex flex-col gap-4">
                 <input 
                   autoFocus
@@ -195,6 +180,8 @@ export const ClientTotemView: React.FC = () => {
             </div>
           </div>
         )}
+
+
       </div>
     );
   }

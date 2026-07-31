@@ -53,7 +53,7 @@ interface MarketState {
   updateProduct: (id: string, updatedProduct: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   registerCustomer: (re: string, name: string) => Promise<void>;
-  loginCustomer: (re: string) => void;
+  loginCustomer: (re: string) => Promise<boolean>;
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
   completePixSale: () => Promise<void>;
@@ -236,14 +236,17 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  loginCustomer: (re) => {
-    const state = get();
-    const customer = state.customers.find(c => c.re === re);
-    if (customer) {
-      set({ currentCustomer: customer });
-      alert(`Bem-vindo, ${customer.name}!`);
+  loginCustomer: async (re) => {
+    if (re.trim().length >= 1) {
+      const customer = await supabaseService.fetchCustomerByRe(re.trim());
+      if (customer) {
+        set({ currentCustomer: customer });
+        return true;
+      }
+      return false;
     } else {
-      alert('RE não encontrado. Por favor, cadastre-se.');
+      alert('Por favor, digite um RE válido.');
+      return false;
     }
   },
 
