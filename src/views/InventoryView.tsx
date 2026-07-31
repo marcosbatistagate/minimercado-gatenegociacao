@@ -4,7 +4,7 @@ import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 
 export const InventoryView: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, dbCategories, initData } = useMarketStore();
+  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData } = useMarketStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -178,17 +178,25 @@ export const InventoryView: React.FC = () => {
             <tr className="border-b border-white/10">
               <th className="p-4 text-white/60 font-medium text-sm">Código</th>
               <th className="p-4 text-white/60 font-medium text-sm">Nome</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Categoria</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Pr. Custo</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Pr. Venda</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Margem (%)</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Estoque</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Ações</th>
+              <th className="p-4 text-left font-medium text-white/60">Categoria</th>
+              <th className="p-4 text-left font-medium text-white/60">Pr. Custo</th>
+              <th className="p-4 text-left font-medium text-white/60">Pr. Venda</th>
+              <th className="p-4 text-left font-medium text-white/60">Margem (%)</th>
+              <th className="p-4 text-left font-medium text-white/60">Lucro Un.</th>
+              <th className="p-4 text-left font-medium text-white/60">Estoque</th>
+              <th className="p-4 text-left font-medium text-white/60">Qtd. Vendida</th>
+              <th className="p-4 text-left font-medium text-white/60">Ações</th>
             </tr>
           </thead>
           <tbody>
             {filteredProducts.map(product => {
               const margin = calculateMargin(product.price, product.cost_price);
+              const profit = product.price - product.cost_price;
+              const qtySold = sales.reduce((sum, sale) => {
+                const item = sale.items.find(i => i.product.id === product.id);
+                return sum + (item ? item.quantity : 0);
+              }, 0);
+
               return (
                 <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 text-white/80">{product.code}</td>
@@ -197,11 +205,13 @@ export const InventoryView: React.FC = () => {
                   <td className="p-4 text-white/80">R$ {product.cost_price.toFixed(2)}</td>
                   <td className="p-4 text-white/80">R$ {product.price.toFixed(2)}</td>
                   <td className="p-4 text-white/80">{margin.toFixed(2)}%</td>
+                  <td className="p-4 text-emerald-400/90 font-medium">R$ {profit.toFixed(2)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getStockBadgeClass(product.stock, product.min_stock)}`}>
                       {product.stock}
                     </span>
                   </td>
+                  <td className="p-4 text-white/80 text-center font-medium">{qtySold}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button onClick={() => handleOpenModal(product)} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
@@ -283,6 +293,12 @@ export const InventoryView: React.FC = () => {
                   <label className="text-sm text-white/60">Margem (%)</label>
                   <div className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white/60 cursor-not-allowed">
                     {calculateMargin(formData.price, formData.cost_price).toFixed(2)}%
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-white/60">Lucro Un. Estimado (R$)</label>
+                  <div className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-3 text-emerald-400 font-medium cursor-not-allowed">
+                    R$ {(formData.price - formData.cost_price).toFixed(2)}
                   </div>
                 </div>
               </div>
