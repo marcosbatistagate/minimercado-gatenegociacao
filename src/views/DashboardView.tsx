@@ -201,52 +201,45 @@ export const DashboardView: React.FC = () => {
             <h2 className="text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
           </div>
           <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="p-4 text-white/60 font-medium text-sm">ID</th>
                   <th className="p-4 text-white/60 font-medium text-sm">Data/Hora</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Cliente (RE)</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Método</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Total</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Status</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Ações</th>
+                  <th className="p-4 text-white/60 font-medium text-sm">Cliente</th>
+                  <th className="p-4 text-white/60 font-medium text-sm">Produto(s) Comprado(s)</th>
+                  <th className="p-4 text-white/60 font-medium text-sm text-center">Qtd.</th>
+                  <th className="p-4 text-white/60 font-medium text-sm text-right">Valor Unitário</th>
+                  <th className="p-4 text-white/60 font-medium text-sm text-right">Valor Total Pago</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredSales.map(sale => (
-                  <tr key={sale.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white/80">#{sale.id}</td>
-                    <td className="p-4 text-white/80">{formatDate(sale.created_at)}</td>
-                    <td className="p-4">
-                      {sale.customerRe ? (
-                        <span className="bg-primary-500/20 text-primary-300 border border-primary-500/30 px-2 py-1 rounded-md text-xs font-medium">
-                          RE: {sale.customerRe}
-                        </span>
-                      ) : (
-                        <span className="text-white/40 text-xs font-medium">Caixa Avulso</span>
+                {filteredSales.map(sale => {
+                  const customerName = sale.customerRe 
+                    ? (customers.find(c => c.re === sale.customerRe)?.name || 'Cliente')
+                    : 'Caixa Avulso';
+
+                  return sale.items.map((item, idx) => (
+                    <tr key={`${sale.id}-${idx}`} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      {idx === 0 && (
+                        <>
+                          <td className="p-4 text-white/80" rowSpan={sale.items.length}>
+                            {formatDate(sale.created_at)}
+                          </td>
+                          <td className="p-4 text-white/80" rowSpan={sale.items.length}>
+                            {sale.customerRe ? `${customerName} (RE: ${sale.customerRe})` : 'Caixa Avulso'}
+                          </td>
+                        </>
                       )}
-                    </td>
-                    <td className="p-4 text-white/80">{sale.payment_method ? paymentMethodLabels[sale.payment_method] : '-'}</td>
-                    <td className="p-4 text-white font-medium">{formatCurrency(sale.total_amount)}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium border ${sale.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border-rose-500/30'}`}>
-                        {sale.status === 'completed' ? 'Concluída' : 'Cancelada'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <button 
-                        onClick={() => setSelectedSale(sale)}
-                        className="px-3 py-1 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm"
-                      >
-                        Ver Itens
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="p-4 text-white font-medium">{item.product.name}</td>
+                      <td className="p-4 text-white/80 text-center">{item.quantity}</td>
+                      <td className="p-4 text-white/80 text-right">{formatCurrency(item.product.price)}</td>
+                      <td className="p-4 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
+                    </tr>
+                  ));
+                })}
                 {filteredSales.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-white/50">
+                    <td colSpan={6} className="p-8 text-center text-white/50">
                       Nenhuma venda encontrada.
                     </td>
                   </tr>
