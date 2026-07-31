@@ -94,7 +94,7 @@ export const ClientTotemView: React.FC = () => {
       <div 
         className="flex flex-col min-h-screen relative overflow-hidden bg-black"
         style={{
-          backgroundImage: 'url(/mobile.jpg)',
+          backgroundImage: 'url(/bg.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
