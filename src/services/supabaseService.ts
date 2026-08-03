@@ -175,7 +175,7 @@ export const supabaseService = {
           re: sanitizedRe, 
           name: sanitizedName, 
           password: sanitizedPassword 
-        })
+        }, { onConflict: 're' })
         .select('re, name, password')
         .single();
 
