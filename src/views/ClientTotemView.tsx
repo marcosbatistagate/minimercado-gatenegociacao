@@ -468,10 +468,10 @@ export const ClientTotemView: React.FC = () => {
             </button>
           </div>
         </div>
-        <footer className="text-center py-4 text-xs text-white/30 font-medium w-full">
-          Desenvolvido por: Delta Negociação - 2026
-        </footer>
       </div>
+      <footer className="text-center py-4 text-xs text-white/30 font-medium w-full">
+        Desenvolvido por: Delta Negociação - 2026
+      </footer>
 
       {/* History and Dashboard Modal */}
       {showHistoryModal && (
