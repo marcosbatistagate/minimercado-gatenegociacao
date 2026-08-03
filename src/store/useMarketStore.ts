@@ -21,7 +21,7 @@ export interface CartItem {
   subtotal: number;
 }
 
-export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | null;
+export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | 'DEBIT' | null;
 
 export interface Sale {
   id: string;
@@ -31,6 +31,7 @@ export interface Sale {
   status: 'completed' | 'cancelled';
   items: CartItem[];
   customerRe?: string;
+  payment_status: 'PAID' | 'PENDING';
 }
 
 interface MarketState {
@@ -59,6 +60,8 @@ interface MarketState {
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
   completePixSale: () => Promise<void>;
+  completeDebitSale: () => Promise<void>;
+  settleDebts: (customerRe: string) => Promise<void>;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -74,16 +77,18 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   initData: async () => {
     try {
-      const [fetchedProducts, fetchedCustomers, fetchedCategories] = await Promise.all([
+      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales] = await Promise.all([
         supabaseService.fetchProducts(),
         supabaseService.fetchCustomers(),
-        supabaseService.fetchCategories()
+        supabaseService.fetchCategories(),
+        supabaseService.fetchSales()
       ]);
       
       set({ 
         products: fetchedProducts, 
         customers: fetchedCustomers,
-        dbCategories: fetchedCategories
+        dbCategories: fetchedCategories,
+        sales: fetchedSales
       });
 
       // Setup Realtime for products
@@ -184,7 +189,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         total_amount,
         status: 'completed',
         items: [...state.cart],
-        customerRe: state.currentCustomer?.re
+        customerRe: state.currentCustomer?.re,
+        payment_status: 'PAID'
       };
 
       set({
@@ -293,7 +299,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         total_amount,
         status: 'completed',
         items: [...state.cart],
-        customerRe: state.currentCustomer?.re
+        customerRe: state.currentCustomer?.re,
+        payment_status: 'PAID'
       };
 
       set({
@@ -306,6 +313,59 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       alert('Venda PIX finalizada com sucesso!');
     } catch (err) {
       alert('Erro ao processar venda PIX.');
+    }
+  },
+
+  completeDebitSale: async () => {
+    const state = get();
+    if (state.cart.length === 0) {
+      alert('Carrinho vazio!');
+      return;
+    }
+    
+    const total_amount = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    try {
+      const saleId = await supabaseService.createSale(
+        total_amount,
+        'DEBIT',
+        state.currentCustomer?.re,
+        state.cart,
+        'PENDING'
+      );
+      
+      const newSale: Sale = {
+        id: saleId || Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+        payment_method: 'DEBIT',
+        total_amount,
+        status: 'completed',
+        items: [...state.cart],
+        customerRe: state.currentCustomer?.re,
+        payment_status: 'PENDING'
+      };
+
+      set({
+        sales: [newSale, ...state.sales],
+        cart: [],
+        paymentMethod: null,
+        receivedAmount: 0
+      });
+      
+      alert('Débito registrado com sucesso no seu RE!');
+    } catch (err) {
+      alert('Erro ao processar venda em débito.');
+    }
+  },
+
+  settleDebts: async (customerRe) => {
+    const success = await supabaseService.updatePaymentStatus(customerRe, 'PAID');
+    if (success) {
+      const updatedSales = await supabaseService.fetchSales();
+      set({ sales: updatedSales });
+      alert('Débitos quitados com sucesso!');
+    } else {
+      alert('Erro ao quitar débitos.');
     }
   }
 }));

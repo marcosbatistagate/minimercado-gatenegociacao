@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Product, CartItem, PaymentMethod } from '../store/useMarketStore';
+import type { Product, CartItem, PaymentMethod, Sale } from '../store/useMarketStore';
 import type { UserCustomer } from '../types';
 
 export const supabaseService = {
@@ -181,7 +181,8 @@ export const supabaseService = {
     totalAmount: number, 
     paymentMethod: PaymentMethod, 
     customerRe: string | undefined, 
-    items: CartItem[]
+    items: CartItem[],
+    paymentStatus: 'PAID' | 'PENDING' = 'PAID'
   ) {
     const formattedItems = items.map(item => ({
       product_id: item.product.id,
@@ -194,7 +195,8 @@ export const supabaseService = {
       p_total_amount: totalAmount,
       p_payment_method: paymentMethod,
       p_customer_re: customerRe || null,
-      p_items: formattedItems
+      p_items: formattedItems,
+      p_payment_status: paymentStatus
     });
 
     if (error) {
@@ -203,5 +205,79 @@ export const supabaseService = {
     }
     
     return data;
+  },
+
+  async fetchSales(): Promise<Sale[]> {
+    const { data, error } = await supabase
+      .from('sales')
+      .select(`
+        id,
+        created_at,
+        payment_method,
+        total_amount,
+        status,
+        customer_re,
+        payment_status,
+        sale_items (
+          id,
+          quantity,
+          unit_price,
+          total_price,
+          product_id,
+          products (
+            id,
+            code,
+            name,
+            cost_price,
+            price,
+            stock,
+            min_stock
+          )
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sales:', error);
+      return [];
+    }
+
+    return (data as any[]).map(s => ({
+      id: s.id,
+      created_at: s.created_at,
+      payment_method: s.payment_method,
+      total_amount: Number(s.total_amount),
+      status: s.status,
+      customerRe: s.customer_re,
+      payment_status: s.payment_status || 'PAID',
+      items: (s.sale_items || []).map((item: any) => ({
+        product: {
+          id: item.products?.id || item.product_id,
+          code: item.products?.code || '',
+          name: item.products?.name || 'Produto Removido',
+          price: Number(item.unit_price),
+          category: '',
+          cost_price: Number(item.products?.cost_price || 0),
+          stock: Number(item.products?.stock || 0),
+          min_stock: Number(item.products?.min_stock || 0)
+        },
+        quantity: Number(item.quantity),
+        subtotal: Number(item.total_price)
+      }))
+    }));
+  },
+
+  async updatePaymentStatus(customerRe: string, newStatus: 'PAID' | 'PENDING'): Promise<boolean> {
+    const { error } = await supabase
+      .from('sales')
+      .update({ payment_status: newStatus })
+      .eq('customer_re', customerRe)
+      .eq('payment_status', 'PENDING');
+
+    if (error) {
+      console.error('Error updating payment status:', error);
+      return false;
+    }
+    return true;
   }
 };

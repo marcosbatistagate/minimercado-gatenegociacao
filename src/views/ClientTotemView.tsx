@@ -7,7 +7,7 @@ const formatCurrency = (value: number) => {
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, logoutCustomer, switchInstance, sales } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -81,6 +81,13 @@ export const ClientTotemView: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentCustomer, cart, completePixSale, logoutCustomer]);
+
+  const handleFinalizeDebit = async () => {
+    if (cart.length > 0) {
+      await completeDebitSale();
+      logoutCustomer();
+    }
+  };
 
   const handleFinalize = () => {
     if (cart.length > 0) {
@@ -272,7 +279,14 @@ export const ClientTotemView: React.FC = () => {
               onClick={handleFinalize}
               className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg glow"
             >
-              Finalizar Pagamento [F4]
+              Pagar com PIX [F4]
+            </button>
+            <button 
+              disabled={cart.length === 0}
+              onClick={handleFinalizeDebit}
+              className="w-full py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+            >
+              Pagar Depois (Registrar em Débito)
             </button>
             <button
               onClick={() => logoutCustomer()}

@@ -16,10 +16,11 @@ const formatDate = (isoString: string) => {
 
 const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> = {
   pix: 'PIX',
+  DEBIT: 'Débito (Pagar Depois)'
 };
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers } = useMarketStore();
+  const { sales, products, customers, settleDebts } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
 
@@ -48,14 +49,30 @@ export const DashboardView: React.FC = () => {
   const criticalStockItems = useMemo(() => products.filter(p => p.stock <= p.min_stock).length, [products]);
 
   const paymentDistribution = useMemo(() => {
-    const dist: Record<string, number> = { money: 0, credit_card: 0, debit_card: 0, pix: 0 };
+    const dist: Record<string, number> = { money: 0, credit_card: 0, debit_card: 0, pix: 0, DEBIT: 0 };
     filteredSales.forEach(s => {
       if (s.payment_method) {
-        dist[s.payment_method] += s.total_amount;
+        dist[s.payment_method] = (dist[s.payment_method] || 0) + s.total_amount;
       }
     });
     return dist;
   }, [filteredSales]);
+
+  // Aggregate pending debts per client
+  const pendingDebts = useMemo(() => {
+    const debtsMap: Record<string, { re: string, name: string, total: number }> = {};
+    sales.forEach(s => {
+      if (s.payment_status === 'PENDING' && s.customerRe) {
+        const customer = customers.find(c => c.re === s.customerRe);
+        const name = customer ? customer.name : 'Desconhecido';
+        if (!debtsMap[s.customerRe]) {
+          debtsMap[s.customerRe] = { re: s.customerRe, name, total: 0 };
+        }
+        debtsMap[s.customerRe].total += s.total_amount;
+      }
+    });
+    return Object.values(debtsMap);
+  }, [sales, customers]);
 
   return (
     <div className="flex flex-col h-full gap-6 p-6 overflow-auto">
@@ -247,6 +264,47 @@ export const DashboardView: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Debits management section */}
+      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+        <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Clientes com Contas Pendentes)</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="p-4 text-white/60 font-medium text-sm">Cliente</th>
+                <th className="p-4 text-white/60 font-medium text-sm">RE</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-right">Total Devido</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingDebts.map(debt => (
+                <tr key={debt.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-4 text-white font-medium">{debt.name}</td>
+                  <td className="p-4 text-white/80">{debt.re}</td>
+                  <td className="p-4 text-rose-400 font-bold text-right">{formatCurrency(debt.total)}</td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => settleDebts(debt.re)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all duration-300 text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                    >
+                      Quitar Débito
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {pendingDebts.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-white/50">
+                    Nenhum débito pendente.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
