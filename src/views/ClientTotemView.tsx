@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
-import { QrCode, Search, Trash2, Shield } from 'lucide-react';
+import { QrCode, Search, Trash2, Shield, History, X } from 'lucide-react';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -11,25 +11,69 @@ export const ClientTotemView: React.FC = () => {
 
   const [reInput, setReInput] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [newRe, setNewRe] = useState('');
   const [newName, setNewName] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
 
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
 
-  const currentMonthTotal = useMemo(() => {
-    if (!currentCustomer) return 0;
+  // User Specific Metrics
+  const userMetrics = useMemo(() => {
+    if (!currentCustomer) return { totalPaid: 0, totalDebt: 0, totalMonth: 0, totalThreeMonths: 0, itemsList: [] as any[] };
+    
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    return sales
-      .filter(s => {
-        if (s.customerRe !== currentCustomer.re || s.status !== 'completed') return false;
-        const d = new Date(s.created_at);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      })
-      .reduce((sum, s) => sum + s.total_amount, 0);
+    const userSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status === 'completed');
+
+    let totalPaid = 0;
+    let totalDebt = 0;
+    let totalMonth = 0;
+    let totalThreeMonths = 0;
+    const itemsList: any[] = [];
+
+    userSales.forEach(s => {
+      const saleDate = new Date(s.created_at);
+      const saleAmount = s.total_amount;
+
+      // 1. Payment status totals
+      if (s.payment_status === 'PENDING') {
+        totalDebt += saleAmount;
+      } else {
+        totalPaid += saleAmount;
+      }
+
+      // 2. Monthly total
+      if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+        totalMonth += saleAmount;
+      }
+
+      // 3. Last 3 months total
+      if (saleDate >= ninetyDaysAgo) {
+        totalThreeMonths += saleAmount;
+      }
+
+      // 4. Products mapping
+      s.items.forEach(item => {
+        itemsList.push({
+          date: s.created_at,
+          productName: item.product.name,
+          unitPrice: item.product.price,
+          quantity: item.quantity,
+          subtotal: item.subtotal,
+          paymentStatus: s.payment_status
+        });
+      });
+    });
+
+    // Sort products history by date descending
+    itemsList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return { totalPaid, totalDebt, totalMonth, totalThreeMonths, itemsList };
   }, [sales, currentCustomer]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -201,9 +245,18 @@ export const ClientTotemView: React.FC = () => {
           <h1 className="text-2xl font-bold text-white font-jakarta">Olá, {currentCustomer.name}</h1>
           <p className="text-white/60">RE: {currentCustomer.re}</p>
         </div>
-        <div className="text-right">
-          <p className="text-white/60 text-sm">Total Comprado (Mês)</p>
-          <p className="text-xl font-bold text-emerald-400">{formatCurrency(currentMonthTotal)}</p>
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl text-white/80 hover:text-white transition-all duration-300"
+          >
+            <History size={18} />
+            <span>Extrato / Histórico</span>
+          </button>
+          <div className="text-right">
+            <p className="text-white/60 text-sm">Total Comprado (Mês)</p>
+            <p className="text-xl font-bold text-emerald-400">{formatCurrency(userMetrics.totalMonth)}</p>
+          </div>
         </div>
       </header>
 
@@ -270,11 +323,7 @@ export const ClientTotemView: React.FC = () => {
             
             <div className="bg-white p-4 rounded-xl flex items-center justify-center">
               <QrCode size={180} className="text-black" />
-            </div>
-
-
-
-            <button 
+            </div>            <button 
               disabled={cart.length === 0}
               onClick={handleFinalize}
               className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg glow"
@@ -297,6 +346,104 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* History and Dashboard Modal */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-xl font-bold text-white font-jakarta">
+                  Extrato e Histórico de Compras
+                </h2>
+                <p className="text-sm text-white/60">RE: {currentCustomer.re} | {currentCustomer.name}</p>
+              </div>
+              <button onClick={() => setShowHistoryModal(false)} className="text-white/60 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-auto flex-1 flex flex-col gap-6">
+              {/* KPIs Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
+                  <span className="text-xs text-white/60 font-medium">Total Pago</span>
+                  <span className="text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalPaid)}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
+                  <span className="text-xs text-white/60 font-medium">Total em Débito</span>
+                  <span className="text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
+                  <span className="text-xs text-white/60 font-medium">Total Mensal</span>
+                  <span className="text-lg font-bold text-primary-400">{formatCurrency(userMetrics.totalMonth)}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
+                  <span className="text-xs text-white/60 font-medium">Últimos 3 Meses</span>
+                  <span className="text-lg font-bold text-white">{formatCurrency(userMetrics.totalThreeMonths)}</span>
+                </div>
+              </div>
+
+              {/* History Table */}
+              <div className="flex flex-col gap-3">
+                <h3 className="font-bold text-white text-lg">Produtos Adquiridos</h3>
+                <div className="overflow-x-auto border border-white/10 rounded-xl">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-white/5 text-xs text-white/60 font-semibold uppercase">
+                        <th className="p-3">Data/Hora</th>
+                        <th className="p-3">Produto</th>
+                        <th className="p-3 text-right">Valor Unitário</th>
+                        <th className="p-3 text-center">Qtd.</th>
+                        <th className="p-3 text-right">Subtotal</th>
+                        <th className="p-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sm">
+                      {userMetrics.itemsList.map((item, idx) => (
+                        <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="p-3 text-white/80">
+                            {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.date))}
+                          </td>
+                          <td className="p-3 text-white font-medium">{item.productName}</td>
+                          <td className="p-3 text-white/80 text-right">{formatCurrency(item.unitPrice)}</td>
+                          <td className="p-3 text-white/80 text-center">{item.quantity}</td>
+                          <td className="p-3 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                              item.paymentStatus === 'PENDING' 
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                            }`}>
+                              {item.paymentStatus === 'PENDING' ? 'Em Débito' : 'Pago'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {userMetrics.itemsList.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-6 text-center text-white/50">
+                            Nenhum produto adquirido ainda.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-white/10 flex justify-end bg-black/20">
+              <button 
+                onClick={() => setShowHistoryModal(false)}
+                className="px-5 py-2.5 rounded-xl font-bold text-white bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
