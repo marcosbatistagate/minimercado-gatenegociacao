@@ -164,17 +164,29 @@ export const supabaseService = {
   },
 
   async saveCustomer(re: string, name: string, password?: string): Promise<UserCustomer | null> {
-    const { data, error } = await supabase
-      .from('customers')
-      .upsert({ re, name, password })
-      .select('re, name, password')
-      .single();
+    try {
+      const sanitizedRe = re.trim();
+      const sanitizedName = name.trim();
+      const sanitizedPassword = password ? password.trim() : undefined;
 
-    if (error) {
-      console.error('Error saving customer:', error);
-      return null;
+      const { data, error } = await supabase
+        .from('customers')
+        .upsert({ 
+          re: sanitizedRe, 
+          name: sanitizedName, 
+          password: sanitizedPassword 
+        })
+        .select('re, name, password')
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      return data;
+    } catch (err: any) {
+      console.error('Error saving customer:', err);
+      throw err;
     }
-    return data;
   },
 
   async updateCustomerPassword(re: string, password?: string): Promise<boolean> {

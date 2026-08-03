@@ -246,14 +246,16 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   registerCustomer: async (re, name, password) => {
-    const saved = await supabaseService.saveCustomer(re, name, password);
-    if (saved) {
-      set(state => ({
-        customers: [...state.customers.filter(c => c.re !== re), saved]
-      }));
-      alert('Cliente cadastrado com sucesso!');
-    } else {
-      alert('Erro ao cadastrar cliente.');
+    try {
+      const saved = await supabaseService.saveCustomer(re, name, password);
+      if (saved) {
+        set(state => ({
+          customers: [...state.customers.filter(c => c.re !== re), saved]
+        }));
+        alert('Cliente cadastrado com sucesso!');
+      }
+    } catch (error: any) {
+      alert('Erro ao cadastrar cliente: ' + (error.message || 'Erro desconhecido.'));
     }
   },
 
