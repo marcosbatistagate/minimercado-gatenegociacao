@@ -55,8 +55,8 @@ interface MarketState {
   addProduct: (product: Omit<Product, 'id'>, categoryId?: string) => Promise<void>;
   updateProduct: (id: string, updatedProduct: Partial<Product>, categoryId?: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  registerCustomer: (re: string, name: string) => Promise<void>;
-  loginCustomer: (re: string) => Promise<boolean>;
+  registerCustomer: (re: string, name: string, password?: string) => Promise<void>;
+  loginCustomer: (re: string, password?: string) => Promise<boolean>;
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
   completePixSale: () => Promise<void>;
@@ -245,8 +245,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  registerCustomer: async (re, name) => {
-    const saved = await supabaseService.saveCustomer(re, name);
+  registerCustomer: async (re, name, password) => {
+    const saved = await supabaseService.saveCustomer(re, name, password);
     if (saved) {
       set(state => ({
         customers: [...state.customers.filter(c => c.re !== re), saved]
@@ -257,10 +257,14 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  loginCustomer: async (re) => {
+  loginCustomer: async (re, password) => {
     if (re.trim().length >= 1) {
       const customer = await supabaseService.fetchCustomerByRe(re.trim());
       if (customer) {
+        // If a password exists on the DB, we must validate it.
+        if (customer.password && customer.password !== password) {
+          return false;
+        }
         set({ currentCustomer: customer });
         return true;
       }

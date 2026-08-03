@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type PaymentMethod } from '../store/useMarketStore';
 import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
+import { supabaseService } from '../services/supabaseService';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -300,6 +301,70 @@ export const DashboardView: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-white/50">
                     Nenhum débito pendente.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Clientes e Redefinição de Senhas */}
+      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+        <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Clientes e Senhas</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="p-4 text-white/60 font-medium text-sm">Policial / Cliente</th>
+                <th className="p-4 text-white/60 font-medium text-sm">RE</th>
+                <th className="p-4 text-white/60 font-medium text-sm">Status Acesso</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map(customer => (
+                <tr key={customer.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-4 text-white font-medium">{customer.name}</td>
+                  <td className="p-4 text-white/80">{customer.re}</td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                      customer.password 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}>
+                      {customer.password ? 'Senha Ativa' : 'Sem Senha Configurada'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={async () => {
+                        const newPass = prompt(`Digite a nova senha para o RE ${customer.re} (mínimo 4 dígitos):`);
+                        if (newPass === null) return;
+                        if (newPass.length < 4) {
+                          alert('A senha precisa ter no mínimo 4 dígitos!');
+                          return;
+                        }
+                        const success = await supabaseService.updateCustomerPassword(customer.re, newPass);
+                        if (success) {
+                          alert(`Senha do RE ${customer.re} redefinida com sucesso!`);
+                          // Reload page/state
+                          window.location.reload();
+                        } else {
+                          alert('Erro ao atualizar senha.');
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-all duration-300 text-xs border border-white/10"
+                    >
+                      Redefinir Senha
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {customers.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-white/50">
+                    Nenhum cliente cadastrado.
                   </td>
                 </tr>
               )}

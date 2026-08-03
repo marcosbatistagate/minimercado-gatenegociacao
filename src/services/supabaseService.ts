@@ -141,7 +141,7 @@ export const supabaseService = {
   },
 
   async fetchCustomers(): Promise<UserCustomer[]> {
-    const { data, error } = await supabase.from('customers').select('re, name');
+    const { data, error } = await supabase.from('customers').select('re, name, password');
     if (error) {
       console.error('Error fetching customers:', error);
       return [];
@@ -152,7 +152,7 @@ export const supabaseService = {
   async fetchCustomerByRe(re: string): Promise<UserCustomer | null> {
     const { data, error } = await supabase
       .from('customers')
-      .select('re, name')
+      .select('re, name, password')
       .eq('re', re)
       .maybeSingle();
       
@@ -163,11 +163,11 @@ export const supabaseService = {
     return data;
   },
 
-  async saveCustomer(re: string, name: string): Promise<UserCustomer | null> {
+  async saveCustomer(re: string, name: string, password?: string): Promise<UserCustomer | null> {
     const { data, error } = await supabase
       .from('customers')
-      .upsert({ re, name })
-      .select('re, name')
+      .upsert({ re, name, password })
+      .select('re, name, password')
       .single();
 
     if (error) {
@@ -175,6 +175,19 @@ export const supabaseService = {
       return null;
     }
     return data;
+  },
+
+  async updateCustomerPassword(re: string, password?: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('customers')
+      .update({ password })
+      .eq('re', re);
+
+    if (error) {
+      console.error('Error updating customer password:', error);
+      return false;
+    }
+    return true;
   },
 
   async createSale(

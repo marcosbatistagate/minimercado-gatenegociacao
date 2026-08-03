@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
 import { QrCode, Search, Trash2, Shield, History, X } from 'lucide-react';
+import { supabaseService } from '../services/supabaseService';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -10,10 +11,15 @@ export const ClientTotemView: React.FC = () => {
   const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [newRe, setNewRe] = useState('');
   const [newName, setNewName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
 
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
@@ -78,21 +84,62 @@ export const ClientTotemView: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError('');
+
     if (reInput.trim().length >= 1) {
-      const logged = await loginCustomer(reInput);
-      if (!logged) {
+      // First check if customer exists to know if we need password or first registration
+      const existing = await supabaseService.fetchCustomerByRe(reInput.trim());
+
+      if (!existing) {
+        // No client found -> First access register
         setNewRe(reInput);
         setNewName('');
+        setNewPassword('');
+        setConfirmPassword('');
         setShowRegisterModal(true);
+        setShowPasswordInput(false);
+      } else if (!existing.password) {
+        // Client exists but has no password set yet (e.g. legacy data) -> Register password
+        setNewRe(reInput);
+        setNewName(existing.name);
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowRegisterModal(true);
+        setShowPasswordInput(false);
+      } else {
+        // Client has password -> Prompt password field if not shown yet
+        if (!showPasswordInput) {
+          setShowPasswordInput(true);
+          setPasswordInput('');
+        } else {
+          const logged = await loginCustomer(reInput, passwordInput);
+          if (logged) {
+            setReInput('');
+            setPasswordInput('');
+            setShowPasswordInput(false);
+            setLoginError('');
+          } else {
+            setLoginError('Senha incorreta. Tente novamente.');
+          }
+        }
       }
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (newPassword.length < 4) {
+      alert('A senha deve ter no mínimo 4 dígitos.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('As senhas não coincidem!');
+      return;
+    }
+
     if (newRe && newName) {
-      await registerCustomer(newRe, newName);
-      await loginCustomer(newRe);
+      await registerCustomer(newRe, newName, newPassword);
+      await loginCustomer(newRe, newPassword);
       setShowRegisterModal(false);
     }
   };
@@ -176,19 +223,59 @@ export const ClientTotemView: React.FC = () => {
                 <label className="text-sm font-medium text-white/80">Número de Registro (RE)</label>
                 <input 
                   autoFocus
+                  disabled={showPasswordInput}
                   type="text" 
                   value={reInput} 
-                  onChange={e => setReInput(e.target.value)}
+                  onChange={e => {
+                    setReInput(e.target.value);
+                    setLoginError('');
+                  }}
                   placeholder="Digite seu RE" 
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors"
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50"
                 />
               </div>
-              <button 
-                type="submit"
-                className="w-full py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.5),inset_0_0_15px_rgba(139,92,246,0.3)] hover:scale-[1.02] transition-all duration-300 mt-2"
-              >
-                Acessar Terminal
-              </button>
+
+              {showPasswordInput && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80">Senha de Acesso</label>
+                  <input 
+                    autoFocus
+                    type="password" 
+                    value={passwordInput} 
+                    onChange={e => {
+                      setPasswordInput(e.target.value);
+                      setLoginError('');
+                    }}
+                    placeholder="Digite sua senha" 
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors"
+                  />
+                </div>
+              )}
+
+              {loginError && (
+                <p className="text-rose-400 text-sm text-center font-medium">{loginError}</p>
+              )}
+
+              <div className="flex gap-2">
+                {showPasswordInput && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordInput(false);
+                      setLoginError('');
+                    }}
+                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300 mt-2"
+                  >
+                    Voltar
+                  </button>
+                )}
+                <button 
+                  type="submit"
+                  className={`${showPasswordInput ? 'w-2/3' : 'w-full'} py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.5),inset_0_0_15px_rgba(139,92,246,0.3)] hover:scale-[1.02] transition-all duration-300 mt-2`}
+                >
+                  {showPasswordInput ? 'Confirmar Senha' : 'Acessar Terminal'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -206,25 +293,52 @@ export const ClientTotemView: React.FC = () => {
         {/* Register Modal */}
         {showRegisterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 gap-6">
+            <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 gap-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso Detectado</h2>
+                <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso / Configurar Senha</h2>
                 <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white">
                   <span className="text-xl">X</span>
                 </button>
               </div>
-              <p className="text-white/80 text-sm">Seu RE ({newRe}) não foi encontrado. Por favor, informe seu nome completo.</p>
+              <p className="text-white/80 text-sm">Configure seu acesso para o RE <strong>{newRe}</strong>.</p>
               <form onSubmit={handleRegister} className="flex flex-col gap-4">
-                <input 
-                  autoFocus
-                  type="text" 
-                  value={newName} 
-                  onChange={e => setNewName(e.target.value)}
-                  placeholder="Nome Completo" 
-                  required
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
-                />
-                <button type="submit" className="w-full py-3 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors">
+                <div className="space-y-1">
+                  <label className="text-xs text-white/60">Nome Completo</label>
+                  <input 
+                    autoFocus
+                    type="text" 
+                    value={newName} 
+                    onChange={e => setNewName(e.target.value)}
+                    placeholder="Nome do Policial" 
+                    required
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-white/60">Senha de Acesso (Mínimo 4 dígitos)</label>
+                  <input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Digite a Senha" 
+                    required
+                    minLength={4}
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-white/60">Confirme a Senha</label>
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Confirme a Senha" 
+                    required
+                    minLength={4}
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                  />
+                </div>
+                <button type="submit" className="w-full py-3 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors mt-2">
                   Cadastrar e Acessar
                 </button>
               </form>
