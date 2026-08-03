@@ -286,7 +286,10 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 flex justify-end relative z-10">
+        <div className="p-6 sm:p-8 flex justify-between items-center relative z-10 w-full mt-auto">
+          <span className="text-xs text-white/30 font-medium">
+            Desenvolvido por: Delta Negociação - 2026
+          </span>
           <button 
             onClick={handleAdminAccess}
             className="flex items-center gap-2 px-5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300"
@@ -465,6 +468,9 @@ export const ClientTotemView: React.FC = () => {
             </button>
           </div>
         </div>
+        <footer className="text-center py-4 text-xs text-white/30 font-medium w-full">
+          Desenvolvido por: Delta Negociação - 2026
+        </footer>
       </div>
 
       {/* History and Dashboard Modal */}

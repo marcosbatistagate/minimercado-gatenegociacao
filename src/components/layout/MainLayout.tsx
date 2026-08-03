@@ -18,6 +18,9 @@ export function MainLayout({ children, activeTab, onTabChange }: MainLayoutProps
         <main className="flex-1 overflow-auto bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-[0_0_30px_rgba(139,92,246,0.05)]">
           {children}
         </main>
+        <footer className="mt-4 text-center text-xs text-white/40 font-medium">
+          Desenvolvido por: Delta Negociação - 2026
+        </footer>
       </div>
     </div>
   );
