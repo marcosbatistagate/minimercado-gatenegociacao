@@ -55,7 +55,7 @@ interface MarketState {
   addProduct: (product: Omit<Product, 'id'>, categoryId?: string) => Promise<void>;
   updateProduct: (id: string, updatedProduct: Partial<Product>, categoryId?: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  registerCustomer: (re: string, name: string, password?: string) => Promise<void>;
+  registerCustomer: (re: string, name: string, password?: string) => Promise<boolean>;
   loginCustomer: (re: string, password?: string) => Promise<boolean>;
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
@@ -253,9 +253,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
           customers: [...state.customers.filter(c => c.re !== re), saved]
         }));
         alert('Cliente cadastrado com sucesso!');
+        return true;
       }
+      return false;
     } catch (error: any) {
-      alert('Erro ao cadastrar cliente: ' + (error.message || 'Erro desconhecido.'));
+      alert('Erro do Supabase: ' + (error.message || JSON.stringify(error)));
+      throw error;
     }
   },
 

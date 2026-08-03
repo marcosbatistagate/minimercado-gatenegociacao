@@ -138,9 +138,15 @@ export const ClientTotemView: React.FC = () => {
     }
 
     if (newRe && newName) {
-      await registerCustomer(newRe, newName, newPassword);
-      await loginCustomer(newRe, newPassword);
-      setShowRegisterModal(false);
+      try {
+        const registered = await registerCustomer(newRe, newName, newPassword);
+        if (registered) {
+          await loginCustomer(newRe, newPassword);
+          setShowRegisterModal(false);
+        }
+      } catch (err) {
+        // Error already alerted in registerCustomer, do not close modal or log in
+      }
     }
   };
 
