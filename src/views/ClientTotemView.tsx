@@ -222,6 +222,7 @@ export const ClientTotemView: React.FC = () => {
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
               <p className="text-white/80">Identifique-se para começar suas compras</p>
+              <p className="text-white/80">A Equipe de Negociação agradece, volte sempre</p>
             </div>
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
