@@ -329,9 +329,9 @@ export const DashboardView: React.FC = () => {
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Máximo / Inicial</th>
                 <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas Ontem</th>
                 <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Esperado</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Máximo / Inicial</th>
               </tr>
             </thead>
             <tbody>
@@ -350,6 +350,9 @@ export const DashboardView: React.FC = () => {
                         )}
                       </div>
                     </td>
+                    <td className="p-4 text-center text-white/80 font-semibold">
+                      {maxStock} un.
+                    </td>
                     <td className="p-4 text-center font-bold text-white text-base">
                       {salesYesterday > 0 ? (
                         <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-sm">
@@ -361,9 +364,6 @@ export const DashboardView: React.FC = () => {
                     </td>
                     <td className="p-4 text-center font-bold text-emerald-400 text-lg">
                       {p.stock} un.
-                    </td>
-                    <td className="p-4 text-center text-white/80 font-semibold">
-                      {maxStock} un.
                     </td>
                   </tr>
                 );
