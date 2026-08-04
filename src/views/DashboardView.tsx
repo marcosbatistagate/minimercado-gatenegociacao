@@ -329,8 +329,8 @@ export const DashboardView: React.FC = () => {
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Máximo / Inicial</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas Ontem</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Inicial</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas de Ontem</th>
                 <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Esperado</th>
               </tr>
             </thead>
