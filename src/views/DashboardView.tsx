@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type PaymentMethod } from '../store/useMarketStore';
-import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, ClipboardList, Search } from 'lucide-react';
+import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, ClipboardList, Search, Award, Percent } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
 
@@ -69,6 +69,35 @@ export const DashboardView: React.FC = () => {
     const lower = auditSearch.toLowerCase();
     return products.filter(p => p.name.toLowerCase().includes(lower));
   }, [products, auditSearch]);
+
+  const topProductsBySales = useMemo(() => {
+    const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
+    filteredSales.forEach(sale => {
+      if (sale.status !== 'cancelled') {
+        sale.items.forEach(item => {
+          if (item.product?.id) {
+            if (!counts[item.product.id]) {
+              counts[item.product.id] = { product: item.product, qty: 0 };
+            }
+            counts[item.product.id].qty += item.quantity;
+          }
+        });
+      }
+    });
+    return Object.values(counts)
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 3);
+  }, [filteredSales, products]);
+
+  const topProductsByMargin = useMemo(() => {
+    return [...products]
+      .map(p => {
+        const margin = p.cost_price > 0 ? ((p.price - p.cost_price) / p.cost_price) * 100 : 0;
+        return { product: p, margin };
+      })
+      .sort((a, b) => b.margin - a.margin)
+      .slice(0, 3);
+  }, [products]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -218,6 +247,75 @@ export const DashboardView: React.FC = () => {
             {criticalStockItems}
           </span>
         </div>
+        </FadeIn>
+      </div>
+
+      {/* Rankings Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Mais Vendidos */}
+        <FadeIn delay="300">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Award size={64} className="text-amber-500" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <Award size={20} className="text-amber-400" />
+              <span className="font-medium text-white/80">Top 3 Produtos Mais Vendidos</span>
+            </div>
+            <div className="flex flex-col gap-3 mt-2 relative z-10">
+              {topProductsBySales.map((item, idx) => (
+                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-4 py-2 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      idx === 0 ? 'bg-amber-400 text-black' :
+                      idx === 1 ? 'bg-slate-300 text-black' :
+                      'bg-amber-700 text-white'
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <span className="text-white font-medium text-sm">{item.product.name}</span>
+                  </div>
+                  <span className="text-emerald-400 font-bold text-sm">{item.qty} un.</span>
+                </div>
+              ))}
+              {topProductsBySales.length === 0 && (
+                <p className="text-white/40 text-sm py-2">Nenhuma venda registrada ainda.</p>
+              )}
+            </div>
+          </div>
+        </FadeIn>
+
+        {/* Maior Margem de Lucro */}
+        <FadeIn delay="500">
+          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Percent size={64} className="text-violet-500" />
+            </div>
+            <div className="flex items-center gap-2 text-white/60 relative z-10">
+              <Percent size={20} className="text-violet-400" />
+              <span className="font-medium text-white/80">Top 3 Maior Margem de Lucro</span>
+            </div>
+            <div className="flex flex-col gap-3 mt-2 relative z-10">
+              {topProductsByMargin.map((item, idx) => (
+                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-4 py-2 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      idx === 0 ? 'bg-amber-400 text-black' :
+                      idx === 1 ? 'bg-slate-300 text-black' :
+                      'bg-amber-700 text-white'
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <span className="text-white font-medium text-sm">{item.product.name}</span>
+                  </div>
+                  <span className="text-violet-400 font-bold text-sm">{item.margin.toFixed(0)}%</span>
+                </div>
+              ))}
+              {topProductsByMargin.length === 0 && (
+                <p className="text-white/40 text-sm py-2">Nenhum produto cadastrado.</p>
+              )}
+            </div>
+          </div>
         </FadeIn>
       </div>
 
