@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type PaymentMethod } from '../store/useMarketStore';
-import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X } from 'lucide-react';
+import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, ClipboardList, Search } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
 
@@ -35,6 +35,40 @@ export const DashboardView: React.FC = () => {
       return matchRe || matchName;
     });
   }, [sales, searchFilter, customers]);
+
+  const [auditSearch, setAuditSearch] = useState('');
+
+  const yesterdaySales = useMemo(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 1);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setDate(end.getDate() - 1);
+    end.setHours(23, 59, 59, 999);
+
+    return sales.filter(sale => {
+      const d = new Date(sale.created_at);
+      return d >= start && d <= end && sale.status !== 'cancelled';
+    });
+  }, [sales]);
+
+  const yesterdayProductConsumption = useMemo(() => {
+    const consumptionMap: Record<string, number> = {};
+    yesterdaySales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.product?.id) {
+          consumptionMap[item.product.id] = (consumptionMap[item.product.id] || 0) + item.quantity;
+        }
+      });
+    });
+    return consumptionMap;
+  }, [yesterdaySales]);
+
+  const filteredAuditProducts = useMemo(() => {
+    const lower = auditSearch.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(lower));
+  }, [products, auditSearch]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -265,6 +299,84 @@ export const DashboardView: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Conferência Diária de Estoque */}
+      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-white font-jakarta flex items-center gap-2">
+              <ClipboardList className="text-violet-400" />
+              Conferência Diária de Estoque
+            </h2>
+            <p className="text-sm text-white/60">Auditoria física matutina do mercado baseada nas vendas de ontem</p>
+          </div>
+          <div className="relative w-full md:w-80">
+            <input 
+              type="text" 
+              placeholder="Buscar produto por nome..." 
+              value={auditSearch}
+              onChange={e => setAuditSearch(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 w-full text-sm"
+            />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas Ontem</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Esperado</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Máximo / Inicial</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAuditProducts.map(p => {
+                const salesYesterday = yesterdayProductConsumption[p.id] || 0;
+                const maxStock = p.stock + salesYesterday;
+                return (
+                  <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium">{p.name}</span>
+                        {p.code && (
+                          <span className="text-xs text-white/40 font-mono mt-0.5">
+                            Cód: {p.code}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-center font-bold text-white text-base">
+                      {salesYesterday > 0 ? (
+                        <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-sm">
+                          {salesYesterday} un.
+                        </span>
+                      ) : (
+                        <span className="text-white/40 text-sm">0 un.</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center font-bold text-emerald-400 text-lg">
+                      {p.stock} un.
+                    </td>
+                    <td className="p-4 text-center text-white/80 font-semibold">
+                      {maxStock} un.
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredAuditProducts.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-white/50">
+                    Nenhum produto encontrado para conferência.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
