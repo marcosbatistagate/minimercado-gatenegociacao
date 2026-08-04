@@ -502,7 +502,7 @@ export const ClientTotemView: React.FC = () => {
                   <span className="text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
-                  <span className="text-xs text-white/60 font-medium">Total Mensal</span>
+                  <span className="text-xs text-white/60 font-medium">Total do Mês</span>
                   <span className="text-lg font-bold text-slate-300">{formatCurrency(userMetrics.totalMonth)}</span>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
