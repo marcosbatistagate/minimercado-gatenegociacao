@@ -90,14 +90,29 @@ export const DashboardView: React.FC = () => {
   }, [filteredSales, products]);
 
   const topProductsByMargin = useMemo(() => {
-    return [...products]
+    const soldProductIds = new Set<string>();
+    filteredSales.forEach(sale => {
+      if (sale.status !== 'cancelled') {
+        sale.items.forEach(item => {
+          if (item.product?.id) {
+            soldProductIds.add(item.product.id);
+          }
+        });
+      }
+    });
+
+    const targetProducts = searchFilter 
+      ? products.filter(p => soldProductIds.has(p.id))
+      : products;
+
+    return [...targetProducts]
       .map(p => {
         const margin = p.cost_price > 0 ? ((p.price - p.cost_price) / p.cost_price) * 100 : 0;
         return { product: p, margin };
       })
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 3);
-  }, [products]);
+  }, [products, filteredSales, searchFilter]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
