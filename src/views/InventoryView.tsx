@@ -185,6 +185,8 @@ export const InventoryView: React.FC = () => {
               <th className="p-4 text-left font-medium text-white/60">Lucro Un.</th>
               <th className="p-4 text-left font-medium text-white/60">Estoque</th>
               <th className="p-4 text-left font-medium text-white/60">Qtd. Vendida</th>
+              <th className="p-4 text-left font-medium text-white/60">Qtd. Paga</th>
+              <th className="p-4 text-left font-medium text-white/60">Qtd. a Receber</th>
               <th className="p-4 text-left font-medium text-white/60">Ações</th>
             </tr>
           </thead>
@@ -193,10 +195,27 @@ export const InventoryView: React.FC = () => {
               const margin = calculateMargin(product.price, product.cost_price);
               const profit = product.price - product.cost_price;
               const qtySold = sales.reduce((sum, sale) => {
+                if (sale.status === 'cancelled') return sum;
                 const item = sale.items.find(i => i.product.id === product.id);
                 return sum + (item ? item.quantity : 0);
               }, 0);
 
+              const qtyPaid = sales.reduce((sum, sale) => {
+                if (sale.payment_status === 'PAID' && sale.status !== 'cancelled') {
+                  const item = sale.items.find(i => i.product.id === product.id);
+                  return sum + (item ? item.quantity : 0);
+                }
+                return sum;
+              }, 0);
+
+              const qtyPending = sales.reduce((sum, sale) => {
+                if (sale.payment_status === 'PENDING' && sale.status !== 'cancelled') {
+                  const item = sale.items.find(i => i.product.id === product.id);
+                  return sum + (item ? item.quantity : 0);
+                }
+                return sum;
+              }, 0);
+ 
               return (
                 <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 text-white/80">{product.code}</td>
@@ -212,6 +231,8 @@ export const InventoryView: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-4 text-white/80 text-center font-medium">{qtySold}</td>
+                  <td className="p-4 text-emerald-400 text-center font-medium">{qtyPaid}</td>
+                  <td className="p-4 text-rose-400 text-center font-medium">{qtyPending}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button onClick={() => handleOpenModal(product)} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
@@ -227,7 +248,7 @@ export const InventoryView: React.FC = () => {
             })}
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-white/50">
+                <td colSpan={12} className="p-8 text-center text-white/50">
                   Nenhum produto encontrado.
                 </td>
               </tr>
