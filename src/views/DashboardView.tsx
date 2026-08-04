@@ -495,12 +495,12 @@ export const DashboardView: React.FC = () => {
 
       {/* Debits management section */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
-        <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Clientes com Contas Pendentes)</h2>
+        <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="p-4 text-white/60 font-medium text-sm">Cliente</th>
+                <th className="p-4 text-white/60 font-medium text-sm">Policial</th>
                 <th className="p-4 text-white/60 font-medium text-sm">RE</th>
                 <th className="p-4 text-white/60 font-medium text-sm text-right">Total Devido</th>
                 <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
@@ -536,7 +536,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Clientes e Redefinição de Senhas */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
-        <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Clientes e Senhas</h2>
+        <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
