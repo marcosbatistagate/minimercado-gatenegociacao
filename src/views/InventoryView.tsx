@@ -183,10 +183,10 @@ export const InventoryView: React.FC = () => {
               <th className="p-4 text-left font-medium text-white/60">Pr. Venda</th>
               <th className="p-4 text-left font-medium text-white/60">Margem (%)</th>
               <th className="p-4 text-left font-medium text-white/60">Lucro Un.</th>
-              <th className="p-4 text-left font-medium text-white/60">Estoque</th>
               <th className="p-4 text-left font-medium text-white/60">Qtd. Vendida</th>
               <th className="p-4 text-left font-medium text-white/60">Qtd. Paga</th>
               <th className="p-4 text-left font-medium text-white/60">Qtd. a Receber</th>
+              <th className="p-4 text-left font-medium text-white/60">Estoque</th>
               <th className="p-4 text-left font-medium text-white/60">Ações</th>
             </tr>
           </thead>
@@ -225,14 +225,14 @@ export const InventoryView: React.FC = () => {
                   <td className="p-4 text-white/80">R$ {product.price.toFixed(2)}</td>
                   <td className="p-4 text-white/80">{margin.toFixed(2)}%</td>
                   <td className="p-4 text-emerald-400/90 font-medium">R$ {profit.toFixed(2)}</td>
+                  <td className="p-4 text-white/80 text-center font-medium">{qtySold}</td>
+                  <td className="p-4 text-emerald-400 text-center font-medium">{qtyPaid}</td>
+                  <td className="p-4 text-rose-400 text-center font-medium">{qtyPending}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getStockBadgeClass(product.stock, product.min_stock)}`}>
                       {product.stock}
                     </span>
                   </td>
-                  <td className="p-4 text-white/80 text-center font-medium">{qtySold}</td>
-                  <td className="p-4 text-emerald-400 text-center font-medium">{qtyPaid}</td>
-                  <td className="p-4 text-rose-400 text-center font-medium">{qtyPending}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button onClick={() => handleOpenModal(product)} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
