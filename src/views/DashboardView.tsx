@@ -216,7 +216,7 @@ export const DashboardView: React.FC = () => {
       </div>
       
       {/* KPIs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Preço de Venda (Faturamento) */}
         <FadeIn delay="100">
           <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
@@ -414,7 +414,7 @@ export const DashboardView: React.FC = () => {
           <div className="p-6 border-b border-white/10">
             <h2 className="text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
           </div>
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 -mx-4 sm:mx-0">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-white/10">
@@ -470,7 +470,7 @@ export const DashboardView: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
-              <p className="text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos top 10 produtos</p>
+              <p className="text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos produtos</p>
             </div>
             <div className="flex items-center gap-4">
               {/* Legenda do Gráfico */}
@@ -673,7 +673,7 @@ export const DashboardView: React.FC = () => {
       {/* Debits management section */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
         <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-white/10">
@@ -719,7 +719,7 @@ export const DashboardView: React.FC = () => {
           </h2>
           <p className="text-sm text-white/60">Histórico de conflitos identificados na conferência diária de estoque</p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-white/10">
@@ -760,7 +760,7 @@ export const DashboardView: React.FC = () => {
       {/* Clientes e Redefinição de Senhas */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
         <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-white/10">
@@ -824,7 +824,7 @@ export const DashboardView: React.FC = () => {
       {/* Sale Items Modal */}
       {selectedSale && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div>
                 <h2 className="text-xl font-bold text-white font-jakarta">

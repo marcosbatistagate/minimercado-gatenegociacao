@@ -174,7 +174,7 @@ export const AuditView: React.FC = () => {
 
       <FadeIn delay="200">
         <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">

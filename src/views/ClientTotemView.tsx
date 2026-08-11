@@ -219,7 +219,7 @@ export const ClientTotemView: React.FC = () => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          <div className="glass-effect bg-slate-900/50 backdrop-blur-md border border-white/20 rounded-3xl p-8 max-w-md w-full flex flex-col gap-6 shadow-2xl">
+          <div className="glass-effect bg-slate-900/50 backdrop-blur-md border border-white/20 rounded-3xl p-6 sm:p-8 w-11/12 max-w-md flex flex-col gap-6 shadow-2xl">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
               <p className="text-white/80">Identifique-se para começar suas compras</p>
@@ -304,7 +304,7 @@ export const ClientTotemView: React.FC = () => {
         {/* Register Modal */}
         {showRegisterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 gap-6">
+            <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso / Configurar Senha</h2>
                 <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white">
@@ -363,29 +363,29 @@ export const ClientTotemView: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-900">
+    <div className="flex flex-col min-h-screen bg-slate-900 pb-20 sm:pb-0">
       {/* Header */}
-      <header className="glass-effect bg-white/5 border-b border-white/10 px-8 py-4 flex justify-between items-center">
+      <header className="glass-effect bg-white/5 border-b border-white/10 px-4 py-3 md:px-8 md:py-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white font-jakarta">Olá, {currentCustomer.name}</h1>
-          <p className="text-white/60">RE: {currentCustomer.re}</p>
+          <h1 className="text-xl md:text-2xl font-bold text-white font-jakarta">Olá, {currentCustomer.name}</h1>
+          <p className="text-sm text-white/60">RE: {currentCustomer.re}</p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           <button
             onClick={() => setShowHistoryModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl text-white/80 hover:text-white transition-all duration-300"
+            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl text-white/80 hover:text-white transition-all duration-300 text-xs md:text-sm"
           >
-            <History size={18} />
+            <History size={16} />
             <span>Extrato / Histórico</span>
           </button>
-          <div className="text-right">
-            <p className="text-white/60 text-sm">Total Comprado (Mês)</p>
-            <p className="text-xl font-bold text-emerald-400">{formatCurrency(userMetrics.totalMonth)}</p>
+          <div className="text-right shrink-0">
+            <p className="text-white/60 text-[10px] md:text-sm">Total Comprado (Mês)</p>
+            <p className="text-base md:text-xl font-bold text-emerald-400">{formatCurrency(userMetrics.totalMonth)}</p>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-auto lg:overflow-hidden">
         {/* Left Column - Scanning and Cart */}
         <div className="flex-1 flex flex-col gap-4 overflow-hidden">
           <form onSubmit={handleBarcodeSubmit} className="relative">
@@ -478,8 +478,8 @@ export const ClientTotemView: React.FC = () => {
       {/* History and Dashboard Modal */}
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
               <div>
                 <h2 className="text-xl font-bold text-white font-jakarta">
                   Extrato e Histórico de Compras
@@ -515,7 +515,7 @@ export const ClientTotemView: React.FC = () => {
               {/* History Table */}
               <div className="flex flex-col gap-3">
                 <h3 className="font-bold text-white text-lg">Produtos Adquiridos</h3>
-                <div className="overflow-x-auto border border-white/10 rounded-xl">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 border border-white/10 rounded-xl">
                   <table className="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                       <tr className="border-b border-white/10 bg-white/5 text-xs text-white/60 font-semibold uppercase">

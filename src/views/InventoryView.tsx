@@ -208,7 +208,7 @@ export const InventoryView: React.FC = () => {
       </div>
 
       <FadeIn delay="100" className="flex-1 min-h-0 flex flex-col w-full">
-        <div className="flex-1 overflow-auto glass-effect bg-white/5 border border-white/10 rounded-2xl">
+        <div className="flex-1 overflow-auto -mx-4 sm:mx-0 glass-effect bg-white/5 border border-white/10 rounded-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/10">
@@ -296,7 +296,7 @@ export const InventoryView: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-xl font-bold text-white font-jakarta">
                 {editingProduct ? 'Editar Produto' : 'Novo Produto'}
