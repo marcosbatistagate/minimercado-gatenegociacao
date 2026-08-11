@@ -21,7 +21,7 @@ const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> =
 };
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers, settleDebts } = useMarketStore();
+  const { sales, products, customers, settleDebts, stockAudits } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
 
@@ -414,6 +414,52 @@ export const DashboardView: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-white/50">
                     Nenhum débito pendente.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Divergências de Estoque Registradas */}
+      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+        <div>
+          <h2 className="text-xl font-bold text-white font-jakarta flex items-center gap-2">
+            Divergências de Estoque Registradas
+          </h2>
+          <p className="text-sm text-white/60">Histórico de conflitos identificados na conferência diária de estoque</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="p-4 text-white/60 font-medium text-sm">Data do Registro</th>
+                <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Esperado</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Real</th>
+                <th className="p-4 text-white/60 font-medium text-sm text-center">Diferença</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stockAudits.map(audit => {
+                const diff = audit.real_stock - audit.expected_stock;
+                const diffText = diff > 0 ? `+${diff}` : diff;
+                const diffClass = diff > 0 ? 'text-emerald-400' : 'text-rose-400';
+                return (
+                  <tr key={audit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-white/80">{formatDate(audit.created_at)}</td>
+                    <td className="p-4 text-white font-medium">{audit.product_name}</td>
+                    <td className="p-4 text-center text-white/80">{audit.expected_stock} un.</td>
+                    <td className="p-4 text-center text-white font-bold">{audit.real_stock} un.</td>
+                    <td className={`p-4 text-center font-bold ${diffClass}`}>{diffText} un.</td>
+                  </tr>
+                );
+              })}
+              {stockAudits.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-white/50">
+                    Nenhuma divergência de estoque registrada até o momento.
                   </td>
                 </tr>
               )}

@@ -44,6 +44,7 @@ interface MarketState {
   customers: UserCustomer[];
   dbCategories: {id: string, name: string}[];
   activeInstance: 'client' | 'admin';
+  stockAudits: { id: string, created_at: string, product_id?: string, product_name: string, real_stock: number, expected_stock: number }[];
   initData: () => Promise<void>;
   addToCartByCode: (codeOrName: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
@@ -62,6 +63,7 @@ interface MarketState {
   completePixSale: () => Promise<void>;
   completeDebitSale: () => Promise<void>;
   settleDebts: (customerRe: string) => Promise<void>;
+  addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -74,21 +76,24 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   customers: [],
   dbCategories: [],
   activeInstance: 'client',
+  stockAudits: [],
 
   initData: async () => {
     try {
-      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales] = await Promise.all([
+      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales, fetchedAudits] = await Promise.all([
         supabaseService.fetchProducts(),
         supabaseService.fetchCustomers(),
         supabaseService.fetchCategories(),
-        supabaseService.fetchSales()
+        supabaseService.fetchSales(),
+        supabaseService.fetchStockAudits()
       ]);
       
       set({ 
         products: fetchedProducts, 
         customers: fetchedCustomers,
         dbCategories: fetchedCategories,
-        sales: fetchedSales
+        sales: fetchedSales,
+        stockAudits: fetchedAudits
       });
 
       // Setup Realtime for products
@@ -375,6 +380,19 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       alert('Débitos quitados com sucesso!');
     } else {
       alert('Erro ao quitar débitos.');
+    }
+  },
+
+  addStockAudit: async (productId, productName, expectedStock, realStock) => {
+    try {
+      const saved = await supabaseService.createStockAudit(productId, productName, expectedStock, realStock);
+      if (saved) {
+        set(state => ({
+          stockAudits: [saved, ...state.stockAudits]
+        }));
+      }
+    } catch (err) {
+      console.error('Error saving stock audit:', err);
     }
   }
 }));

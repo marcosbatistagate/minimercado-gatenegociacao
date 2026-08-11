@@ -304,5 +304,52 @@ export const supabaseService = {
       return false;
     }
     return true;
+  },
+
+  async fetchStockAudits(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('stock_audits')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (err: any) {
+      console.warn('Supabase fetchStockAudits failed or table does not exist. Using localStorage fallback.', err);
+      const local = localStorage.getItem('local_stock_audits');
+      return local ? JSON.parse(local) : [];
+    }
+  },
+
+  async createStockAudit(product_id: string, product_name: string, expected_stock: number, real_stock: number): Promise<any | null> {
+    const payload = {
+      product_id: product_id || null,
+      product_name,
+      expected_stock,
+      real_stock,
+      created_at: new Date().toISOString()
+    };
+    try {
+      const { data, error } = await supabase
+        .from('stock_audits')
+        .insert(payload)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      console.warn('Supabase createStockAudit failed or table does not exist. Saving to localStorage fallback.', err);
+      const local = localStorage.getItem('local_stock_audits');
+      const audits = local ? JSON.parse(local) : [];
+      const newAudit = {
+        id: Math.random().toString(36).substring(2, 9),
+        ...payload
+      };
+      audits.unshift(newAudit);
+      localStorage.setItem('local_stock_audits', JSON.stringify(audits));
+      return newAudit;
+    }
   }
 };
