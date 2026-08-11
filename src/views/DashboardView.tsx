@@ -81,11 +81,11 @@ export const DashboardView: React.FC = () => {
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
   }, [activeSales, products, chartPeriod]);
 
-  const chartHeight = 350;
-  const paddingLeft = 30;
-  const paddingBottom = 80;
+  const chartHeight = 380;
+  const paddingLeft = 75;
+  const paddingBottom = 110;
   const paddingTop = 20;
-  const paddingRight = 30;
+  const paddingRight = 60;
   const svgWidth = 700;
   
   const chartContentWidth = svgWidth - paddingLeft - paddingRight;
@@ -473,7 +473,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
-        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6 flex flex-col gap-4 relative">
+        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-4 flex flex-col gap-4 relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
@@ -544,7 +544,7 @@ export const DashboardView: React.FC = () => {
                       x={paddingLeft - 10} 
                       y={y + 4} 
                       textAnchor="end" 
-                      className="fill-white/40 text-[12px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[13px] font-mono font-medium"
                     >
                       {formatCurrency(tick).replace(',00', '')}
                     </text>
@@ -561,7 +561,7 @@ export const DashboardView: React.FC = () => {
                       x={svgWidth - paddingRight + 10} 
                       y={y + 4} 
                       textAnchor="start" 
-                      className="fill-white/40 text-[12px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[13px] font-mono font-medium"
                     >
                       {Math.round(tick)} un
                     </text>
@@ -639,10 +639,10 @@ export const DashboardView: React.FC = () => {
                     {/* Product Name Label */}
                     <text
                       x={midX - 4}
-                      y={chartHeight - paddingBottom + 12}
+                      y={chartHeight - paddingBottom + 16}
                       textAnchor="end"
-                      transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 12})`}
-                      className="fill-[#94a3b8] text-[13px] font-sans group-hover:fill-white font-medium transition-colors"
+                      transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 16})`}
+                      className="fill-[#94a3b8] text-[16px] font-sans group-hover:fill-white font-medium transition-colors"
                     >
                       {d.name.length > 18 ? d.name.substring(0, 15) + '...' : d.name}
                     </text>
