@@ -9,7 +9,7 @@ import { ClientTotemView } from './views/ClientTotemView';
 import { useMarketStore } from './store/useMarketStore';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('audit');
   const { activeInstance, initData } = useMarketStore();
 
   useEffect(() => {
