@@ -82,10 +82,10 @@ export const DashboardView: React.FC = () => {
   }, [activeSales, products, chartPeriod]);
 
   const chartHeight = 380;
-  const paddingLeft = 75;
+  const paddingLeft = 115;
   const paddingBottom = 110;
   const paddingTop = 20;
-  const paddingRight = 60;
+  const paddingRight = 95;
   const svgWidth = 700;
   
   const chartContentWidth = svgWidth - paddingLeft - paddingRight;
@@ -544,7 +544,7 @@ export const DashboardView: React.FC = () => {
                       x={paddingLeft - 10} 
                       y={y + 4} 
                       textAnchor="end" 
-                      className="fill-[#94a3b8] text-[13px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[16px] font-mono font-medium"
                     >
                       {formatCurrency(tick).replace(',00', '')}
                     </text>
@@ -561,7 +561,7 @@ export const DashboardView: React.FC = () => {
                       x={svgWidth - paddingRight + 10} 
                       y={y + 4} 
                       textAnchor="start" 
-                      className="fill-[#94a3b8] text-[13px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[16px] font-mono font-medium"
                     >
                       {Math.round(tick)} un
                     </text>
