@@ -81,11 +81,11 @@ export const DashboardView: React.FC = () => {
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
   }, [activeSales, products, chartPeriod]);
 
-  const chartHeight = 300;
-  const paddingLeft = 50;
+  const chartHeight = 350;
+  const paddingLeft = 30;
   const paddingBottom = 80;
   const paddingTop = 20;
-  const paddingRight = 45;
+  const paddingRight = 30;
   const svgWidth = 700;
   
   const chartContentWidth = svgWidth - paddingLeft - paddingRight;
@@ -94,11 +94,11 @@ export const DashboardView: React.FC = () => {
   }, [chartData.length, chartContentWidth]);
 
   const barWidth = useMemo(() => {
-    return Math.max(6, step * 0.32);
+    return Math.max(6, step * 0.44);
   }, [step]);
 
   const innerGap = useMemo(() => {
-    return Math.max(1, step * 0.06);
+    return Math.max(1, step * 0.08);
   }, [step]);
 
   const maxAmount = useMemo(() => {
@@ -503,12 +503,12 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full overflow-hidden pb-2">
+          <div className="w-full min-w-full flex-1 min-h-[350px] p-0 m-0 overflow-hidden">
             <svg 
-              viewBox={`0 0 ${Math.max(svgWidth, 700)} ${chartHeight}`}
+              viewBox={`0 0 ${svgWidth} ${chartHeight}`}
               width="100%"
-              height={chartHeight}
-              className="w-full"
+              height="100%"
+              className="w-full h-full"
             >
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
