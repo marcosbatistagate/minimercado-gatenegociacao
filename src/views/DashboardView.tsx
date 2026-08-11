@@ -82,16 +82,24 @@ export const DashboardView: React.FC = () => {
   }, [activeSales, products, chartPeriod]);
 
   const chartHeight = 300;
-  const paddingLeft = 60;
-  const paddingBottom = 90;
+  const paddingLeft = 50;
+  const paddingBottom = 80;
   const paddingTop = 20;
-  const paddingRight = 60;
+  const paddingRight = 45;
+  const svgWidth = 700;
   
-  // Sizing for side-by-side bars
-  const barWidth = 14;
-  const innerGap = 4;
-  const groupGap = 24;
-  const step = (barWidth * 2) + innerGap + groupGap;
+  const chartContentWidth = svgWidth - paddingLeft - paddingRight;
+  const step = useMemo(() => {
+    return chartData.length > 0 ? chartContentWidth / chartData.length : 60;
+  }, [chartData.length, chartContentWidth]);
+
+  const barWidth = useMemo(() => {
+    return Math.max(6, step * 0.32);
+  }, [step]);
+
+  const innerGap = useMemo(() => {
+    return Math.max(1, step * 0.06);
+  }, [step]);
 
   const maxAmount = useMemo(() => {
     const max = Math.max(...chartData.map(d => d.amount), 0);
@@ -103,7 +111,6 @@ export const DashboardView: React.FC = () => {
     return max === 0 ? 10 : max * 1.1;
   }, [chartData]);
 
-  const svgWidth = paddingLeft + paddingRight + chartData.length * step;
   const yTicks = 4;
   const yAxisTicksAmount = Array.from({ length: yTicks }, (_, i) => (maxAmount / (yTicks - 1)) * i);
   const yAxisTicksQuantity = Array.from({ length: yTicks }, (_, i) => (maxQuantity / (yTicks - 1)) * i);
@@ -466,7 +473,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
-        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 relative">
+        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6 flex flex-col gap-4 relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
@@ -528,7 +535,7 @@ export const DashboardView: React.FC = () => {
                     <line 
                       x1={paddingLeft} 
                       y1={y} 
-                      x2={Math.max(svgWidth, 700) - paddingRight} 
+                      x2={svgWidth - paddingRight} 
                       y2={y} 
                       className="stroke-white/5" 
                       strokeDasharray="4 4" 
@@ -537,7 +544,7 @@ export const DashboardView: React.FC = () => {
                       x={paddingLeft - 10} 
                       y={y + 4} 
                       textAnchor="end" 
-                      className="fill-white/40 text-[10px] font-mono"
+                      className="fill-white/40 text-[12px] font-mono font-medium"
                     >
                       {formatCurrency(tick).replace(',00', '')}
                     </text>
@@ -551,10 +558,10 @@ export const DashboardView: React.FC = () => {
                 return (
                   <g key={`qty-axis-${idx}`}>
                     <text 
-                      x={Math.max(svgWidth, 700) - paddingRight + 10} 
+                      x={svgWidth - paddingRight + 10} 
                       y={y + 4} 
                       textAnchor="start" 
-                      className="fill-white/40 text-[10px] font-mono"
+                      className="fill-white/40 text-[12px] font-mono font-medium"
                     >
                       {Math.round(tick)} un
                     </text>
@@ -565,8 +572,9 @@ export const DashboardView: React.FC = () => {
               {/* Double Bars per Product */}
               {chartData.map((d, idx) => {
                 const xGroup = paddingLeft + (idx * step);
-                const xRevenue = xGroup;
-                const xQuantity = xGroup + barWidth + innerGap;
+                const groupWidth = (barWidth * 2) + innerGap;
+                const xRevenue = xGroup + (step - groupWidth) / 2;
+                const xQuantity = xRevenue + barWidth + innerGap;
 
                 const revenueHeight = (d.amount / maxAmount) * (chartHeight - paddingBottom - paddingTop);
                 const quantityHeight = (d.quantity / maxQuantity) * (chartHeight - paddingBottom - paddingTop);
@@ -574,7 +582,7 @@ export const DashboardView: React.FC = () => {
                 const yRevenue = chartHeight - paddingBottom - revenueHeight;
                 const yQuantity = chartHeight - paddingBottom - quantityHeight;
 
-                const midX = xGroup + (barWidth * 2 + innerGap) / 2;
+                const midX = xRevenue + barWidth + innerGap / 2;
 
                 return (
                   <g key={d.id} className="group">
@@ -634,9 +642,9 @@ export const DashboardView: React.FC = () => {
                       y={chartHeight - paddingBottom + 12}
                       textAnchor="end"
                       transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 12})`}
-                      className="fill-white/40 text-[9px] font-sans group-hover:fill-white font-medium transition-colors"
+                      className="fill-[#94a3b8] text-[13px] font-sans group-hover:fill-white font-medium transition-colors"
                     >
-                      {d.name.length > 20 ? d.name.substring(0, 17) + '...' : d.name}
+                      {d.name.length > 18 ? d.name.substring(0, 15) + '...' : d.name}
                     </text>
                   </g>
                 );
