@@ -4,6 +4,7 @@ import type { TabType } from './components/layout/Sidebar';
 
 import { InventoryView } from './views/InventoryView';
 import { DashboardView } from './views/DashboardView';
+import { AuditView } from './views/AuditView';
 import { ClientTotemView } from './views/ClientTotemView';
 import { useMarketStore } from './store/useMarketStore';
 
@@ -24,6 +25,7 @@ function App() {
 
       {activeTab === 'inventory' && <InventoryView />}
       {activeTab === 'dashboard' && <DashboardView />}
+      {activeTab === 'audit' && <AuditView />}
     </MainLayout>
   );
 }
