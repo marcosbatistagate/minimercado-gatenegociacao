@@ -392,7 +392,7 @@ export const DashboardView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Methods Panel */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6 col-span-1 lg:col-span-1">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
           <h2 className="text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
           <div className="flex flex-col gap-4">
             {(Object.entries(paymentMethodLabels) as [NonNullable<PaymentMethod>, string][]).map(([key, label]) => {
@@ -417,7 +417,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Recent Sales History */}
-        <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl overflow-hidden col-span-1 lg:col-span-2 flex flex-col">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden col-span-1 lg:col-span-2 flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
           <div className="p-6 border-b border-white/10">
             <h2 className="text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
           </div>
@@ -473,7 +473,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
-        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-4 flex flex-col gap-4 relative">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col gap-4 relative shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
@@ -641,7 +641,7 @@ export const DashboardView: React.FC = () => {
                       y={chartHeight - paddingBottom + 12}
                       textAnchor="end"
                       transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 12})`}
-                      className="fill-[#94a3b8] text-[10px] font-sans group-hover:fill-white font-medium transition-colors"
+                      className="fill-[#94a3b8] text-[8px] font-sans group-hover:fill-white font-medium transition-colors"
                     >
                       {d.name.length > 18 ? d.name.substring(0, 15) + '...' : d.name}
                     </text>
@@ -679,7 +679,7 @@ export const DashboardView: React.FC = () => {
       </FadeIn>
 
       {/* Debits management section */}
-      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
         <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
         <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[600px]">
@@ -720,7 +720,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Divergências de Estoque Registradas */}
-      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
         <div>
           <h2 className="text-xl font-bold text-white font-jakarta flex items-center gap-2">
             Divergências de Estoque Registradas
@@ -766,7 +766,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Clientes e Redefinição de Senhas */}
-      <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
         <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
         <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[600px]">

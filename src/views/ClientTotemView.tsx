@@ -219,7 +219,7 @@ export const ClientTotemView: React.FC = () => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          <div className="glass-effect bg-slate-900/50 backdrop-blur-md border border-white/20 rounded-3xl p-6 sm:p-8 w-11/12 max-w-md flex flex-col gap-6 shadow-2xl">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 w-11/12 max-w-md flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
               <p className="text-white/80">Identifique-se para começar suas compras</p>
@@ -304,7 +304,7 @@ export const ClientTotemView: React.FC = () => {
         {/* Register Modal */}
         {showRegisterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6">
+            <div className="glass-effect bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6 shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso / Configurar Senha</h2>
                 <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white">
@@ -400,7 +400,7 @@ export const ClientTotemView: React.FC = () => {
             />
           </form>
 
-          <div className="flex-1 glass-effect bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex flex-col">
+          <div className="flex-1 glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <div className="p-4 border-b border-white/10">
               <h2 className="font-bold text-white/80">Carrinho de Compras</h2>
             </div>
@@ -433,14 +433,14 @@ export const ClientTotemView: React.FC = () => {
 
         {/* Right Column - Totals and PIX */}
         <div className="w-full lg:w-96 flex flex-col gap-4">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-2">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <span className="text-white/60 font-medium">Total da Compra</span>
             <span className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400 py-2">
               {formatCurrency(totalCart)}
             </span>
           </div>
 
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-6 flex-1 justify-center">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-6 flex-1 justify-center shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <div className="text-center space-y-1">
               <h3 className="font-bold text-white text-lg">Pague com PIX</h3>
               <p className="text-white/60 text-sm">Escaneie o QR barcode abaixo</p>

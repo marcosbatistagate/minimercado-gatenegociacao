@@ -208,7 +208,7 @@ export const InventoryView: React.FC = () => {
       </div>
 
       <FadeIn delay="100" className="flex-1 min-h-0 flex flex-col w-full">
-        <div className="flex-1 overflow-auto -mx-4 sm:mx-0 glass-effect bg-white/5 border border-white/10 rounded-2xl">
+        <div className="flex-1 overflow-auto -mx-4 sm:mx-0 glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/10">
@@ -296,7 +296,7 @@ export const InventoryView: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="glass-effect bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300">
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-xl font-bold text-white font-jakarta">
                 {editingProduct ? 'Editar Produto' : 'Novo Produto'}
