@@ -4,7 +4,7 @@ import { ClipboardCheck, Search, RefreshCw, CheckCircle2, AlertTriangle, Save } 
 import { FadeIn } from '../components/ui/FadeIn';
 
 export const AuditView: React.FC = () => {
-  const { sales, products, initData, addStockAudit } = useMarketStore();
+  const { sales, products, initData, addStockAudit, currentCycleStart } = useMarketStore();
   const [auditSearch, setAuditSearch] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -31,11 +31,13 @@ export const AuditView: React.FC = () => {
     end.setDate(end.getDate() - 1);
     end.setHours(23, 59, 59, 999);
 
+    const cycleStart = new Date(currentCycleStart);
+
     return sales.filter(sale => {
       const d = new Date(sale.created_at);
-      return d >= start && d <= end && sale.status !== 'cancelled';
+      return d >= start && d <= end && sale.status !== 'cancelled' && d >= cycleStart;
     });
-  }, [sales]);
+  }, [sales, currentCycleStart]);
 
   const yesterdayProductConsumption = useMemo(() => {
     const consumptionMap: Record<string, number> = {};

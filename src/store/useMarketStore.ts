@@ -45,6 +45,8 @@ interface MarketState {
   dbCategories: {id: string, name: string}[];
   activeInstance: 'client' | 'admin';
   stockAudits: { id: string, created_at: string, product_id?: string, product_name: string, real_stock: number, expected_stock: number }[];
+  currentCycleStart: string;
+  lastStockUpdate: string;
   initData: () => Promise<void>;
   addToCartByCode: (codeOrName: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
@@ -64,6 +66,8 @@ interface MarketState {
   completeDebitSale: () => Promise<void>;
   settleDebts: (customerRe: string) => Promise<void>;
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
+  startNewMonth: () => void;
+  updateStockTimestamp: () => void;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -77,6 +81,19 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   dbCategories: [],
   activeInstance: 'client',
   stockAudits: [],
+  currentCycleStart: localStorage.getItem('current_cycle_start') || (() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    const iso = d.toISOString();
+    localStorage.setItem('current_cycle_start', iso);
+    return iso;
+  })(),
+  lastStockUpdate: localStorage.getItem('last_stock_update') || (() => {
+    const iso = new Date().toISOString();
+    localStorage.setItem('last_stock_update', iso);
+    return iso;
+  })(),
 
   initData: async () => {
     try {
@@ -103,6 +120,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
           // Quando houver mudança na tabela products, buscamos novamente para atualizar o estado
           const updatedProducts = await supabaseService.fetchProducts();
           set({ products: updatedProducts });
+          get().updateStockTimestamp();
         })
         .subscribe();
         
@@ -217,6 +235,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       if (saved) {
         const state = get();
         set({ products: [...state.products, saved] });
+        get().updateStockTimestamp();
       }
     } catch (err) {
       throw err;
@@ -234,6 +253,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
           set({
             products: state.products.map(p => p.id === id ? saved : p)
           });
+          get().updateStockTimestamp();
         }
       }
     } catch (err) {
@@ -247,6 +267,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       set(state => ({
         products: state.products.filter(p => p.id !== id)
       }));
+      get().updateStockTimestamp();
     }
   },
 
@@ -394,5 +415,21 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     } catch (err) {
       console.error('Error saving stock audit:', err);
     }
+  },
+
+  startNewMonth: () => {
+    const nowIso = new Date().toISOString();
+    localStorage.setItem('current_cycle_start', nowIso);
+    localStorage.setItem('last_stock_update', nowIso);
+    set({
+      currentCycleStart: nowIso,
+      lastStockUpdate: nowIso
+    });
+  },
+
+  updateStockTimestamp: () => {
+    const nowIso = new Date().toISOString();
+    localStorage.setItem('last_stock_update', nowIso);
+    set({ lastStockUpdate: nowIso });
   }
 }));

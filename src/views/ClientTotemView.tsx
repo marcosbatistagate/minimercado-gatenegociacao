@@ -8,7 +8,7 @@ const formatCurrency = (value: number) => {
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -34,7 +34,8 @@ export const ClientTotemView: React.FC = () => {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const userSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status === 'completed');
+    const cycleStart = new Date(currentCycleStart);
+    const userSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status === 'completed' && new Date(s.created_at) >= cycleStart);
 
     let totalPaid = 0;
     let totalDebt = 0;

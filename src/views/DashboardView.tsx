@@ -21,9 +21,14 @@ const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> =
 };
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers, settleDebts, stockAudits } = useMarketStore();
+  const { sales, products, customers, settleDebts, stockAudits, currentCycleStart } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
+
+  const activeSales = useMemo(() => {
+    const cycleStart = new Date(currentCycleStart);
+    return sales.filter(s => new Date(s.created_at) >= cycleStart);
+  }, [sales, currentCycleStart]);
 
   const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
   const [hoveredBar, setHoveredBar] = useState<{ 
@@ -48,7 +53,7 @@ export const DashboardView: React.FC = () => {
 
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
 
-    sales.forEach(sale => {
+    activeSales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
         if (saleDate >= startDate && saleDate <= today) {
@@ -75,7 +80,7 @@ export const DashboardView: React.FC = () => {
     return Object.values(productStats)
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10);
-  }, [sales, chartPeriod]);
+  }, [activeSales, chartPeriod]);
 
   const chartHeight = 220;
   const paddingLeft = 60;
@@ -105,15 +110,15 @@ export const DashboardView: React.FC = () => {
   const yAxisTicksQuantity = Array.from({ length: yTicks }, (_, i) => (maxQuantity / (yTicks - 1)) * i);
 
   const filteredSales = useMemo(() => {
-    if (!searchFilter) return sales;
+    if (!searchFilter) return activeSales;
     const lowerSearch = searchFilter.toLowerCase();
-    return sales.filter(s => {
+    return activeSales.filter(s => {
       const matchRe = s.customerRe?.toLowerCase().includes(lowerSearch);
       const customer = customers.find(c => c.re === s.customerRe);
       const matchName = customer?.name.toLowerCase().includes(lowerSearch);
       return matchRe || matchName;
     });
-  }, [sales, searchFilter, customers]);
+  }, [activeSales, searchFilter, customers]);
 
   const topProductsBySales = useMemo(() => {
     const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
@@ -185,7 +190,7 @@ export const DashboardView: React.FC = () => {
   // Aggregate pending debts per client
   const pendingDebts = useMemo(() => {
     const debtsMap: Record<string, { re: string, name: string, total: number }> = {};
-    sales.forEach(s => {
+    activeSales.forEach(s => {
       if (s.payment_status === 'PENDING' && s.customerRe) {
         const customer = customers.find(c => c.re === s.customerRe);
         const name = customer ? customer.name : 'Desconhecido';
@@ -196,7 +201,7 @@ export const DashboardView: React.FC = () => {
       }
     });
     return Object.values(debtsMap);
-  }, [sales, customers]);
+  }, [activeSales, customers]);
 
   return (
     <div className="flex flex-col h-full gap-6 p-6 overflow-auto">

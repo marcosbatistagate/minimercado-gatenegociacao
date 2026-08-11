@@ -4,7 +4,25 @@ import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 
 export const InventoryView: React.FC = () => {
-  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData } = useMarketStore();
+  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth } = useMarketStore();
+
+  const formatUpdateTimestamp = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} às ${hours}:${minutes}`;
+    } catch (e) {
+      return 'Data inválida';
+    }
+  };
+
+  const isSaleInCurrentCycle = (saleDateStr: string) => {
+    return new Date(saleDateStr) >= new Date(currentCycleStart);
+  };
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -137,15 +155,33 @@ export const InventoryView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full gap-6 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-white font-jakarta">Gestão de Estoque</h1>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-black/60 border border-violet-500 rounded-full text-sm font-medium text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.4),inset_0_0_10px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300"
-        >
-          <Plus size={18} />
-          Novo Produto
-        </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white font-jakarta">Gestão de Estoque</h1>
+          <p className="text-xs text-white/50 mt-1">
+            Última atualização do estoque: {formatUpdateTimestamp(lastStockUpdate)}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (confirm('Tem certeza que deseja zerar os indicadores do mês e reiniciar a planilha de estoque?')) {
+                startNewMonth();
+                alert('Planilha de estoque reiniciada para o novo mês!');
+              }
+            }}
+            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-full text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"
+          >
+            Iniciar Novo Mês
+          </button>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-black/60 border border-violet-500 rounded-full text-sm font-medium text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.4),inset_0_0_10px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300"
+          >
+            <Plus size={18} />
+            Novo Produto
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -195,13 +231,13 @@ export const InventoryView: React.FC = () => {
               const margin = calculateMargin(product.price, product.cost_price);
               const profit = product.price - product.cost_price;
               const qtySold = sales.reduce((sum, sale) => {
-                if (sale.status === 'cancelled') return sum;
+                if (sale.status === 'cancelled' || !isSaleInCurrentCycle(sale.created_at)) return sum;
                 const item = sale.items.find(i => i.product.id === product.id);
                 return sum + (item ? item.quantity : 0);
               }, 0);
 
               const qtyPaid = sales.reduce((sum, sale) => {
-                if (sale.payment_status === 'PAID' && sale.status !== 'cancelled') {
+                if (sale.payment_status === 'PAID' && sale.status !== 'cancelled' && isSaleInCurrentCycle(sale.created_at)) {
                   const item = sale.items.find(i => i.product.id === product.id);
                   return sum + (item ? item.quantity : 0);
                 }
@@ -209,7 +245,7 @@ export const InventoryView: React.FC = () => {
               }, 0);
 
               const qtyPending = sales.reduce((sum, sale) => {
-                if (sale.payment_status === 'PENDING' && sale.status !== 'cancelled') {
+                if (sale.payment_status === 'PENDING' && sale.status !== 'cancelled' && isSaleInCurrentCycle(sale.created_at)) {
                   const item = sale.items.find(i => i.product.id === product.id);
                   return sum + (item ? item.quantity : 0);
                 }
