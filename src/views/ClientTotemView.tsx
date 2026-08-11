@@ -209,16 +209,16 @@ export const ClientTotemView: React.FC = () => {
         {/* Degradê extra na parte inferior para garantir contraste */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"></div>
 
-        <div className="flex-none p-6 sm:p-8 relative z-20">
-          <div className="inline-flex items-center gap-5 glass-effect bg-slate-900/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-3xl px-6 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300">
-            <img src="/negociacao.png" alt="Logo Negociação" className="h-12 sm:h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 font-jakarta drop-shadow-md pr-2">
+        <div className="flex-none p-4 sm:p-6 relative z-20">
+          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-3 px-6 py-4 w-full max-w-md sm:max-w-xl mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
+            <img src="/negociacao.png" alt="Logo Negociação" className="w-12 h-12 sm:w-14 sm:h-14 object-contain mx-auto sm:mx-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <h1 className="text-base sm:text-xl font-bold tracking-tight text-white text-center sm:text-left font-jakarta">
               Minimercado Gremio Negociação
             </h1>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10">
           <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 w-11/12 max-w-md flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
@@ -288,7 +288,7 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 flex justify-between items-center relative z-10 w-full mt-auto">
+        <div className="p-4 sm:p-6 flex justify-between items-center relative z-10 w-full mt-auto">
           <span className="text-xs text-white/30 font-medium">
             Desenvolvido por: Delta Negociação - 2026
           </span>
