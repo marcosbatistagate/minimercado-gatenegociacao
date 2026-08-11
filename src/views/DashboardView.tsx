@@ -26,7 +26,13 @@ export const DashboardView: React.FC = () => {
   const [searchFilter, setSearchFilter] = useState('');
 
   const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
-  const [hoveredBar, setHoveredBar] = useState<{ label: string; amount: number; x: number; y: number } | null>(null);
+  const [hoveredBar, setHoveredBar] = useState<{ 
+    name: string; 
+    amount: number; 
+    quantity: number; 
+    x: number; 
+    y: number;
+  } | null>(null);
 
   const chartData = useMemo(() => {
     const today = new Date();
@@ -40,56 +46,63 @@ export const DashboardView: React.FC = () => {
     
     startDate.setHours(0, 0, 0, 0);
 
-    const datesList: { dateStr: string; label: string; amount: number }[] = [];
-    const currentDate = new Date(startDate);
-    
-    while (currentDate <= today) {
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const day = String(currentDate.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      
-      const label = `${day}/${month}`;
-      datesList.push({ dateStr, label, amount: 0 });
-      
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
 
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
-        const y = saleDate.getFullYear();
-        const m = String(saleDate.getMonth() + 1).padStart(2, '0');
-        const d = String(saleDate.getDate()).padStart(2, '0');
-        const saleDateStr = `${y}-${m}-${d}`;
-        
-        const entry = datesList.find(e => e.dateStr === saleDateStr);
-        if (entry) {
-          entry.amount += sale.total_amount;
+        if (saleDate >= startDate && saleDate <= today) {
+          sale.items.forEach(item => {
+            if (item.product?.id) {
+              const pid = item.product.id;
+              if (!productStats[pid]) {
+                productStats[pid] = {
+                  id: pid,
+                  name: item.product.name,
+                  amount: 0,
+                  quantity: 0
+                };
+              }
+              productStats[pid].amount += item.subtotal;
+              productStats[pid].quantity += item.quantity;
+            }
+          });
         }
       }
     });
 
-    return datesList;
+    // Return top 10 products sorted by revenue
+    return Object.values(productStats)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
   }, [sales, chartPeriod]);
 
   const chartHeight = 220;
-  const paddingLeft = 50;
-  const paddingBottom = 30;
+  const paddingLeft = 60;
+  const paddingBottom = 40;
   const paddingTop = 20;
-  const paddingRight = 20;
-  const barWidth = 20;
-  const barGap = 12;
-  const step = barWidth + barGap;
+  const paddingRight = 60;
+  
+  // Sizing for side-by-side bars
+  const barWidth = 14;
+  const innerGap = 4;
+  const groupGap = 24;
+  const step = (barWidth * 2) + innerGap + groupGap;
 
   const maxAmount = useMemo(() => {
     const max = Math.max(...chartData.map(d => d.amount), 0);
     return max === 0 ? 100 : max * 1.1;
   }, [chartData]);
 
+  const maxQuantity = useMemo(() => {
+    const max = Math.max(...chartData.map(d => d.quantity), 0);
+    return max === 0 ? 10 : max * 1.1;
+  }, [chartData]);
+
   const svgWidth = paddingLeft + paddingRight + chartData.length * step;
   const yTicks = 4;
-  const yAxisTicks = Array.from({ length: yTicks }, (_, i) => (maxAmount / (yTicks - 1)) * i);
+  const yAxisTicksAmount = Array.from({ length: yTicks }, (_, i) => (maxAmount / (yTicks - 1)) * i);
+  const yAxisTicksQuantity = Array.from({ length: yTicks }, (_, i) => (maxQuantity / (yTicks - 1)) * i);
 
   const filteredSales = useMemo(() => {
     if (!searchFilter) return sales;
@@ -447,50 +460,70 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráfico de Evolução de Vendas */}
+      {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
         <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento</h2>
-              <p className="text-sm text-white/60">Análise de vendas brutas por período</p>
+              <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
+              <p className="text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos top 10 produtos</p>
             </div>
-            <select
-              value={chartPeriod}
-              onChange={e => setChartPeriod(e.target.value as any)}
-              className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-sm cursor-pointer"
-            >
-              <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
-              <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
-              <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-            </select>
+            <div className="flex items-center gap-4">
+              {/* Legenda do Gráfico */}
+              <div className="flex items-center gap-4 text-xs font-medium">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-md bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+                  <span className="text-white/70">Faturamento (R$)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-md bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
+                  <span className="text-white/70">Qtde Vendida (un)</span>
+                </div>
+              </div>
+              <select
+                value={chartPeriod}
+                onChange={e => setChartPeriod(e.target.value as any)}
+                className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-sm cursor-pointer"
+              >
+                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
+                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+              </select>
+            </div>
           </div>
 
           <div className="relative overflow-x-auto scrollbar-thin pb-2">
             <svg 
-              width={Math.max(svgWidth, 600)} 
+              width={Math.max(svgWidth, 700)} 
               height={chartHeight} 
               className="w-full"
             >
               <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#10B981" />
                   <stop offset="100%" stopColor="rgba(16, 185, 129, 0.05)" />
                 </linearGradient>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <linearGradient id="quantityGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="rgba(139, 92, 246, 0.05)" />
+                </linearGradient>
+                <filter id="revenueGlow" x="-20%" y="-20%" width="140%" height="140%">
                   <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#10B981" floodOpacity="0.3"/>
+                </filter>
+                <filter id="quantityGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#8B5CF6" floodOpacity="0.3"/>
                 </filter>
               </defs>
 
-              {/* Grid Lines and Y-Axis */}
-              {yAxisTicks.map((tick, idx) => {
+              {/* Grid Lines and Y-Axis (Left - Revenue BRL) */}
+              {yAxisTicksAmount.map((tick, idx) => {
                 const y = chartHeight - paddingBottom - ((tick / maxAmount) * (chartHeight - paddingBottom - paddingTop));
                 return (
-                  <g key={idx}>
+                  <g key={`rev-grid-${idx}`}>
                     <line 
                       x1={paddingLeft} 
                       y1={y} 
-                      x2={Math.max(svgWidth, 600) - paddingRight} 
+                      x2={Math.max(svgWidth, 700) - paddingRight} 
                       y2={y} 
                       className="stroke-white/5" 
                       strokeDasharray="4 4" 
@@ -507,66 +540,125 @@ export const DashboardView: React.FC = () => {
                 );
               })}
 
-              {/* Bars */}
+              {/* Right Y-Axis (Quantity - Units) */}
+              {yAxisTicksQuantity.map((tick, idx) => {
+                const y = chartHeight - paddingBottom - ((tick / maxQuantity) * (chartHeight - paddingBottom - paddingTop));
+                return (
+                  <g key={`qty-axis-${idx}`}>
+                    <text 
+                      x={Math.max(svgWidth, 700) - paddingRight + 10} 
+                      y={y + 4} 
+                      textAnchor="start" 
+                      className="fill-white/40 text-[10px] font-mono"
+                    >
+                      {Math.round(tick)} un
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Double Bars per Product */}
               {chartData.map((d, idx) => {
-                const barHeight = (d.amount / maxAmount) * (chartHeight - paddingBottom - paddingTop);
-                const x = paddingLeft + idx * step;
-                const y = chartHeight - paddingBottom - barHeight;
+                const xGroup = paddingLeft + (idx * step);
+                const xRevenue = xGroup;
+                const xQuantity = xGroup + barWidth + innerGap;
+
+                const revenueHeight = (d.amount / maxAmount) * (chartHeight - paddingBottom - paddingTop);
+                const quantityHeight = (d.quantity / maxQuantity) * (chartHeight - paddingBottom - paddingTop);
+
+                const yRevenue = chartHeight - paddingBottom - revenueHeight;
+                const yQuantity = chartHeight - paddingBottom - quantityHeight;
+
+                const midX = xGroup + (barWidth * 2 + innerGap) / 2;
 
                 return (
-                  <g key={d.dateStr}>
+                  <g key={d.id} className="group">
+                    {/* Revenue Bar (Emerald Gradient) */}
                     <rect
-                      x={x}
-                      y={y}
+                      x={xRevenue}
+                      y={yRevenue}
                       width={barWidth}
-                      height={Math.max(barHeight, 2)}
-                      rx={4}
-                      fill="url(#barGradient)"
-                      filter="url(#glow)"
+                      height={Math.max(revenueHeight, 2)}
+                      rx={3}
+                      fill="url(#revenueGradient)"
+                      filter="url(#revenueGlow)"
                       className="transition-all duration-300 cursor-pointer hover:fill-emerald-400"
                       onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
                         const containerRect = e.currentTarget.ownerSVGElement?.parentElement?.getBoundingClientRect();
                         if (containerRect) {
                           setHoveredBar({
-                            label: d.label,
+                            name: d.name,
                             amount: d.amount,
-                            x: rect.left - containerRect.left + barWidth / 2,
-                            y: rect.top - containerRect.top
+                            quantity: d.quantity,
+                            x: midX,
+                            y: Math.min(yRevenue, yQuantity)
                           });
                         }
                       }}
                       onMouseLeave={() => setHoveredBar(null)}
                     />
-                    {((chartData.length <= 31) || (idx % 3 === 0)) && (
-                      <text
-                        x={x + barWidth / 2}
-                        y={chartHeight - 10}
-                        textAnchor="middle"
-                        className="fill-white/30 text-[9px] font-mono"
-                      >
-                        {d.label}
-                      </text>
-                    )}
+
+                    {/* Quantity Bar (Violet Gradient) */}
+                    <rect
+                      x={xQuantity}
+                      y={yQuantity}
+                      width={barWidth}
+                      height={Math.max(quantityHeight, 2)}
+                      rx={3}
+                      fill="url(#quantityGradient)"
+                      filter="url(#quantityGlow)"
+                      className="transition-all duration-300 cursor-pointer hover:fill-violet-400"
+                      onMouseEnter={(e) => {
+                        const containerRect = e.currentTarget.ownerSVGElement?.parentElement?.getBoundingClientRect();
+                        if (containerRect) {
+                          setHoveredBar({
+                            name: d.name,
+                            amount: d.amount,
+                            quantity: d.quantity,
+                            x: midX,
+                            y: Math.min(yRevenue, yQuantity)
+                          });
+                        }
+                      }}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+
+                    {/* Product Name Label */}
+                    <text
+                      x={midX}
+                      y={chartHeight - 15}
+                      textAnchor="middle"
+                      className="fill-white/40 text-[9px] font-sans group-hover:fill-white font-medium transition-colors"
+                    >
+                      {d.name.length > 12 ? d.name.substring(0, 10) + '...' : d.name}
+                    </text>
                   </g>
                 );
               })}
             </svg>
 
-            {/* Hover Tooltip */}
+            {/* Glassmorphic Hover Tooltip with Dual Metrics relationship */}
             {hoveredBar && (
               <div 
-                className="absolute z-10 bg-slate-950/90 border border-emerald-500/30 backdrop-blur-md rounded-xl p-3 shadow-xl text-xs flex flex-col gap-1 pointer-events-none transition-all duration-150"
+                className="absolute z-10 bg-slate-950/90 border border-emerald-500/20 backdrop-blur-md rounded-xl p-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-xs flex flex-col gap-2 pointer-events-none transition-all duration-150"
                 style={{ 
                   left: hoveredBar.x, 
-                  top: hoveredBar.y - 65,
-                  transform: 'translateX(-50%)'
+                  top: hoveredBar.y - 85,
+                  transform: 'translateX(-50%)',
+                  minWidth: '180px'
                 }}
               >
-                <span className="text-white/60 font-medium">{hoveredBar.label}</span>
-                <span className="text-emerald-400 font-bold text-sm">
-                  {formatCurrency(hoveredBar.amount)}
-                </span>
+                <div className="font-bold text-white border-b border-white/10 pb-1.5 mb-1">
+                  {hoveredBar.name}
+                </div>
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-white/60">Faturamento:</span>
+                  <span className="text-emerald-400 font-bold">{formatCurrency(hoveredBar.amount)}</span>
+                </div>
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-white/60">Vendas:</span>
+                  <span className="text-violet-400 font-bold">{hoveredBar.quantity} un.</span>
+                </div>
               </div>
             )}
           </div>
