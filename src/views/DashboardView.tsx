@@ -219,7 +219,7 @@ export const DashboardView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Preço de Venda (Faturamento) */}
         <FadeIn delay="100">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <TrendingUp size={64} className="text-violet-500" />
             </div>
@@ -235,7 +235,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Custo Total */}
         <FadeIn delay="200">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Receipt size={64} className="text-rose-500" />
             </div>
@@ -251,7 +251,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Lucro Bruto */}
         <FadeIn delay="200">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <TrendingUp size={64} className="text-emerald-500" />
             </div>
@@ -267,7 +267,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Total de Vendas */}
         <FadeIn delay="200">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <ShoppingBag size={64} className="text-white" />
             </div>
@@ -283,7 +283,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Ticket Médio */}
         <FadeIn delay="300">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Receipt size={64} className="text-white" />
             </div>
@@ -299,7 +299,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Itens em Estoque Crítico */}
         <FadeIn delay="500">
-          <div className={`glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-2 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden group ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]' : 'hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]'}`}>
+          <div className={`glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group ${criticalStockItems > 0 ? 'bg-amber-500/10 border-amber-500/30 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)] hover:border-amber-400/40' : 'hover:shadow-emerald-500/10 hover:border-emerald-500/40'}`}>
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <AlertTriangle size={64} className={criticalStockItems > 0 ? 'text-amber-500' : 'text-white'} />
             </div>
@@ -318,7 +318,7 @@ export const DashboardView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Mais Vendidos */}
         <FadeIn delay="300">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Award size={64} className="text-amber-500" />
             </div>
@@ -351,7 +351,7 @@ export const DashboardView: React.FC = () => {
 
         {/* Maior Margem de Lucro */}
         <FadeIn delay="500">
-          <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:border-white/20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Percent size={64} className="text-violet-500" />
             </div>

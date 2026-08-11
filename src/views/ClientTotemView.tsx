@@ -279,7 +279,7 @@ export const ClientTotemView: React.FC = () => {
                 )}
                 <button 
                   type="submit"
-                  className={`${showPasswordInput ? 'w-2/3' : 'w-full'} py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.5),inset_0_0_15px_rgba(139,92,246,0.3)] hover:scale-[1.02] transition-all duration-300 mt-2`}
+                  className={`${showPasswordInput ? 'w-2/3' : 'w-full'} py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 mt-2`}
                 >
                   {showPasswordInput ? 'Confirmar Senha' : 'Acessar Terminal'}
                 </button>
@@ -451,20 +451,20 @@ export const ClientTotemView: React.FC = () => {
             </div>            <button 
               disabled={cart.length === 0}
               onClick={handleFinalize}
-              className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg glow"
+              className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 hover:border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg glow border border-transparent"
             >
               Pagar com PIX [F4]
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={handleFinalizeDebit}
-              className="w-full py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+              className="w-full py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 border border-transparent hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-base"
             >
               Pagar Depois (Registrar em Débito)
             </button>
             <button
               onClick={() => logoutCustomer()}
-              className="w-full py-3 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              className="w-full py-3 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300"
             >
               Cancelar e Sair
             </button>
