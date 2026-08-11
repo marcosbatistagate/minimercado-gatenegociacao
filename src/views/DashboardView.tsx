@@ -52,39 +52,38 @@ export const DashboardView: React.FC = () => {
     startDate.setHours(0, 0, 0, 0);
 
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
+    
+    // Initialize stats for all active products
+    products.forEach(p => {
+      productStats[p.id] = {
+        id: p.id,
+        name: p.name,
+        amount: 0,
+        quantity: 0
+      };
+    });
 
     activeSales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
         if (saleDate >= startDate && saleDate <= today) {
           sale.items.forEach(item => {
-            if (item.product?.id) {
-              const pid = item.product.id;
-              if (!productStats[pid]) {
-                productStats[pid] = {
-                  id: pid,
-                  name: item.product.name,
-                  amount: 0,
-                  quantity: 0
-                };
-              }
-              productStats[pid].amount += item.subtotal;
-              productStats[pid].quantity += item.quantity;
+            if (item.product?.id && productStats[item.product.id]) {
+              productStats[item.product.id].amount += item.subtotal;
+              productStats[item.product.id].quantity += item.quantity;
             }
           });
         }
       }
     });
 
-    // Return top 10 products sorted by revenue
-    return Object.values(productStats)
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
-  }, [activeSales, chartPeriod]);
+    // Return all products sorted by name or amount
+    return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
+  }, [activeSales, products, chartPeriod]);
 
-  const chartHeight = 220;
+  const chartHeight = 300;
   const paddingLeft = 60;
-  const paddingBottom = 40;
+  const paddingBottom = 90;
   const paddingTop = 20;
   const paddingRight = 60;
   
@@ -630,12 +629,13 @@ export const DashboardView: React.FC = () => {
 
                     {/* Product Name Label */}
                     <text
-                      x={midX}
-                      y={chartHeight - 15}
-                      textAnchor="middle"
+                      x={midX - 4}
+                      y={chartHeight - paddingBottom + 12}
+                      textAnchor="end"
+                      transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 12})`}
                       className="fill-white/40 text-[9px] font-sans group-hover:fill-white font-medium transition-colors"
                     >
-                      {d.name.length > 12 ? d.name.substring(0, 10) + '...' : d.name}
+                      {d.name.length > 20 ? d.name.substring(0, 17) + '...' : d.name}
                     </text>
                   </g>
                 );
