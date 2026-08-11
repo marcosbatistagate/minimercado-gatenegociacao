@@ -81,11 +81,11 @@ export const DashboardView: React.FC = () => {
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
   }, [activeSales, products, chartPeriod]);
 
-  const chartHeight = 380;
-  const paddingLeft = 115;
-  const paddingBottom = 110;
-  const paddingTop = 20;
-  const paddingRight = 95;
+  const chartHeight = 320;
+  const paddingLeft = 55;
+  const paddingBottom = 80;
+  const paddingTop = 10;
+  const paddingRight = 45;
   const svgWidth = 700;
   
   const chartContentWidth = svgWidth - paddingLeft - paddingRight;
@@ -526,7 +526,6 @@ export const DashboardView: React.FC = () => {
                   <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#8B5CF6" floodOpacity="0.3"/>
                 </filter>
               </defs>
-
               {/* Grid Lines and Y-Axis (Left - Revenue BRL) */}
               {yAxisTicksAmount.map((tick, idx) => {
                 const y = chartHeight - paddingBottom - ((tick / maxAmount) * (chartHeight - paddingBottom - paddingTop));
@@ -544,7 +543,7 @@ export const DashboardView: React.FC = () => {
                       x={paddingLeft - 10} 
                       y={y + 4} 
                       textAnchor="end" 
-                      className="fill-[#94a3b8] text-[16px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[10px] font-mono font-medium"
                     >
                       {formatCurrency(tick).replace(',00', '')}
                     </text>
@@ -561,7 +560,7 @@ export const DashboardView: React.FC = () => {
                       x={svgWidth - paddingRight + 10} 
                       y={y + 4} 
                       textAnchor="start" 
-                      className="fill-[#94a3b8] text-[16px] font-mono font-medium"
+                      className="fill-[#94a3b8] text-[10px] font-mono font-medium"
                     >
                       {Math.round(tick)} un
                     </text>
@@ -639,10 +638,10 @@ export const DashboardView: React.FC = () => {
                     {/* Product Name Label */}
                     <text
                       x={midX - 4}
-                      y={chartHeight - paddingBottom + 16}
+                      y={chartHeight - paddingBottom + 12}
                       textAnchor="end"
-                      transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 16})`}
-                      className="fill-[#94a3b8] text-[16px] font-sans group-hover:fill-white font-medium transition-colors"
+                      transform={`rotate(-45, ${midX - 4}, ${chartHeight - paddingBottom + 12})`}
+                      className="fill-[#94a3b8] text-[10px] font-sans group-hover:fill-white font-medium transition-colors"
                     >
                       {d.name.length > 18 ? d.name.substring(0, 15) + '...' : d.name}
                     </text>
