@@ -414,8 +414,8 @@ export const DashboardView: React.FC = () => {
           <div className="p-6 border-b border-white/10">
             <h2 className="text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
           </div>
-          <div className="overflow-x-auto flex-1 -mx-4 sm:mx-0">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+          <div className="overflow-x-auto flex-1 -mx-4 sm:mx-0 custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="p-4 text-white/60 font-medium text-sm">Data/Hora</th>
@@ -453,7 +453,7 @@ export const DashboardView: React.FC = () => {
                 })}
                 {filteredSales.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-white/50">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
                       Nenhuma venda encontrada.
                     </td>
                   </tr>
@@ -496,10 +496,11 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="relative overflow-x-auto scrollbar-thin pb-2">
+          <div className="w-full overflow-hidden pb-2">
             <svg 
-              width={Math.max(svgWidth, 700)} 
-              height={chartHeight} 
+              viewBox={`0 0 ${Math.max(svgWidth, 700)} ${chartHeight}`}
+              width="100%"
+              height={chartHeight}
               className="w-full"
             >
               <defs>
@@ -673,8 +674,8 @@ export const DashboardView: React.FC = () => {
       {/* Debits management section */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
         <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full text-left border-collapse min-w-[500px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-4 text-white/60 font-medium text-sm">Policial</th>
@@ -701,7 +702,7 @@ export const DashboardView: React.FC = () => {
               ))}
               {pendingDebts.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-white/50">
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
                     Nenhum débito pendente.
                   </td>
                 </tr>
@@ -719,8 +720,8 @@ export const DashboardView: React.FC = () => {
           </h2>
           <p className="text-sm text-white/60">Histórico de conflitos identificados na conferência diária de estoque</p>
         </div>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full text-left border-collapse min-w-[500px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-4 text-white/60 font-medium text-sm">Data do Registro</th>
@@ -747,7 +748,7 @@ export const DashboardView: React.FC = () => {
               })}
               {stockAudits.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-white/50">
+                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
                     Nenhuma divergência de estoque registrada até o momento.
                   </td>
                 </tr>
@@ -760,8 +761,8 @@ export const DashboardView: React.FC = () => {
       {/* Clientes e Redefinição de Senhas */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
         <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full text-left border-collapse min-w-[500px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="border-b border-white/10">
                 <th className="p-4 text-white/60 font-medium text-sm">Policial / Cliente</th>
@@ -778,8 +779,8 @@ export const DashboardView: React.FC = () => {
                   <td className="p-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
                       customer.password 
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                         : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}>
                       {customer.password ? 'Senha Ativa' : 'Sem Senha Configurada'}
                     </span>
@@ -811,7 +812,7 @@ export const DashboardView: React.FC = () => {
               ))}
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-white/50">
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
                     Nenhum cliente cadastrado.
                   </td>
                 </tr>
