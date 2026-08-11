@@ -25,6 +25,72 @@ export const DashboardView: React.FC = () => {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
 
+  const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
+  const [hoveredBar, setHoveredBar] = useState<{ label: string; amount: number; x: number; y: number } | null>(null);
+
+  const chartData = useMemo(() => {
+    const today = new Date();
+    let startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    if (chartPeriod === '2_months') {
+      startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    } else if (chartPeriod === '3_months') {
+      startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    }
+    
+    startDate.setHours(0, 0, 0, 0);
+
+    const datesList: { dateStr: string; label: string; amount: number }[] = [];
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= today) {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      const label = `${day}/${month}`;
+      datesList.push({ dateStr, label, amount: 0 });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    sales.forEach(sale => {
+      if (sale.status !== 'cancelled') {
+        const saleDate = new Date(sale.created_at);
+        const y = saleDate.getFullYear();
+        const m = String(saleDate.getMonth() + 1).padStart(2, '0');
+        const d = String(saleDate.getDate()).padStart(2, '0');
+        const saleDateStr = `${y}-${m}-${d}`;
+        
+        const entry = datesList.find(e => e.dateStr === saleDateStr);
+        if (entry) {
+          entry.amount += sale.total_amount;
+        }
+      }
+    });
+
+    return datesList;
+  }, [sales, chartPeriod]);
+
+  const chartHeight = 220;
+  const paddingLeft = 50;
+  const paddingBottom = 30;
+  const paddingTop = 20;
+  const paddingRight = 20;
+  const barWidth = 20;
+  const barGap = 12;
+  const step = barWidth + barGap;
+
+  const maxAmount = useMemo(() => {
+    const max = Math.max(...chartData.map(d => d.amount), 0);
+    return max === 0 ? 100 : max * 1.1;
+  }, [chartData]);
+
+  const svgWidth = paddingLeft + paddingRight + chartData.length * step;
+  const yTicks = 4;
+  const yAxisTicks = Array.from({ length: yTicks }, (_, i) => (maxAmount / (yTicks - 1)) * i);
+
   const filteredSales = useMemo(() => {
     if (!searchFilter) return sales;
     const lowerSearch = searchFilter.toLowerCase();
@@ -380,6 +446,132 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Gráfico de Evolução de Vendas */}
+      <FadeIn delay="300">
+        <div className="glass-effect bg-slate-900/60 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 relative">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento</h2>
+              <p className="text-sm text-white/60">Análise de vendas brutas por período</p>
+            </div>
+            <select
+              value={chartPeriod}
+              onChange={e => setChartPeriod(e.target.value as any)}
+              className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-sm cursor-pointer"
+            >
+              <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+              <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
+              <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+            </select>
+          </div>
+
+          <div className="relative overflow-x-auto scrollbar-thin pb-2">
+            <svg 
+              width={Math.max(svgWidth, 600)} 
+              height={chartHeight} 
+              className="w-full"
+            >
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" />
+                  <stop offset="100%" stopColor="rgba(16, 185, 129, 0.05)" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#10B981" floodOpacity="0.3"/>
+                </filter>
+              </defs>
+
+              {/* Grid Lines and Y-Axis */}
+              {yAxisTicks.map((tick, idx) => {
+                const y = chartHeight - paddingBottom - ((tick / maxAmount) * (chartHeight - paddingBottom - paddingTop));
+                return (
+                  <g key={idx}>
+                    <line 
+                      x1={paddingLeft} 
+                      y1={y} 
+                      x2={Math.max(svgWidth, 600) - paddingRight} 
+                      y2={y} 
+                      className="stroke-white/5" 
+                      strokeDasharray="4 4" 
+                    />
+                    <text 
+                      x={paddingLeft - 10} 
+                      y={y + 4} 
+                      textAnchor="end" 
+                      className="fill-white/40 text-[10px] font-mono"
+                    >
+                      {formatCurrency(tick).replace(',00', '')}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Bars */}
+              {chartData.map((d, idx) => {
+                const barHeight = (d.amount / maxAmount) * (chartHeight - paddingBottom - paddingTop);
+                const x = paddingLeft + idx * step;
+                const y = chartHeight - paddingBottom - barHeight;
+
+                return (
+                  <g key={d.dateStr}>
+                    <rect
+                      x={x}
+                      y={y}
+                      width={barWidth}
+                      height={Math.max(barHeight, 2)}
+                      rx={4}
+                      fill="url(#barGradient)"
+                      filter="url(#glow)"
+                      className="transition-all duration-300 cursor-pointer hover:fill-emerald-400"
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const containerRect = e.currentTarget.ownerSVGElement?.parentElement?.getBoundingClientRect();
+                        if (containerRect) {
+                          setHoveredBar({
+                            label: d.label,
+                            amount: d.amount,
+                            x: rect.left - containerRect.left + barWidth / 2,
+                            y: rect.top - containerRect.top
+                          });
+                        }
+                      }}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+                    {((chartData.length <= 31) || (idx % 3 === 0)) && (
+                      <text
+                        x={x + barWidth / 2}
+                        y={chartHeight - 10}
+                        textAnchor="middle"
+                        className="fill-white/30 text-[9px] font-mono"
+                      >
+                        {d.label}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Hover Tooltip */}
+            {hoveredBar && (
+              <div 
+                className="absolute z-10 bg-slate-950/90 border border-emerald-500/30 backdrop-blur-md rounded-xl p-3 shadow-xl text-xs flex flex-col gap-1 pointer-events-none transition-all duration-150"
+                style={{ 
+                  left: hoveredBar.x, 
+                  top: hoveredBar.y - 65,
+                  transform: 'translateX(-50%)'
+                }}
+              >
+                <span className="text-white/60 font-medium">{hoveredBar.label}</span>
+                <span className="text-emerald-400 font-bold text-sm">
+                  {formatCurrency(hoveredBar.amount)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </FadeIn>
 
       {/* Debits management section */}
       <div className="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-6">
