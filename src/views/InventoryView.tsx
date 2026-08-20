@@ -3,6 +3,15 @@ import { useMarketStore, type Product } from '../store/useMarketStore';
 import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 
+const categoryDescriptions: Record<string, string> = {
+  'Bebidas': 'Refrigerantes, sucos, águas, energéticos e outras bebidas.',
+  'Snacks e doces': 'Chocolates, salgadinhos, biscoitos, barras de cereal e doces variados.',
+  'Salgadinho': 'Batata frita, nachos, amendoins e petiscos salgados.',
+  'Barra de proteína': 'Barras de proteína de diversos sabores e marcas para pré/pós treino.',
+  'Balas': 'Balas de goma, balas mastigáveis, balas duras e pastilhas.',
+  'Bombons': 'Bombons recheados, trufas e chocolates finos.',
+};
+
 export const InventoryView: React.FC = () => {
   const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth } = useMarketStore();
 
@@ -195,16 +204,23 @@ export const InventoryView: React.FC = () => {
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50"
           />
         </div>
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-primary-500/50 appearance-none min-w-[200px]"
-        >
-          <option value="">Todas Categorias</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+        <div className="flex flex-col gap-1 min-w-[200px]">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-primary-500/50 appearance-none w-full"
+          >
+            <option value="">Todas Categorias</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          {categoryFilter && categoryDescriptions[categoryFilter] && (
+            <span className="text-[10px] text-white/40 px-1 italic">
+              {categoryDescriptions[categoryFilter]}
+            </span>
+          )}
+        </div>
       </div>
 
       <FadeIn delay="100" className="flex-1 min-h-0 flex flex-col w-full">
@@ -329,6 +345,11 @@ export const InventoryView: React.FC = () => {
                       <option key={cat.id} value={cat.name}>{cat.name}</option>
                     ))}
                   </select>
+                  {formData.category && categoryDescriptions[formData.category] && (
+                    <p className="text-xs text-white/40 mt-1 italic">
+                      {categoryDescriptions[formData.category]}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm text-white/60">Estoque Atual</label>
