@@ -15,6 +15,8 @@ const formatDate = (isoString: string) => {
   }).format(new Date(isoString));
 };
 
+type TopPeriod = 'current_month' | '2_months' | '3_months' | 'all';
+
 export const DashboardView: React.FC = () => {
   const { sales, products, customers, settleDebts, stockAudits, currentCycleStart } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -30,8 +32,8 @@ export const DashboardView: React.FC = () => {
   }, [sales, currentCycleStart]);
 
   const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
-  const [topSalesPeriod, setTopSalesPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
-  const [topMarginPeriod, setTopMarginPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
+  const [topSalesPeriod, setTopSalesPeriod] = useState<TopPeriod>('current_month');
+  const [topMarginPeriod, setTopMarginPeriod] = useState<TopPeriod>('current_month');
 
   const [hoveredBar, setHoveredBar] = useState<{ 
     name: string; 
@@ -41,7 +43,8 @@ export const DashboardView: React.FC = () => {
     y: number;
   } | null>(null);
 
-  const getPeriodStartDate = (period: 'current_month' | '2_months' | '3_months') => {
+  const getPeriodStartDate = (period: TopPeriod) => {
+    if (period === 'all') return null;
     const today = new Date();
     let startDate = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
     if (period === '2_months') {
@@ -71,7 +74,7 @@ export const DashboardView: React.FC = () => {
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
-        if (saleDate >= startDate && saleDate <= today) {
+        if ((!startDate || saleDate >= startDate) && saleDate <= today) {
           sale.items.forEach(item => {
             if (item.product?.id && productStats[item.product.id]) {
               productStats[item.product.id].amount += item.subtotal;
@@ -135,22 +138,25 @@ export const DashboardView: React.FC = () => {
     const startDate = getPeriodStartDate(topSalesPeriod);
     const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
     sales.forEach(sale => {
-      if (sale.status !== 'cancelled' && new Date(sale.created_at) >= startDate) {
-        if (searchFilter) {
-          const lowerSearch = searchFilter.toLowerCase();
-          const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
-          const customer = customers.find(c => c.re === sale.customerRe);
-          const matchName = customer?.name.toLowerCase().includes(lowerSearch);
-          if (!matchRe && !matchName) return;
-        }
-        sale.items.forEach(item => {
-          if (item.product?.id) {
-            if (!counts[item.product.id]) {
-              counts[item.product.id] = { product: item.product, qty: 0 };
-            }
-            counts[item.product.id].qty += item.quantity;
+      if (sale.status !== 'cancelled') {
+        const saleDate = new Date(sale.created_at);
+        if (!startDate || saleDate >= startDate) {
+          if (searchFilter) {
+            const lowerSearch = searchFilter.toLowerCase();
+            const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
+            const customer = customers.find(c => c.re === sale.customerRe);
+            const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+            if (!matchRe && !matchName) return;
           }
-        });
+          sale.items.forEach(item => {
+            if (item.product?.id) {
+              if (!counts[item.product.id]) {
+                counts[item.product.id] = { product: item.product, qty: 0 };
+              }
+              counts[item.product.id].qty += item.quantity;
+            }
+          });
+        }
       }
     });
     return Object.values(counts)
@@ -162,19 +168,22 @@ export const DashboardView: React.FC = () => {
     const startDate = getPeriodStartDate(topMarginPeriod);
     const soldProductIds = new Set<string>();
     sales.forEach(sale => {
-      if (sale.status !== 'cancelled' && new Date(sale.created_at) >= startDate) {
-        if (searchFilter) {
-          const lowerSearch = searchFilter.toLowerCase();
-          const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
-          const customer = customers.find(c => c.re === sale.customerRe);
-          const matchName = customer?.name.toLowerCase().includes(lowerSearch);
-          if (!matchRe && !matchName) return;
-        }
-        sale.items.forEach(item => {
-          if (item.product?.id) {
-            soldProductIds.add(item.product.id);
+      if (sale.status !== 'cancelled') {
+        const saleDate = new Date(sale.created_at);
+        if (!startDate || saleDate >= startDate) {
+          if (searchFilter) {
+            const lowerSearch = searchFilter.toLowerCase();
+            const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
+            const customer = customers.find(c => c.re === sale.customerRe);
+            const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+            if (!matchRe && !matchName) return;
           }
-        });
+          sale.items.forEach(item => {
+            if (item.product?.id) {
+              soldProductIds.add(item.product.id);
+            }
+          });
+        }
       }
     });
 
@@ -382,12 +391,13 @@ export const DashboardView: React.FC = () => {
               </div>
               <select
                 value={topSalesPeriod}
-                onChange={e => setTopSalesPeriod(e.target.value as any)}
+                onChange={e => setTopSalesPeriod(e.target.value as TopPeriod)}
                 className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-amber-500/50 text-xs cursor-pointer font-medium"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+                <option value="all" className="bg-slate-900 text-white">Todo o Período</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -426,12 +436,13 @@ export const DashboardView: React.FC = () => {
               </div>
               <select
                 value={topMarginPeriod}
-                onChange={e => setTopMarginPeriod(e.target.value as any)}
+                onChange={e => setTopMarginPeriod(e.target.value as TopPeriod)}
                 className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-violet-500/50 text-xs cursor-pointer font-medium"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+                <option value="all" className="bg-slate-900 text-white">Todo o Período</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -468,7 +479,7 @@ export const DashboardView: React.FC = () => {
             </span>
           </div>
 
-          {/* Donut Chart */}
+          {/* Donut Chart (innerRadius: 35, outerRadius: 55, r: 45, strokeWidth: 20) */}
           <div className="flex flex-col items-center justify-center gap-2 py-1">
             <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
               <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
@@ -486,10 +497,10 @@ export const DashboardView: React.FC = () => {
                 <circle
                   cx="70"
                   cy="70"
-                  r="48"
+                  r="45"
                   fill="transparent"
                   stroke="rgba(255, 255, 255, 0.08)"
-                  strokeWidth="14"
+                  strokeWidth="20"
                 />
                 {paymentSummary.grandTotal > 0 && (
                   <>
@@ -498,11 +509,11 @@ export const DashboardView: React.FC = () => {
                       <circle
                         cx="70"
                         cy="70"
-                        r="48"
+                        r="45"
                         fill="transparent"
                         stroke="url(#immediateDonutGrad)"
-                        strokeWidth="14"
-                        strokeDasharray={`${(paymentSummary.immediatePct / 100) * 301.59} 301.59`}
+                        strokeWidth="20"
+                        strokeDasharray={`${(paymentSummary.immediatePct / 100) * 282.74} 282.74`}
                         strokeDashoffset="0"
                         strokeLinecap="round"
                         className="transition-all duration-700 ease-out"
@@ -513,12 +524,12 @@ export const DashboardView: React.FC = () => {
                       <circle
                         cx="70"
                         cy="70"
-                        r="48"
+                        r="45"
                         fill="transparent"
                         stroke="url(#debitDonutGrad)"
-                        strokeWidth="14"
-                        strokeDasharray={`${(paymentSummary.debitPct / 100) * 301.59} 301.59`}
-                        strokeDashoffset={-((paymentSummary.immediatePct / 100) * 301.59)}
+                        strokeWidth="20"
+                        strokeDasharray={`${(paymentSummary.debitPct / 100) * 282.74} 282.74`}
+                        strokeDashoffset={-((paymentSummary.immediatePct / 100) * 282.74)}
                         strokeLinecap="round"
                         className="transition-all duration-700 ease-out"
                       />
@@ -536,24 +547,27 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Breakdown Items */}
+          {/* Breakdown Items with Badges, Currency and Percentages */}
           <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
             {/* Pagamento Imediato */}
             <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {paymentSummary.immediateCount} vendas
+                  </span>
                   <span className="text-white/90 font-medium">Pagamento Imediato</span>
                 </div>
-                <span className="font-bold text-emerald-400">
-                  {formatCurrency(paymentSummary.immediateTotal)}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-emerald-400">
+                    {formatCurrency(paymentSummary.immediateTotal)}
+                  </span>
+                  <span className="font-semibold text-emerald-300/90 text-[11px]">
+                    ({paymentSummary.immediatePct.toFixed(1)}%)
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-white/60">
-                <span>{paymentSummary.immediateCount} transações</span>
-                <span className="font-semibold text-emerald-300/80">{paymentSummary.immediatePct.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-0.5">
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-1">
                 <div 
                   className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
                   style={{ width: `${paymentSummary.immediatePct}%` }}
@@ -565,18 +579,21 @@ export const DashboardView: React.FC = () => {
             <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    {paymentSummary.debitCount} vendas
+                  </span>
                   <span className="text-white/90 font-medium">Pagar Depois (Débito)</span>
                 </div>
-                <span className="font-bold text-violet-400">
-                  {formatCurrency(paymentSummary.debitTotal)}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-violet-400">
+                    {formatCurrency(paymentSummary.debitTotal)}
+                  </span>
+                  <span className="font-semibold text-violet-300/90 text-[11px]">
+                    ({paymentSummary.debitPct.toFixed(1)}%)
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-white/60">
-                <span>{paymentSummary.debitCount} em aberto</span>
-                <span className="font-semibold text-violet-300/80">{paymentSummary.debitPct.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-0.5">
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-1">
                 <div 
                   className="bg-gradient-to-r from-violet-500 to-purple-400 h-full rounded-full transition-all duration-500" 
                   style={{ width: `${paymentSummary.debitPct}%` }}
