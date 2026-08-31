@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import type { UserCustomer } from '../types';
 import { supabaseService } from '../services/supabaseService';
 import { supabase } from '../lib/supabase';
+import { findProductByBarcode } from '../utils/productSearch';
 
 export interface Product {
   id: string;
   code: string;
+  box_barcode?: string;
   name: string;
   price: number;
   category: string;
@@ -169,9 +171,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   addToCartByCode: (codeOrName) => {
     const state = get();
-    const product = state.products.find(
-      p => p.code.trim() === codeOrName.trim() || p.name.toLowerCase().trim() === codeOrName.toLowerCase().trim()
-    );
+    let product = findProductByBarcode(state.products, codeOrName);
+    if (!product) {
+      product = state.products.find(
+        p => p.name.toLowerCase().trim() === codeOrName.toLowerCase().trim()
+      );
+    }
 
     if (product) {
       if (product.stock <= 0) {

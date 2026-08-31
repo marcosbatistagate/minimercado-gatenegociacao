@@ -4,6 +4,7 @@ import { QrCode, Search, Trash2, Shield, History, X } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
 import { QRCodeSVG } from 'qrcode.react';
 import { generatePixPayload } from '../utils/pixGenerator';
+import { findProductByBarcode } from '../utils/productSearch';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -104,7 +105,7 @@ export const ClientTotemView: React.FC = () => {
           const scannedCode = buffer;
           buffer = '';
 
-          const product = products.find(p => p.code.trim() === scannedCode.trim());
+          const product = findProductByBarcode(products, scannedCode);
           if (product) {
             if (product.stock <= 0) {
               setToast({ message: 'Produto fora de estoque!', type: 'error' });
@@ -279,7 +280,8 @@ export const ClientTotemView: React.FC = () => {
     e.preventDefault();
     const query = barcodeInput.trim();
     if (query) {
-      const product = products.find(p => p.code.trim() === query);
+      const product = findProductByBarcode(products, query) || 
+                      products.find(p => p.name.toLowerCase().trim().includes(query.toLowerCase()));
       if (product) {
         if (product.stock <= 0) {
           setToast({ message: 'Produto fora de estoque!', type: 'error' });
