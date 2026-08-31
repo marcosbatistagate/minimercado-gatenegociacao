@@ -64,7 +64,7 @@ interface MarketState {
   switchInstance: (instance: 'client' | 'admin') => void;
   completePixSale: () => Promise<boolean>;
   completeDebitSale: () => Promise<boolean>;
-  settleDebts: (customerRe: string) => Promise<void>;
+  settleDebts: (customerRe: string) => Promise<boolean>;
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
   startNewMonth: () => void;
   updateStockTimestamp: () => void;
@@ -440,10 +440,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (success) {
       const updatedSales = await supabaseService.fetchSales();
       set({ sales: updatedSales });
-      alert('Débitos quitados com sucesso!');
-    } else {
-      alert('Erro ao quitar débitos.');
+      return true;
     }
+    return false;
   },
 
   addStockAudit: async (productId, productName, expectedStock, realStock) => {

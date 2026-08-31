@@ -10,7 +10,7 @@ const formatCurrency = (value: number) => {
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products, pixSettings } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products, pixSettings, settleDebts } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -24,6 +24,32 @@ export const ClientTotemView: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const [showSettleDebtModal, setShowSettleDebtModal] = useState(false);
+  const [settleDebtPayload, setSettleDebtPayload] = useState('');
+
+  const handleOpenSettleDebtModal = () => {
+    if (!pixSettings || !pixSettings.pix_key) {
+      alert('Chave PIX não configurada no sistema. Por favor, contate o administrador.');
+      return;
+    }
+    const payload = generatePixPayload(pixSettings.pix_key, pixSettings.merchant_name, pixSettings.merchant_city, userMetrics.totalDebt);
+    setSettleDebtPayload(payload);
+    setShowSettleDebtModal(true);
+  };
+
+  const handleConfirmSettleDebt = async () => {
+    if (!currentCustomer) return;
+    const success = await settleDebts(currentCustomer.re);
+    if (success) {
+      setToast({ message: 'Débito quitado com sucesso!', type: 'success' });
+      playBeep('success');
+      setShowSettleDebtModal(false);
+    } else {
+      setToast({ message: 'Erro ao processar quitação do débito.', type: 'error' });
+      playBeep('error');
+    }
+  };
 
   useEffect(() => {
     if (toast) {
@@ -643,9 +669,23 @@ export const ClientTotemView: React.FC = () => {
                   <span className="text-xs text-white/60 font-medium">Total Pago</span>
                   <span className="text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalPaid)}</span>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
-                  <span className="text-xs text-white/60 font-medium">Total em Débito</span>
-                  <span className="text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-2 justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-white/60 font-medium">Total em Débito</span>
+                    <span className="text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
+                  </div>
+                  {userMetrics.totalDebt > 0 ? (
+                    <button
+                      onClick={handleOpenSettleDebtModal}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1.5 px-3 rounded-lg text-[10px] md:text-xs transition-all mt-1"
+                    >
+                      Quitar Débito via PIX
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mt-1 self-start">
+                      Em Dia
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
                   <span className="text-xs text-white/60 font-medium">Total do Mês</span>
@@ -714,6 +754,57 @@ export const ClientTotemView: React.FC = () => {
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showSettleDebtModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col shadow-2xl shadow-black/60 p-6 gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white font-jakarta">
+                Quitar Débito via PIX
+              </h2>
+              <button onClick={() => setShowSettleDebtModal(false)} className="text-white/60 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="text-center">
+              <span className="text-white/60 font-medium text-sm">Valor do Débito</span>
+              <h3 className="text-4xl font-bold text-rose-400 py-1">
+                {formatCurrency(userMetrics.totalDebt)}
+              </h3>
+            </div>
+
+            <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-lg self-center">
+              <QRCodeSVG value={settleDebtPayload} size={200} />
+            </div>
+
+            {settleDebtPayload && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(settleDebtPayload);
+                  setToast({ message: 'Código PIX Copia e Cola copiado!', type: 'success' });
+                  playBeep('success');
+                }}
+                className="text-xs text-emerald-400 hover:text-emerald-300 font-medium underline flex items-center gap-1.5 justify-center transition-all"
+              >
+                Copiar código PIX (Copia e Cola)
+              </button>
+            )}
+
+            <button
+              onClick={handleConfirmSettleDebt}
+              className="w-full py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] transition-all duration-300 text-base"
+            >
+              Confirmar Pagamento Realizado
+            </button>
+            <button
+              onClick={() => setShowSettleDebtModal(false)}
+              className="w-full py-2.5 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300 text-sm"
+            >
+              Voltar
+            </button>
           </div>
         </div>
       )}

@@ -699,7 +699,11 @@ export const DashboardView: React.FC = () => {
                   <td className="p-4 text-rose-400 font-bold text-right">{formatCurrency(debt.total)}</td>
                   <td className="p-4 text-center">
                     <button
-                      onClick={() => settleDebts(debt.re)}
+                      onClick={async () => {
+                        const ok = await settleDebts(debt.re);
+                        if (ok) alert('Débitos quitados com sucesso!');
+                        else alert('Erro ao quitar débitos.');
+                      }}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all duration-300 text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                     >
                       Quitar Débito
