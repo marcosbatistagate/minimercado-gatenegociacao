@@ -43,12 +43,27 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
       startDate = new Date(currentYear, currentMonth - 2, 1, 0, 0, 0, 0);
     }
 
+    const isSaleDebit = (s: Sale) => {
+      const rawPaymentStatus = (s.payment_status || '').toLowerCase();
+      const rawStatus = (s.status || '').toLowerCase();
+      const rawMethod = (s.payment_method || '').toUpperCase();
+      return (
+        rawPaymentStatus === 'pending' ||
+        rawPaymentStatus === 'debit' ||
+        rawStatus === 'pending' ||
+        rawStatus === 'debit' ||
+        rawMethod === 'DEBIT'
+      );
+    };
+
     const allUserSales = sales.filter(s => s.customerRe === customer.re && s.status !== 'cancelled');
 
-    // Total em Débito SEMPRE reflete o saldo devedor real acumulado em aberto
-    const totalDebt = allUserSales
-      .filter(s => s.payment_status === 'PENDING')
+    // Total em Débito: Soma de todas as vendas cujo status seja em aberto/débito OU customers.debt
+    const salesDebt = allUserSales
+      .filter(isSaleDebit)
       .reduce((sum, s) => sum + s.total_amount, 0);
+    const customerDebt = (customer as any).debt ? Number((customer as any).debt) : 0;
+    const totalDebt = Math.max(salesDebt, customerDebt);
 
     // Vendas filtradas pelo período selecionado
     const periodSales = allUserSales.filter(s => {
@@ -67,12 +82,13 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
       unitPrice: number;
       quantity: number;
       subtotal: number;
-      paymentStatus: 'PAID' | 'PENDING';
+      isDebit: boolean;
     }> = [];
 
     periodSales.forEach(s => {
       periodTotal += s.total_amount;
-      if (s.payment_status === 'PAID') {
+      const isDebit = isSaleDebit(s);
+      if (!isDebit) {
         periodPaid += s.total_amount;
       }
       s.items.forEach(item => {
@@ -83,7 +99,7 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
           unitPrice: item.product.price,
           quantity: item.quantity,
           subtotal: item.subtotal,
-          paymentStatus: s.payment_status
+          isDebit
         });
       });
     });
@@ -97,7 +113,7 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
       periodItemsQty,
       totalDebt
     };
-  }, [sales, customer.re, period]);
+  }, [sales, customer, period]);
 
   if (!isOpen) return null;
 
@@ -208,11 +224,11 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
                       <td className="p-2.5 sm:p-3 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
                       <td className="p-2.5 sm:p-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold border ${
-                          item.paymentStatus === 'PENDING' 
+                          item.isDebit 
                             ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
                             : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                         }`}>
-                          {item.paymentStatus === 'PENDING' ? 'Em Débito' : 'Pago'}
+                          {item.isDebit ? 'Em Débito' : 'Pago'}
                         </span>
                       </td>
                     </tr>

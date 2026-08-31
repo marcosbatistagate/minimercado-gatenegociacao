@@ -251,9 +251,22 @@ export const DashboardView: React.FC = () => {
     let debitCount = 0;
     let debitTotal = 0;
 
+    const isSaleDebit = (s: Sale) => {
+      const rawPaymentStatus = (s.payment_status || '').toLowerCase();
+      const rawStatus = (s.status || '').toLowerCase();
+      const rawMethod = (s.payment_method || '').toUpperCase();
+      return (
+        rawPaymentStatus === 'pending' ||
+        rawPaymentStatus === 'debit' ||
+        rawStatus === 'pending' ||
+        rawStatus === 'debit' ||
+        rawMethod === 'DEBIT'
+      );
+    };
+
     filteredSales.forEach(s => {
       if (s.status !== 'cancelled') {
-        if (s.payment_status === 'PENDING' || s.payment_method === 'DEBIT') {
+        if (isSaleDebit(s)) {
           debitCount++;
           debitTotal += s.total_amount;
         } else {
@@ -283,8 +296,21 @@ export const DashboardView: React.FC = () => {
   // Aggregate pending debts per client across ALL time (never reset by monthly cycle)
   const pendingDebts = useMemo(() => {
     const debtsMap: Record<string, { re: string, name: string, total: number }> = {};
+    const isSaleDebit = (s: Sale) => {
+      const rawPaymentStatus = (s.payment_status || '').toLowerCase();
+      const rawStatus = (s.status || '').toLowerCase();
+      const rawMethod = (s.payment_method || '').toUpperCase();
+      return (
+        rawPaymentStatus === 'pending' ||
+        rawPaymentStatus === 'debit' ||
+        rawStatus === 'pending' ||
+        rawStatus === 'debit' ||
+        rawMethod === 'DEBIT'
+      );
+    };
+
     sales.forEach(s => {
-      if (s.payment_status === 'PENDING' && s.status !== 'cancelled' && s.customerRe) {
+      if (isSaleDebit(s) && s.status !== 'cancelled' && s.customerRe) {
         const customer = customers.find(c => c.re === s.customerRe);
         const name = customer ? customer.name : 'Desconhecido';
         if (!debtsMap[s.customerRe]) {

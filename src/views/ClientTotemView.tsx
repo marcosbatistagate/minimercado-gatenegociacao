@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useMarketStore } from '../store/useMarketStore';
+import { useMarketStore, type Sale } from '../store/useMarketStore';
 import { QrCode, Search, Trash2, Shield, History, X, Eye, EyeOff } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
 import { QRCodeSVG } from 'qrcode.react';
@@ -177,8 +177,21 @@ export const ClientTotemView: React.FC = () => {
     // All valid non-cancelled sales for the customer regardless of month cycle (preserves all pending debits)
     const allUserSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status !== 'cancelled');
 
+    const isSaleDebit = (s: Sale) => {
+      const rawPaymentStatus = (s.payment_status || '').toLowerCase();
+      const rawStatus = (s.status || '').toLowerCase();
+      const rawMethod = (s.payment_method || '').toUpperCase();
+      return (
+        rawPaymentStatus === 'pending' ||
+        rawPaymentStatus === 'debit' ||
+        rawStatus === 'pending' ||
+        rawStatus === 'debit' ||
+        rawMethod === 'DEBIT'
+      );
+    };
+
     let totalPaid = 0;
-    let totalDebt = 0;
+    let salesDebt = 0;
     let totalMonth = 0;
     let totalThreeMonths = 0;
     const itemsList: any[] = [];
@@ -186,10 +199,11 @@ export const ClientTotemView: React.FC = () => {
     allUserSales.forEach(s => {
       const saleDate = new Date(s.created_at);
       const saleAmount = s.total_amount;
+      const isDebit = isSaleDebit(s);
 
       // 1. Payment status totals (ALL accumulated pending debits are strictly preserved)
-      if (s.payment_status === 'PENDING') {
-        totalDebt += saleAmount;
+      if (isDebit) {
+        salesDebt += saleAmount;
       } else {
         totalPaid += saleAmount;
       }
@@ -212,10 +226,13 @@ export const ClientTotemView: React.FC = () => {
           unitPrice: item.product.price,
           quantity: item.quantity,
           subtotal: item.subtotal,
-          paymentStatus: s.payment_status
+          paymentStatus: isDebit ? 'PENDING' : 'PAID'
         });
       });
     });
+
+    const customerDebt = (currentCustomer as any).debt ? Number((currentCustomer as any).debt) : 0;
+    const totalDebt = Math.max(salesDebt, customerDebt);
 
     // Sort products history by date descending
     itemsList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

@@ -207,7 +207,7 @@ export const supabaseService = {
     paymentMethod: PaymentMethod, 
     customerRe: string | undefined, 
     items: CartItem[],
-    paymentStatus: 'PAID' | 'PENDING' = 'PAID'
+    paymentStatus: 'paid' | 'pending' | 'PAID' | 'PENDING' = 'paid'
   ) {
     const formattedItems = items.map(item => ({
       product_id: item.product.id,
@@ -216,12 +216,16 @@ export const supabaseService = {
       total_price: item.subtotal
     }));
 
+    const isDebit = paymentMethod === 'DEBIT' || paymentStatus.toLowerCase() === 'pending';
+    const finalMethod = isDebit ? 'DEBIT' : 'PIX';
+    const finalStatus = isDebit ? 'pending' : 'paid';
+
     const { data, error } = await supabase.rpc('process_sale', {
       p_total_amount: totalAmount,
-      p_payment_method: paymentMethod,
+      p_payment_method: finalMethod,
       p_customer_re: customerRe || null,
       p_items: formattedItems,
-      p_payment_status: paymentStatus
+      p_payment_status: finalStatus
     });
 
     if (error) {
@@ -267,37 +271,50 @@ export const supabaseService = {
       return [];
     }
 
-    return (data as any[]).map(s => ({
-      id: s.id,
-      created_at: s.created_at,
-      payment_method: s.payment_method,
-      total_amount: Number(s.total_amount),
-      status: s.status,
-      customerRe: s.customer_re,
-      payment_status: s.payment_status || 'PAID',
-      items: (s.sale_items || []).map((item: any) => ({
-        product: {
-          id: item.products?.id || item.product_id,
-          code: item.products?.code || '',
-          name: item.products?.name || 'Produto Removido',
-          price: Number(item.unit_price),
-          category: '',
-          cost_price: Number(item.products?.cost_price || 0),
-          stock: Number(item.products?.stock || 0),
-          min_stock: Number(item.products?.min_stock || 0)
-        },
-        quantity: Number(item.quantity),
-        subtotal: Number(item.total_price)
-      }))
-    }));
+    return (data as any[]).map(s => {
+      const rawStatus = (s.status || '').toLowerCase();
+      const rawPaymentStatus = (s.payment_status || '').toLowerCase();
+      const rawMethod = (s.payment_method || '').toUpperCase();
+
+      const isDebit = 
+        rawPaymentStatus === 'pending' || 
+        rawPaymentStatus === 'debit' ||
+        rawStatus === 'pending' || 
+        rawStatus === 'debit' || 
+        rawMethod === 'DEBIT';
+
+      return {
+        id: s.id,
+        created_at: s.created_at,
+        payment_method: isDebit ? 'DEBIT' : 'PIX',
+        total_amount: Number(s.total_amount),
+        status: isDebit ? 'pending' : (s.status || 'completed'),
+        customerRe: s.customer_re,
+        payment_status: isDebit ? 'PENDING' : 'PAID',
+        items: (s.sale_items || []).map((item: any) => ({
+          product: {
+            id: item.products?.id || item.product_id,
+            code: item.products?.code || '',
+            name: item.products?.name || 'Produto Removido',
+            price: Number(item.unit_price),
+            category: '',
+            cost_price: Number(item.products?.cost_price || 0),
+            stock: Number(item.products?.stock || 0),
+            min_stock: Number(item.products?.min_stock || 0)
+          },
+          quantity: Number(item.quantity),
+          subtotal: Number(item.total_price)
+        }))
+      };
+    });
   },
 
-  async updatePaymentStatus(customerRe: string, newStatus: 'PAID' | 'PENDING'): Promise<boolean> {
+  async updatePaymentStatus(customerRe: string, newStatus: 'PAID' | 'PENDING' = 'PAID'): Promise<boolean> {
     const { error } = await supabase
       .from('sales')
-      .update({ payment_status: newStatus })
+      .update({ payment_status: newStatus, status: 'completed' })
       .eq('customer_re', customerRe)
-      .eq('payment_status', 'PENDING');
+      .or('payment_status.eq.PENDING,payment_status.eq.pending,payment_status.eq.debit,payment_method.eq.DEBIT,status.eq.pending,status.eq.debit');
 
     if (error) {
       console.error('Error updating payment status:', error);

@@ -23,14 +23,14 @@ export interface CartItem {
   subtotal: number;
 }
 
-export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | 'DEBIT' | null;
+export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | 'PIX' | 'DEBIT' | null;
 
 export interface Sale {
   id: string;
   created_at: string;
   payment_method: PaymentMethod;
   total_amount: number;
-  status: 'completed' | 'cancelled';
+  status: 'completed' | 'cancelled' | 'pending';
   items: CartItem[];
   customerRe?: string;
   payment_status: 'PAID' | 'PENDING';
@@ -365,15 +365,16 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     try {
       const saleId = await supabaseService.createSale(
         total_amount,
-        'pix',
+        'PIX',
         state.currentCustomer?.re,
-        state.cart
+        state.cart,
+        'paid'
       );
       
       const newSale: Sale = {
         id: saleId || Math.random().toString(36).substring(2, 9),
         created_at: new Date().toISOString(),
-        payment_method: 'pix',
+        payment_method: 'PIX',
         total_amount,
         status: 'completed',
         items: [...state.cart],
@@ -411,7 +412,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         'DEBIT',
         state.currentCustomer?.re,
         state.cart,
-        'PENDING'
+        'pending'
       );
       
       const newSale: Sale = {
@@ -419,7 +420,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         created_at: new Date().toISOString(),
         payment_method: 'DEBIT',
         total_amount,
-        status: 'completed',
+        status: 'pending',
         items: [...state.cart],
         customerRe: state.currentCustomer?.re,
         payment_status: 'PENDING'
