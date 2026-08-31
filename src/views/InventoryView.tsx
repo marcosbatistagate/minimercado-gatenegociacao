@@ -358,13 +358,13 @@ export const InventoryView: React.FC = () => {
                         setFormData({...formData, category: e.target.value});
                       }
                     }} 
-                    className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50"
+                    className="w-full bg-slate-800 text-white border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg p-2.5 text-white focus:outline-none"
                   >
-                    <option value="">Selecione uma categoria...</option>
+                    <option value="" className="bg-slate-800 text-white">Selecione uma categoria...</option>
                     {modalCategories.map(catName => (
-                      <option key={catName} value={catName}>{catName}</option>
+                      <option key={catName} value={catName} className="bg-slate-800 text-white">{catName}</option>
                     ))}
-                    <option value="NEW_CUSTOM">+ Nova Categoria...</option>
+                    <option value="NEW_CUSTOM" className="bg-slate-800 text-white">+ Nova Categoria...</option>
                   </select>
                   {showCustomCategory && (
                     <div className="mt-2 space-y-1">
@@ -378,7 +378,7 @@ export const InventoryView: React.FC = () => {
                           setFormData({...formData, category: e.target.value});
                         }} 
                         placeholder="Digite o nome da categoria"
-                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                        className="w-full bg-slate-800 text-white placeholder-slate-400 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
                       />
                     </div>
                   )}
