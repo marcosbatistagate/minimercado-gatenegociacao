@@ -78,26 +78,7 @@ export const AuditView: React.FC = () => {
     setCountedStock(autofills);
   };
 
-  const handleRegisterSingle = async (productId: string, productName: string, expected: number) => {
-    const countedVal = countedStock[productId];
-    if (countedVal === undefined || countedVal === '') {
-      alert('Por favor, insira o valor contado primeiro.');
-      return;
-    }
 
-    const countedNum = parseInt(countedVal, 10);
-    if (isNaN(countedNum)) {
-      alert('Por favor, insira um número válido.');
-      return;
-    }
-
-    await addStockAudit(productId, productName, expected, countedNum);
-    setRegisteredIds(prev => ({
-      ...prev,
-      [productId]: true
-    }));
-    alert(`Divergência registrada para ${productName}!`);
-  };
 
   const handleRegisterAllDiscrepancies = async () => {
     let registeredCount = 0;
@@ -175,28 +156,24 @@ export const AuditView: React.FC = () => {
       <FadeIn delay="200">
         <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
           <div className="overflow-x-auto w-full shadow-inner">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
                   <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
-                  <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Inicial</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas de Ontem</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Esperado</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Total Contado</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Status</th>
-                  <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAuditProducts.map(p => {
                   const salesYesterday = yesterdayProductConsumption[p.id] || 0;
-                  const maxStock = p.stock + salesYesterday;
                   const countedValue = countedStock[p.id] || '';
                   const hasInput = countedValue !== '';
                   const countedNum = parseInt(countedValue, 10);
                   const isOk = hasInput && !isNaN(countedNum) && countedNum === p.stock;
                   const isDifferent = hasInput && !isNaN(countedNum) && countedNum !== p.stock;
-                  const isAlreadyRegistered = registeredIds[p.id];
 
                   // CSS classes depending on match status
                   const inputBorderClass = isDifferent
@@ -216,9 +193,6 @@ export const AuditView: React.FC = () => {
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td className="p-4 text-center text-white/80 font-semibold">
-                        {maxStock} un.
                       </td>
                       <td className="p-4 text-center font-medium">
                         {salesYesterday > 0 ? (
@@ -245,39 +219,20 @@ export const AuditView: React.FC = () => {
                       <td className="p-4 text-center">
                         {hasInput && !isNaN(countedNum) ? (
                           isOk ? (
-                            <span className="flex items-center justify-center gap-1.5 text-emerald-400 text-sm font-semibold">
-                              <CheckCircle2 size={18} />
-                              OK
+                            <span className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full">
+                              <CheckCircle2 size={14} />
+                              Correto
                             </span>
                           ) : (
-                            <span className="flex items-center justify-center gap-1.5 text-rose-400 text-sm font-semibold">
-                              <AlertTriangle size={18} />
+                            <span className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold rounded-full">
+                              <AlertTriangle size={14} />
                               Divergente
                             </span>
                           )
                         ) : (
-                          <span className="text-white/30 text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-center">
-                        {isDifferent && (
-                          <button
-                            onClick={() => handleRegisterSingle(p.id, p.name, p.stock)}
-                            disabled={isAlreadyRegistered}
-                            className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-                              isAlreadyRegistered 
-                                ? 'bg-white/5 border border-white/10 text-white/40 cursor-default'
-                                : 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.2)]'
-                            }`}
-                          >
-                            {isAlreadyRegistered ? 'Registrado' : 'Registrar'}
-                          </button>
-                        )}
-                        {isOk && (
-                          <span className="text-emerald-500/60 text-xs font-semibold">Sem divergências</span>
-                        )}
-                        {!hasInput && (
-                          <span className="text-white/20 text-xs">Aguardando contagem</span>
+                          <span className="inline-flex items-center justify-center px-3 py-1 bg-white/5 border border-white/10 text-white/40 text-xs font-medium rounded-full">
+                            Aguardando contagem
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -285,7 +240,7 @@ export const AuditView: React.FC = () => {
                 })}
                 {filteredAuditProducts.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-white/50">
+                    <td colSpan={5} className="p-8 text-center text-white/50">
                       Nenhum produto encontrado para conferência.
                     </td>
                   </tr>
