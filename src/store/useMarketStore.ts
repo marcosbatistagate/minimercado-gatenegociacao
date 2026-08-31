@@ -399,7 +399,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         receivedAmount: 0
       });
       
-      alert('Débito registrado com sucesso no seu RE!');
+      alert('Débito registrado com sucesso!');
     } catch (err) {
       alert('Erro ao processar venda em débito.');
     }

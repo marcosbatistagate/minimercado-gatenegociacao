@@ -545,17 +545,17 @@ export const ClientTotemView: React.FC = () => {
 
         {/* Right Column - Totals and PIX */}
         <div className="w-full lg:w-96 flex flex-col gap-4">
-          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-            <span className="text-white/60 font-medium">Total da Compra</span>
-            <span className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400 py-2">
-              {formatCurrency(totalCart)}
-            </span>
-          </div>
-
           <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-6 flex-1 justify-center shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+            <div className="text-center">
+              <span className="text-white/60 font-medium text-sm">Total da Compra</span>
+              <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400 py-2">
+                {formatCurrency(totalCart)}
+              </h2>
+            </div>
+
             <div className="text-center space-y-1">
               <h3 className="font-bold text-white text-lg">Pague com PIX</h3>
-              <p className="text-white/60 text-sm">Escaneie o QR barcode abaixo</p>
+              <p className="text-white/60 text-sm">Escaneie o QR Code abaixo</p>
             </div>
             
             <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-lg">
@@ -589,7 +589,7 @@ export const ClientTotemView: React.FC = () => {
               onClick={handleFinalize}
               className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 hover:border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg glow border border-transparent"
             >
-              Pagar com PIX [F4]
+              Finalizar Compra (PIX Realizado)
             </button>
             <button 
               disabled={cart.length === 0}
