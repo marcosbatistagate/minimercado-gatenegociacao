@@ -86,6 +86,38 @@ export const InventoryView: React.FC = () => {
     min_stock: 0,
   });
 
+  // Box / Pack / Display entry state
+  const [entryType, setEntryType] = useState<'unit' | 'box'>('unit');
+  const [boxCount, setBoxCount] = useState<number>(1);
+  const [unitsPerBox, setUnitsPerBox] = useState<number>(1);
+  const [boxCost, setBoxCost] = useState<number>(0);
+  const [addStockToExisting, setAddStockToExisting] = useState<boolean>(true);
+
+  // Derived calculations for Box mode
+  const calculatedUnitCost = useMemo(() => {
+    if (entryType === 'box') {
+      if (unitsPerBox > 0 && boxCost > 0) {
+        return Number((boxCost / unitsPerBox).toFixed(2));
+      }
+      return 0;
+    }
+    return formData.cost_price;
+  }, [entryType, boxCost, unitsPerBox, formData.cost_price]);
+
+  const boxAddedUnits = useMemo(() => {
+    return (Number(boxCount) || 0) * (Number(unitsPerBox) || 0);
+  }, [boxCount, unitsPerBox]);
+
+  const totalCalculatedStock = useMemo(() => {
+    if (entryType === 'box') {
+      if (editingProduct && addStockToExisting) {
+        return (Number(editingProduct.stock) || 0) + boxAddedUnits;
+      }
+      return boxAddedUnits;
+    }
+    return formData.stock;
+  }, [entryType, editingProduct, addStockToExisting, boxAddedUnits, formData.stock]);
+
   const fallbackCategories = ['Bebidas', 'Doces & Chocolates', 'Salgados & Snacks', 'Fitness & Proteicos', 'Diversos'];
   
   const modalCategories = useMemo(() => {
@@ -123,6 +155,11 @@ export const InventoryView: React.FC = () => {
   const handleOpenModal = (product?: Product) => {
     setShowCustomCategory(false);
     setCustomCategory('');
+    setEntryType('unit');
+    setBoxCount(1);
+    setUnitsPerBox(1);
+    setBoxCost(0);
+    setAddStockToExisting(true);
     if (product) {
       setEditingProduct(product);
       setFormData({
@@ -134,6 +171,9 @@ export const InventoryView: React.FC = () => {
         stock: product.stock,
         min_stock: product.min_stock,
       });
+      if (product.cost_price > 0) {
+        setBoxCost(product.cost_price);
+      }
     } else {
       setEditingProduct(null);
       setFormData({
@@ -155,6 +195,11 @@ export const InventoryView: React.FC = () => {
     setSaveError(null);
     setShowCustomCategory(false);
     setCustomCategory('');
+    setEntryType('unit');
+    setBoxCount(1);
+    setUnitsPerBox(1);
+    setBoxCost(0);
+    setAddStockToExisting(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -164,13 +209,21 @@ export const InventoryView: React.FC = () => {
       // Find category ID
       const categoryId = dbCategories.find(c => c.name === formData.category)?.id;
       
+      const finalCostPrice = entryType === 'box'
+        ? calculatedUnitCost
+        : Number(formData.cost_price) || 0;
+
+      const finalStock = entryType === 'box'
+        ? totalCalculatedStock
+        : Number(formData.stock) || 0;
+
       const payload = {
         code: formData.code.trim(),
         name: formData.name.trim(),
         category: formData.category,
-        stock: Number(formData.stock) || 0,
+        stock: finalStock,
         min_stock: Number(formData.min_stock) || 0,
-        cost_price: Number(formData.cost_price) || 0,
+        cost_price: finalCostPrice,
         price: Number(formData.price) || 0,
       };
 
@@ -372,100 +425,280 @@ export const InventoryView: React.FC = () => {
             </div>
             
             <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-auto">
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Código</label>
-                  <input autoFocus required type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} onKeyDown={handleCodeKeyDown} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Nome do Produto</label>
-                  <input ref={nameInputRef} required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Categoria</label>
-                  <select 
-                    required 
-                    value={showCustomCategory ? 'NEW_CUSTOM' : formData.category} 
-                    onChange={e => {
-                      if (e.target.value === 'NEW_CUSTOM') {
-                        setShowCustomCategory(true);
-                        setFormData({...formData, category: customCategory});
-                      } else {
-                        setShowCustomCategory(false);
-                        setFormData({...formData, category: e.target.value});
-                      }
-                    }} 
-                    className="w-full bg-slate-800 text-white border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg p-2.5 text-white focus:outline-none"
+              <div className="p-6 flex flex-col gap-4">
+                {/* Entry Type Toggle */}
+                <div className="flex items-center gap-2 p-1 bg-black/40 border border-white/10 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setEntryType('unit')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${
+                      entryType === 'unit'
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
                   >
-                    <option value="" className="bg-slate-800 text-white">Selecione uma categoria...</option>
-                    {modalCategories.map(catName => (
-                      <option key={catName} value={catName} className="bg-slate-800 text-white">{catName}</option>
-                    ))}
-                    <option value="NEW_CUSTOM" className="bg-slate-800 text-white">+ Nova Categoria...</option>
-                  </select>
-                  {showCustomCategory && (
-                    <div className="mt-2 space-y-1">
-                      <label className="text-xs text-white/60">Nome da Nova Categoria</label>
+                    Unidade Avulsa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEntryType('box');
+                      if (formData.cost_price > 0 && boxCost === 0) {
+                        setBoxCost(Number((formData.cost_price * (unitsPerBox || 1)).toFixed(2)));
+                      }
+                    }}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                      entryType === 'box'
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>📦 Caixa / Display</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Barcode of unit */}
+                  <div className="space-y-1">
+                    <label className="text-sm text-white/60">
+                      {entryType === 'box' ? 'Código de Barras da Unidade (Venda no Totem)' : 'Código de Barras (Unidade)'}
+                    </label>
+                    <input 
+                      autoFocus 
+                      required 
+                      type="text" 
+                      value={formData.code} 
+                      onChange={e => setFormData({...formData, code: e.target.value})} 
+                      onKeyDown={handleCodeKeyDown} 
+                      placeholder="Bipe ou digite o código..."
+                      className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  {/* Product Name */}
+                  <div className="space-y-1">
+                    <label className="text-sm text-white/60">Nome do Produto</label>
+                    <input 
+                      ref={nameInputRef} 
+                      required 
+                      type="text" 
+                      value={formData.name} 
+                      onChange={e => setFormData({...formData, name: e.target.value})} 
+                      placeholder="Ex: Chocolate KitKat 41.5g"
+                      className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-sm text-white/60">Categoria</label>
+                    <select 
+                      required 
+                      value={showCustomCategory ? 'NEW_CUSTOM' : formData.category} 
+                      onChange={e => {
+                        if (e.target.value === 'NEW_CUSTOM') {
+                          setShowCustomCategory(true);
+                          setFormData({...formData, category: customCategory});
+                        } else {
+                          setShowCustomCategory(false);
+                          setFormData({...formData, category: e.target.value});
+                        }
+                      }} 
+                      className="w-full bg-slate-800 text-white border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg p-2.5 text-white focus:outline-none"
+                    >
+                      <option value="" className="bg-slate-800 text-white">Selecione uma categoria...</option>
+                      {modalCategories.map(catName => (
+                        <option key={catName} value={catName} className="bg-slate-800 text-white">{catName}</option>
+                      ))}
+                      <option value="NEW_CUSTOM" className="bg-slate-800 text-white">+ Nova Categoria...</option>
+                    </select>
+                    {showCustomCategory && (
+                      <div className="mt-2 space-y-1">
+                        <label className="text-xs text-white/60">Nome da Nova Categoria</label>
+                        <input 
+                          required 
+                          type="text" 
+                          value={customCategory} 
+                          onChange={e => {
+                            setCustomCategory(e.target.value);
+                            setFormData({...formData, category: e.target.value});
+                          }} 
+                          placeholder="Digite o nome da categoria"
+                          className="w-full bg-slate-800 text-white placeholder-slate-400 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                        />
+                      </div>
+                    )}
+                    {formData.category && categoryDescriptions[formData.category] && (
+                      <p className="text-xs text-white/40 mt-1 italic">
+                        {categoryDescriptions[formData.category]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Minimum Stock */}
+                  <div className="space-y-1">
+                    <label className="text-sm text-white/60">Estoque Mínimo (Unidades)</label>
+                    <input 
+                      required 
+                      type="number" 
+                      min="0"
+                      value={formData.min_stock} 
+                      onChange={e => setFormData({...formData, min_stock: Number(e.target.value)})} 
+                      className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  {/* Mode specific stock inputs */}
+                  {entryType === 'unit' ? (
+                    <div className="space-y-1">
+                      <label className="text-sm text-white/60">Estoque Atual (Unidades)</label>
                       <input 
                         required 
-                        type="text" 
-                        value={customCategory} 
-                        onChange={e => {
-                          setCustomCategory(e.target.value);
-                          setFormData({...formData, category: e.target.value});
-                        }} 
-                        placeholder="Digite o nome da categoria"
-                        className="w-full bg-slate-800 text-white placeholder-slate-400 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                        type="number" 
+                        min="0"
+                        value={formData.stock} 
+                        onChange={e => setFormData({...formData, stock: Number(e.target.value)})} 
+                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
                       />
                     </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-sm text-white/60 font-medium">Quantidade de Caixas Recebidas</label>
+                        <input 
+                          required 
+                          type="number" 
+                          min="1"
+                          value={boxCount} 
+                          onChange={e => setBoxCount(Math.max(1, Number(e.target.value)))} 
+                          placeholder="Ex: 2"
+                          className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-sm text-white/60 font-medium">Unidades por Caixa / Display</label>
+                        <input 
+                          required 
+                          type="number" 
+                          min="1"
+                          value={unitsPerBox} 
+                          onChange={e => setUnitsPerBox(Math.max(1, Number(e.target.value)))} 
+                          placeholder="Ex: 16"
+                          className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+
+                      {/* Highlighted Resulting Stock Card */}
+                      <div className="sm:col-span-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-emerald-300 font-medium">Estoque Total Resultante</span>
+                          <span className="text-xl font-bold text-emerald-400">
+                            📦 Total: {totalCalculatedStock} unidades em estoque
+                          </span>
+                          <span className="text-[11px] text-white/50">
+                            ({boxCount} {boxCount === 1 ? 'caixa' : 'caixas'} × {unitsPerBox} un. = {boxAddedUnits} novas unidades
+                            {editingProduct && addStockToExisting ? ` + ${editingProduct.stock} un. atuais` : ''})
+                          </span>
+                        </div>
+                        {editingProduct && (
+                          <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer bg-black/30 px-3 py-1.5 rounded-lg border border-white/10 hover:border-emerald-500/40 transition-colors">
+                            <input 
+                              type="checkbox" 
+                              checked={addStockToExisting} 
+                              onChange={e => setAddStockToExisting(e.target.checked)}
+                              className="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500" 
+                            />
+                            <span>Somar ao estoque atual ({editingProduct.stock} un.)</span>
+                          </label>
+                        )}
+                      </div>
+                    </>
                   )}
-                  {formData.category && categoryDescriptions[formData.category] && (
-                    <p className="text-xs text-white/40 mt-1 italic">
-                      {categoryDescriptions[formData.category]}
-                    </p>
+
+                  {/* Mode specific cost inputs */}
+                  {entryType === 'unit' ? (
+                    <div className="space-y-1">
+                      <label className="text-sm text-white/60">Preço de Custo Unitário (R$)</label>
+                      <input 
+                        required 
+                        type="number" 
+                        step="0.01" 
+                        min="0"
+                        value={formData.cost_price} 
+                        onChange={e => setFormData({...formData, cost_price: Number(e.target.value)})} 
+                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-sm text-white/60 font-medium">Custo da Caixa (R$)</label>
+                        <input 
+                          required 
+                          type="number" 
+                          step="0.01" 
+                          min="0"
+                          value={boxCost} 
+                          onChange={e => setBoxCost(Number(e.target.value))} 
+                          placeholder="Ex: 24.00"
+                          className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-sm text-white/60 font-medium">Custo Unitário (Calculado)</label>
+                        <div className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-emerald-400 font-semibold cursor-not-allowed flex items-center justify-between">
+                          <span>R$ {calculatedUnitCost.toFixed(2)}</span>
+                          <span className="text-[10px] text-white/40 font-normal">
+                            (R$ {boxCost.toFixed(2)} / {unitsPerBox} un.)
+                          </span>
+                        </div>
+                      </div>
+                    </>
                   )}
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Estoque Atual</label>
-                  <input required type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Estoque Mínimo</label>
-                  <input required type="number" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Preço de Custo (R$)</label>
-                  <input required type="number" step="0.01" value={formData.cost_price} onChange={e => setFormData({...formData, cost_price: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Preço de Venda (R$)</label>
-                  <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Margem (%)</label>
-                  <div className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white/60 cursor-not-allowed">
-                    {calculateMargin(formData.price, formData.cost_price).toFixed(2)}%
+
+                  {/* Sale Price */}
+                  <div className="space-y-1">
+                    <label className="text-sm text-white/60">Preço de Venda Unitário (R$)</label>
+                    <input 
+                      required 
+                      type="number" 
+                      step="0.01" 
+                      min="0"
+                      value={formData.price} 
+                      onChange={e => setFormData({...formData, price: Number(e.target.value)})} 
+                      placeholder="Ex: 3.50"
+                      className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                    />
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-white/60">Lucro Un. Estimado (R$)</label>
-                  <div className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-3 text-emerald-400 font-medium cursor-not-allowed">
-                    R$ {(formData.price - formData.cost_price).toFixed(2)}
+
+                  {/* Margin & Profit */}
+                  <div className="space-y-1">
+                    <label className="text-sm text-white/60">Margem (%)</label>
+                    <div className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white/60 cursor-not-allowed">
+                      {calculateMargin(formData.price, entryType === 'box' ? calculatedUnitCost : formData.cost_price).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-sm text-white/60">Lucro Un. Estimado (R$)</label>
+                    <div className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-3 text-emerald-400 font-medium cursor-not-allowed">
+                      R$ {(formData.price - (entryType === 'box' ? calculatedUnitCost : formData.cost_price)).toFixed(2)}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {saveError && (
-                <div className="px-6 py-3 mx-6 mt-4 bg-rose-500/20 border border-rose-500/30 rounded-xl text-rose-300 text-sm">
+                <div className="px-6 py-3 mx-6 mt-2 bg-rose-500/20 border border-rose-500/30 rounded-xl text-rose-300 text-sm">
                   {saveError}
                 </div>
               )}
               
-              <div className="p-6 border-t border-white/10 flex justify-end gap-3 mt-auto">
+              <div className="p-6 border-t border-white/10 flex justify-end gap-3 mt-auto bg-black/20">
                 <button type="button" onClick={handleCloseModal} className="px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium">
                   Cancelar
                 </button>
-                <button type="submit" className="px-5 py-2 rounded-xl text-white bg-primary-600 hover:bg-primary-500 transition-colors font-medium">
+                <button type="submit" className="px-5 py-2 rounded-xl text-white bg-primary-600 hover:bg-primary-500 transition-colors font-medium shadow-lg shadow-emerald-600/20">
                   {editingProduct ? 'Salvar Alterações' : 'Cadastrar Produto'}
                 </button>
               </div>
