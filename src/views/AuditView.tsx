@@ -154,7 +154,7 @@ export const AuditView: React.FC = () => {
       </FadeIn>
 
       <FadeIn delay="200">
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/50 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 transition-colors duration-200">
           <div className="overflow-x-auto w-full shadow-inner">
             <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>

@@ -1034,7 +1034,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Divergências de Estoque Registradas */}
-      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 transition-colors duration-200">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta flex items-center gap-2">
             Divergências de Estoque Registradas
