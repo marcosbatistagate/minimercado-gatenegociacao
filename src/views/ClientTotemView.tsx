@@ -301,7 +301,7 @@ export const ClientTotemView: React.FC = () => {
 
   const handleAdminAccess = () => {
     const password = prompt('Digite a senha administrativa:');
-    if (password === 'admin') {
+    if (password === 'delta0309') {
       switchInstance('admin');
     } else if (password !== null) {
       alert('Senha incorreta!');
