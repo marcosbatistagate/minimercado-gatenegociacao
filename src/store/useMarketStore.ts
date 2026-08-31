@@ -69,21 +69,45 @@ interface MarketState {
   startNewMonth: () => void;
   updateStockTimestamp: () => void;
   pixSettings: {
-    keyType: string;
-    pixKey: string;
-    beneficiaryName: string;
-    city: string;
+    id?: string;
+    pix_key_type: string;
+    pix_key: string;
+    merchant_name: string;
+    merchant_city: string;
   };
-  updatePixSettings: (settings: { keyType: string; pixKey: string; beneficiaryName: string; city: string }) => void;
+  updatePixSettings: (settings: { id?: string; pix_key_type: string; pix_key: string; merchant_name: string; merchant_city: string }) => Promise<void>;
+  fetchPixSettings: () => Promise<void>;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
   products: [],
   cart: [],
-  pixSettings: JSON.parse(localStorage.getItem('market_pix_settings') || '{"keyType":"random","pixKey":"","beneficiaryName":"Gremio Negociacao","city":"Sao Paulo"}'),
-  updatePixSettings: (settings) => {
-    localStorage.setItem('market_pix_settings', JSON.stringify(settings));
-    set({ pixSettings: settings });
+  pixSettings: {
+    pix_key_type: 'random',
+    pix_key: '',
+    merchant_name: 'Gremio Negociacao',
+    merchant_city: 'Sao Paulo'
+  },
+  updatePixSettings: async (settings) => {
+    try {
+      const saved = await supabaseService.saveMarketSettings(settings);
+      if (saved) {
+        set({ pixSettings: saved });
+      }
+    } catch (err) {
+      console.error('Error saving settings to db, fallback to memory', err);
+      set({ pixSettings: settings });
+    }
+  },
+  fetchPixSettings: async () => {
+    try {
+      const data = await supabaseService.fetchMarketSettings();
+      if (data) {
+        set({ pixSettings: data });
+      }
+    } catch (err) {
+      console.error('Error fetching settings', err);
+    }
   },
   sales: [],
   paymentMethod: null,
@@ -124,6 +148,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         sales: fetchedSales,
         stockAudits: fetchedAudits
       });
+
+      await get().fetchPixSettings();
 
       // Setup Realtime for products
       supabase

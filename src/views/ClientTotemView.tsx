@@ -118,8 +118,8 @@ export const ClientTotemView: React.FC = () => {
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
 
   const pixPayload = useMemo(() => {
-    if (!pixSettings || !pixSettings.pixKey) return '';
-    return generatePixPayload(pixSettings.pixKey, pixSettings.beneficiaryName, pixSettings.city, totalCart);
+    if (!pixSettings || !pixSettings.pix_key) return '';
+    return generatePixPayload(pixSettings.pix_key, pixSettings.merchant_name, pixSettings.merchant_city, totalCart);
   }, [pixSettings, totalCart]);
 
   // User Specific Metrics
@@ -564,7 +564,7 @@ export const ClientTotemView: React.FC = () => {
                   <QrCode size={48} className="mb-3 text-slate-400" />
                   Adicione produtos para gerar o QR Code
                 </div>
-              ) : !pixSettings || !pixSettings.pixKey ? (
+              ) : !pixSettings || !pixSettings.pix_key ? (
                 <div className="w-[220px] h-[220px] flex flex-col items-center justify-center text-rose-500 text-xs text-center p-2 font-medium">
                   <QrCode size={48} className="mb-3 text-rose-300" />
                   Chave PIX não configurada

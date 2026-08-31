@@ -44,27 +44,33 @@ export const InventoryView: React.FC = () => {
   
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [configForm, setConfigForm] = useState({
-    keyType: 'random',
-    pixKey: '',
-    beneficiaryName: '',
-    city: '',
+    id: undefined as string | undefined,
+    pix_key_type: 'random',
+    pix_key: '',
+    merchant_name: '',
+    merchant_city: '',
   });
 
   const handleOpenConfigModal = () => {
     setConfigForm({
-      keyType: pixSettings.keyType || 'random',
-      pixKey: pixSettings.pixKey || '',
-      beneficiaryName: pixSettings.beneficiaryName || '',
-      city: pixSettings.city || '',
+      id: pixSettings.id,
+      pix_key_type: pixSettings.pix_key_type || 'random',
+      pix_key: pixSettings.pix_key || '',
+      merchant_name: pixSettings.merchant_name || '',
+      merchant_city: pixSettings.merchant_city || '',
     });
     setIsConfigModalOpen(true);
   };
 
-  const handleSaveConfig = (e: React.FormEvent) => {
+  const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    updatePixSettings(configForm);
-    alert('Configurações do PIX salvas com sucesso!');
-    setIsConfigModalOpen(false);
+    try {
+      await updatePixSettings(configForm);
+      alert('Configurações salvas com sucesso!');
+      setIsConfigModalOpen(false);
+    } catch (err) {
+      alert('Erro ao salvar configurações.');
+    }
   };
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -483,8 +489,8 @@ export const InventoryView: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-sm text-white/60 font-medium">Tipo de Chave PIX</label>
                 <select
-                  value={configForm.keyType}
-                  onChange={e => setConfigForm({...configForm, keyType: e.target.value})}
+                  value={configForm.pix_key_type}
+                  onChange={e => setConfigForm({...configForm, pix_key_type: e.target.value})}
                   className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="CPF" className="bg-slate-800 text-white">CPF</option>
@@ -500,8 +506,8 @@ export const InventoryView: React.FC = () => {
                 <input
                   required
                   type="text"
-                  value={configForm.pixKey}
-                  onChange={e => setConfigForm({...configForm, pixKey: e.target.value})}
+                  value={configForm.pix_key}
+                  onChange={e => setConfigForm({...configForm, pix_key: e.target.value})}
                   placeholder="Ex: 123.456.789-00 ou email@domain.com"
                   className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
@@ -512,8 +518,8 @@ export const InventoryView: React.FC = () => {
                 <input
                   required
                   type="text"
-                  value={configForm.beneficiaryName}
-                  onChange={e => setConfigForm({...configForm, beneficiaryName: e.target.value})}
+                  value={configForm.merchant_name}
+                  onChange={e => setConfigForm({...configForm, merchant_name: e.target.value})}
                   placeholder="Ex: Gremio Negociacao"
                   className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
@@ -524,8 +530,8 @@ export const InventoryView: React.FC = () => {
                 <input
                   required
                   type="text"
-                  value={configForm.city}
-                  onChange={e => setConfigForm({...configForm, city: e.target.value})}
+                  value={configForm.merchant_city}
+                  onChange={e => setConfigForm({...configForm, merchant_city: e.target.value})}
                   placeholder="Ex: Sao Paulo"
                   className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />

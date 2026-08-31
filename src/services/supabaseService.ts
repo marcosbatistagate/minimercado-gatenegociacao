@@ -351,5 +351,33 @@ export const supabaseService = {
       localStorage.setItem('local_stock_audits', JSON.stringify(audits));
       return newAudit;
     }
+  },
+
+  async fetchMarketSettings(): Promise<any | null> {
+    const { data, error } = await supabase
+      .from('market_settings')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching market settings:', error);
+      return null;
+    }
+    return data;
+  },
+
+  async saveMarketSettings(settings: { id?: string; pix_key_type: string; pix_key: string; merchant_name: string; merchant_city: string }): Promise<any | null> {
+    const { data, error } = await supabase
+      .from('market_settings')
+      .upsert(settings)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error saving market settings:', error);
+      throw error;
+    }
+    return data;
   }
 };
