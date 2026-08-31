@@ -15,25 +15,17 @@ const formatDate = (isoString: string) => {
   }).format(new Date(isoString));
 };
 
-type TopPeriod = 'current_month' | '2_months' | '3_months' | 'all';
+type DashboardPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months' | 'all';
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers, settleDebts, stockAudits, currentCycleStart } = useMarketStore();
+  const { sales, products, customers, settleDebts, stockAudits } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
 
-  const activeSales = useMemo(() => {
-    const now = new Date();
-    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const cycleStart = new Date(currentCycleStart);
-    // Uses the latest timestamp between currentCycleStart and start of current civil month
-    const effectiveStart = cycleStart > startOfCurrentMonth ? cycleStart : startOfCurrentMonth;
-    return sales.filter(s => s.status !== 'cancelled' && new Date(s.created_at) >= effectiveStart);
-  }, [sales, currentCycleStart]);
-
-  const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
-  const [topSalesPeriod, setTopSalesPeriod] = useState<TopPeriod>('current_month');
-  const [topMarginPeriod, setTopMarginPeriod] = useState<TopPeriod>('current_month');
+  const [globalPeriod, setGlobalPeriod] = useState<DashboardPeriod>('current_month');
+  const [chartPeriod, setChartPeriod] = useState<DashboardPeriod>('current_month');
+  const [topSalesPeriod, setTopSalesPeriod] = useState<DashboardPeriod>('current_month');
+  const [topMarginPeriod, setTopMarginPeriod] = useState<DashboardPeriod>('current_month');
 
   const [hoveredBar, setHoveredBar] = useState<{ 
     name: string; 
@@ -43,21 +35,55 @@ export const DashboardView: React.FC = () => {
     y: number;
   } | null>(null);
 
-  const getPeriodStartDate = (period: TopPeriod) => {
-    if (period === 'all') return null;
+  const getPeriodRange = (period: DashboardPeriod) => {
     const today = new Date();
-    let startDate = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
-    if (period === '2_months') {
-      startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1, 0, 0, 0, 0);
-    } else if (period === '3_months') {
-      startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1, 0, 0, 0, 0);
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    if (period === 'all') {
+      return { startDate: null, endDate: null };
     }
-    return startDate;
+    if (period === 'current_month') {
+      return {
+        startDate: new Date(currentYear, currentMonth, 1, 0, 0, 0, 0),
+        endDate: null
+      };
+    }
+    if (period === 'previous_month') {
+      return {
+        startDate: new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0),
+        endDate: new Date(currentYear, currentMonth, 0, 23, 59, 59, 999)
+      };
+    }
+    if (period === '2_months') {
+      return {
+        startDate: new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0),
+        endDate: null
+      };
+    }
+    if (period === '3_months') {
+      return {
+        startDate: new Date(currentYear, currentMonth - 2, 1, 0, 0, 0, 0),
+        endDate: null
+      };
+    }
+    return { startDate: null, endDate: null };
   };
+
+  const activeSales = useMemo(() => {
+    const { startDate, endDate } = getPeriodRange(globalPeriod);
+    return sales.filter(s => {
+      if (s.status === 'cancelled') return false;
+      const saleDate = new Date(s.created_at);
+      if (startDate && saleDate < startDate) return false;
+      if (endDate && saleDate > endDate) return false;
+      return true;
+    });
+  }, [sales, globalPeriod]);
 
   const chartData = useMemo(() => {
     const today = new Date();
-    const startDate = getPeriodStartDate(chartPeriod);
+    const { startDate, endDate } = getPeriodRange(chartPeriod);
 
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
     
@@ -74,7 +100,9 @@ export const DashboardView: React.FC = () => {
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
-        if ((!startDate || saleDate >= startDate) && saleDate <= today) {
+        const afterStart = !startDate || saleDate >= startDate;
+        const beforeEnd = !endDate || saleDate <= endDate;
+        if (afterStart && beforeEnd && saleDate <= today) {
           sale.items.forEach(item => {
             if (item.product?.id && productStats[item.product.id]) {
               productStats[item.product.id].amount += item.subtotal;
@@ -135,12 +163,14 @@ export const DashboardView: React.FC = () => {
   }, [activeSales, searchFilter, customers]);
 
   const topProductsBySales = useMemo(() => {
-    const startDate = getPeriodStartDate(topSalesPeriod);
+    const { startDate, endDate } = getPeriodRange(topSalesPeriod);
     const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
-        if (!startDate || saleDate >= startDate) {
+        const afterStart = !startDate || saleDate >= startDate;
+        const beforeEnd = !endDate || saleDate <= endDate;
+        if (afterStart && beforeEnd) {
           if (searchFilter) {
             const lowerSearch = searchFilter.toLowerCase();
             const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
@@ -165,12 +195,14 @@ export const DashboardView: React.FC = () => {
   }, [sales, products, topSalesPeriod, searchFilter, customers]);
 
   const topProductsByMargin = useMemo(() => {
-    const startDate = getPeriodStartDate(topMarginPeriod);
+    const { startDate, endDate } = getPeriodRange(topMarginPeriod);
     const soldProductIds = new Set<string>();
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
-        if (!startDate || saleDate >= startDate) {
+        const afterStart = !startDate || saleDate >= startDate;
+        const beforeEnd = !endDate || saleDate <= endDate;
+        if (afterStart && beforeEnd) {
           if (searchFilter) {
             const lowerSearch = searchFilter.toLowerCase();
             const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
@@ -267,14 +299,33 @@ export const DashboardView: React.FC = () => {
   return (
     <div className="flex flex-col h-full gap-5 sm:gap-6 p-4 sm:p-6 overflow-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 w-full">
-        <h1 className="text-xl sm:text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
-        <input 
-          type="text" 
-          placeholder="Filtrar por RE ou Nome..." 
-          value={searchFilter}
-          onChange={e => setSearchFilter(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 w-full sm:w-auto min-w-[200px] sm:min-w-[260px]"
-        />
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
+          <p className="text-xs text-white/50">Visão analítica de faturamento, estoque e modalidades de pagamento</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm shadow-sm">
+            <span className="text-white/60 font-medium">Período:</span>
+            <select
+              value={globalPeriod}
+              onChange={e => setGlobalPeriod(e.target.value as DashboardPeriod)}
+              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs sm:text-sm"
+            >
+              <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+              <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
+              <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
+              <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+              <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
+            </select>
+          </div>
+          <input 
+            type="text" 
+            placeholder="Filtrar por RE ou Nome..." 
+            value={searchFilter}
+            onChange={e => setSearchFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 flex-1 sm:flex-initial sm:min-w-[220px]"
+          />
+        </div>
       </div>
       
       {/* KPIs Grid */}
@@ -391,13 +442,14 @@ export const DashboardView: React.FC = () => {
               </div>
               <select
                 value={topSalesPeriod}
-                onChange={e => setTopSalesPeriod(e.target.value as TopPeriod)}
+                onChange={e => setTopSalesPeriod(e.target.value as DashboardPeriod)}
                 className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-amber-500/50 text-xs cursor-pointer font-medium"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-                <option value="all" className="bg-slate-900 text-white">Todo o Período</option>
+                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -436,13 +488,14 @@ export const DashboardView: React.FC = () => {
               </div>
               <select
                 value={topMarginPeriod}
-                onChange={e => setTopMarginPeriod(e.target.value as TopPeriod)}
+                onChange={e => setTopMarginPeriod(e.target.value as DashboardPeriod)}
                 className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-violet-500/50 text-xs cursor-pointer font-medium"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-                <option value="all" className="bg-slate-900 text-white">Todo o Período</option>
+                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -549,21 +602,21 @@ export const DashboardView: React.FC = () => {
 
           {/* Breakdown Items with Badges, Currency and Percentages */}
           <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
-            {/* Pagamento Imediato */}
+            {/* Pagamento Imediato (PIX) */}
             <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {paymentSummary.immediateCount} vendas
+                    {paymentSummary.immediateCount} transações
                   </span>
-                  <span className="text-white/90 font-medium">Pagamento Imediato</span>
+                  <span className="text-white/90 font-medium">Pagamento Imediato (PIX)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-emerald-400">
                     {formatCurrency(paymentSummary.immediateTotal)}
                   </span>
-                  <span className="font-semibold text-emerald-300/90 text-[11px]">
-                    ({paymentSummary.immediatePct.toFixed(1)}%)
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {paymentSummary.immediatePct.toFixed(1)}%
                   </span>
                 </div>
               </div>
@@ -580,7 +633,7 @@ export const DashboardView: React.FC = () => {
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                    {paymentSummary.debitCount} vendas
+                    {paymentSummary.debitCount} transações
                   </span>
                   <span className="text-white/90 font-medium">Pagar Depois (Débito)</span>
                 </div>
@@ -588,8 +641,8 @@ export const DashboardView: React.FC = () => {
                   <span className="font-bold text-violet-400">
                     {formatCurrency(paymentSummary.debitTotal)}
                   </span>
-                  <span className="font-semibold text-violet-300/90 text-[11px]">
-                    ({paymentSummary.debitPct.toFixed(1)}%)
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    {paymentSummary.debitPct.toFixed(1)}%
                   </span>
                 </div>
               </div>
@@ -680,12 +733,14 @@ export const DashboardView: React.FC = () => {
               </div>
               <select
                 value={chartPeriod}
-                onChange={e => setChartPeriod(e.target.value as any)}
+                onChange={e => setChartPeriod(e.target.value as DashboardPeriod)}
                 className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-xs sm:text-sm cursor-pointer ml-auto sm:ml-0"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
           </div>
