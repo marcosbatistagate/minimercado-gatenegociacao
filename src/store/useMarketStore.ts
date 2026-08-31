@@ -68,11 +68,23 @@ interface MarketState {
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
   startNewMonth: () => void;
   updateStockTimestamp: () => void;
+  pixSettings: {
+    keyType: string;
+    pixKey: string;
+    beneficiaryName: string;
+    city: string;
+  };
+  updatePixSettings: (settings: { keyType: string; pixKey: string; beneficiaryName: string; city: string }) => void;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
   products: [],
   cart: [],
+  pixSettings: JSON.parse(localStorage.getItem('market_pix_settings') || '{"keyType":"random","pixKey":"","beneficiaryName":"Gremio Negociacao","city":"Sao Paulo"}'),
+  updatePixSettings: (settings) => {
+    localStorage.setItem('market_pix_settings', JSON.stringify(settings));
+    set({ pixSettings: settings });
+  },
   sales: [],
   paymentMethod: null,
   receivedAmount: 0,

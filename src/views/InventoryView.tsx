@@ -13,7 +13,7 @@ const categoryDescriptions: Record<string, string> = {
 };
 
 export const InventoryView: React.FC = () => {
-  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth } = useMarketStore();
+  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth, pixSettings, updatePixSettings } = useMarketStore();
 
   const formatUpdateTimestamp = (isoString: string) => {
     try {
@@ -42,6 +42,31 @@ export const InventoryView: React.FC = () => {
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [configForm, setConfigForm] = useState({
+    keyType: 'random',
+    pixKey: '',
+    beneficiaryName: '',
+    city: '',
+  });
+
+  const handleOpenConfigModal = () => {
+    setConfigForm({
+      keyType: pixSettings.keyType || 'random',
+      pixKey: pixSettings.pixKey || '',
+      beneficiaryName: pixSettings.beneficiaryName || '',
+      city: pixSettings.city || '',
+    });
+    setIsConfigModalOpen(true);
+  };
+
+  const handleSaveConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    updatePixSettings(configForm);
+    alert('Configurações do PIX salvas com sucesso!');
+    setIsConfigModalOpen(false);
+  };
+
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Modal form state
@@ -194,6 +219,12 @@ export const InventoryView: React.FC = () => {
             className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-full text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"
           >
             Iniciar Novo Mês
+          </button>
+          <button
+            onClick={handleOpenConfigModal}
+            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-full text-sm font-medium text-slate-300 hover:bg-slate-700 transition-all duration-300"
+          >
+            Configurar PIX
           </button>
           <button 
             onClick={() => handleOpenModal()}
@@ -430,6 +461,89 @@ export const InventoryView: React.FC = () => {
                 </button>
                 <button type="submit" className="px-5 py-2 rounded-xl text-white bg-primary-600 hover:bg-primary-500 transition-colors font-medium">
                   {editingProduct ? 'Salvar Alterações' : 'Cadastrar Produto'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isConfigModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-lg overflow-hidden flex flex-col shadow-2xl shadow-black/40">
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-xl font-bold text-white font-jakarta">
+                Configurações do Mercado (PIX)
+              </h2>
+              <button onClick={() => setIsConfigModalOpen(false)} className="text-white/60 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveConfig} className="flex flex-col p-6 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm text-white/60 font-medium">Tipo de Chave PIX</label>
+                <select
+                  value={configForm.keyType}
+                  onChange={e => setConfigForm({...configForm, keyType: e.target.value})}
+                  className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="CPF" className="bg-slate-800 text-white">CPF</option>
+                  <option value="CNPJ" className="bg-slate-800 text-white">CNPJ</option>
+                  <option value="email" className="bg-slate-800 text-white">E-mail</option>
+                  <option value="phone" className="bg-slate-800 text-white">Telefone</option>
+                  <option value="random" className="bg-slate-800 text-white">Chave Aleatória (EVP)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-white/60 font-medium">Chave PIX</label>
+                <input
+                  required
+                  type="text"
+                  value={configForm.pixKey}
+                  onChange={e => setConfigForm({...configForm, pixKey: e.target.value})}
+                  placeholder="Ex: 123.456.789-00 ou email@domain.com"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-white/60 font-medium">Nome do Beneficiário/Titular</label>
+                <input
+                  required
+                  type="text"
+                  value={configForm.beneficiaryName}
+                  onChange={e => setConfigForm({...configForm, beneficiaryName: e.target.value})}
+                  placeholder="Ex: Gremio Negociacao"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-white/60 font-medium">Cidade do Beneficiário</label>
+                <input
+                  required
+                  type="text"
+                  value={configForm.city}
+                  onChange={e => setConfigForm({...configForm, city: e.target.value})}
+                  placeholder="Ex: Sao Paulo"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsConfigModalOpen(false)}
+                  className="px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 transition-colors font-medium text-sm"
+                >
+                  Salvar Configurações
                 </button>
               </div>
             </form>

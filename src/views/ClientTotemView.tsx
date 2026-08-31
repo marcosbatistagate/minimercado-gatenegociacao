@@ -2,13 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
 import { QrCode, Search, Trash2, Shield, History, X } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
+import { QRCodeSVG } from 'qrcode.react';
+import { generatePixPayload } from '../utils/pixGenerator';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products, pixSettings } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -114,6 +116,11 @@ export const ClientTotemView: React.FC = () => {
   }, [currentCustomer, products, addToCartByCode]);
 
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
+
+  const pixPayload = useMemo(() => {
+    if (!pixSettings || !pixSettings.pixKey) return '';
+    return generatePixPayload(pixSettings.pixKey, pixSettings.beneficiaryName, pixSettings.city, totalCart);
+  }, [pixSettings, totalCart]);
 
   // User Specific Metrics
   const userMetrics = useMemo(() => {
@@ -551,9 +558,33 @@ export const ClientTotemView: React.FC = () => {
               <p className="text-white/60 text-sm">Escaneie o QR barcode abaixo</p>
             </div>
             
-            <div className="bg-white p-4 rounded-xl flex items-center justify-center">
-              <QrCode size={180} className="text-black" />
-            </div>            <button 
+            <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-lg">
+              {cart.length === 0 ? (
+                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center text-slate-500 text-xs text-center p-2 font-medium">
+                  <QrCode size={48} className="mb-3 text-slate-400" />
+                  Adicione produtos para gerar o QR Code
+                </div>
+              ) : !pixSettings || !pixSettings.pixKey ? (
+                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center text-rose-500 text-xs text-center p-2 font-medium">
+                  <QrCode size={48} className="mb-3 text-rose-300" />
+                  Chave PIX não configurada
+                </div>
+              ) : (
+                <QRCodeSVG value={pixPayload} size={220} />
+              )}
+            </div>
+            {cart.length > 0 && pixPayload && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(pixPayload);
+                  setToast({ message: 'Código PIX Copia e Cola copiado!', type: 'success' });
+                  playBeep('success');
+                }}
+                className="text-xs text-emerald-400 hover:text-emerald-300 font-medium underline flex items-center gap-1.5 -mt-2 transition-all"
+              >
+                Copiar código PIX (Copia e Cola)
+              </button>
+            )}            <button 
               disabled={cart.length === 0}
               onClick={handleFinalize}
               className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 hover:border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg glow border border-transparent"
