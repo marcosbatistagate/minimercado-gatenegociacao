@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { UserCustomer } from '../types';
-import type { Sale } from '../store/useMarketStore';
+import { useMarketStore, type Sale } from '../store/useMarketStore';
 import { X, ShoppingBag } from 'lucide-react';
 
 const formatCurrency = (value: number) => {
@@ -25,20 +25,24 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
   onOpenSettleDebtModal
 }) => {
   const [period, setPeriod] = useState<HistoryPeriod>('current_month');
+  const { currentCycleStart } = useMarketStore();
 
   const historyData = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
+    const startOfCurrentMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 
     let startDate: Date | null = null;
     let endDate: Date | null = null;
 
     if (period === 'current_month') {
-      startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+      const cycleDate = currentCycleStart ? new Date(currentCycleStart) : startOfCurrentMonth;
+      startDate = cycleDate > startOfCurrentMonth ? cycleDate : startOfCurrentMonth;
     } else if (period === 'previous_month') {
       startDate = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
-      endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+      const cycleDate = currentCycleStart ? new Date(currentCycleStart) : startOfCurrentMonth;
+      endDate = cycleDate > startOfCurrentMonth ? cycleDate : new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
     } else if (period === '2_months') {
       startDate = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
     } else if (period === '3_months') {
@@ -120,7 +124,7 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
       periodItemsQty,
       totalDebt
     };
-  }, [sales, customer, period]);
+  }, [sales, customer, period, currentCycleStart]);
 
   if (!isOpen) return null;
 

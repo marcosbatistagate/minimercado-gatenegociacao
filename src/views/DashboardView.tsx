@@ -18,7 +18,7 @@ const formatDate = (isoString: string) => {
 type DashboardPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months';
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers, settleDebts, stockAudits } = useMarketStore();
+  const { sales, products, customers, settleDebts, stockAudits, currentCycleStart, startNewMonth } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
 
@@ -88,17 +88,22 @@ export const DashboardView: React.FC = () => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
+    const startOfCurrentMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 
     if (period === 'current_month') {
+      const cycleDate = currentCycleStart ? new Date(currentCycleStart) : startOfCurrentMonth;
+      const effectiveStart = cycleDate > startOfCurrentMonth ? cycleDate : startOfCurrentMonth;
       return {
-        startDate: new Date(currentYear, currentMonth, 1, 0, 0, 0, 0),
+        startDate: effectiveStart,
         endDate: null
       };
     }
     if (period === 'previous_month') {
+      const cycleDate = currentCycleStart ? new Date(currentCycleStart) : startOfCurrentMonth;
+      const effectiveEnd = cycleDate > startOfCurrentMonth ? cycleDate : new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
       return {
         startDate: new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0),
-        endDate: new Date(currentYear, currentMonth, 0, 23, 59, 59, 999)
+        endDate: effectiveEnd
       };
     }
     if (period === '2_months') {
@@ -114,7 +119,7 @@ export const DashboardView: React.FC = () => {
       };
     }
     return {
-      startDate: new Date(currentYear, currentMonth, 1, 0, 0, 0, 0),
+      startDate: startOfCurrentMonth,
       endDate: null
     };
   };
@@ -128,7 +133,7 @@ export const DashboardView: React.FC = () => {
       if (endDate && saleDate > endDate) return false;
       return true;
     });
-  }, [sales, globalPeriod]);
+  }, [sales, globalPeriod, currentCycleStart]);
 
   const chartData = useMemo(() => {
     const today = new Date();
@@ -164,7 +169,7 @@ export const DashboardView: React.FC = () => {
 
     // Return all products sorted by name or amount
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
-  }, [sales, products, chartPeriod]);
+  }, [sales, products, chartPeriod, currentCycleStart]);
 
   const chartHeight = 320;
   const paddingLeft = 55;
@@ -241,7 +246,7 @@ export const DashboardView: React.FC = () => {
     return Object.values(counts)
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 3);
-  }, [sales, products, topSalesPeriod, searchFilter, customers]);
+  }, [sales, products, topSalesPeriod, searchFilter, customers, currentCycleStart]);
 
   const topProductsByMargin = useMemo(() => {
     const { startDate, endDate } = getPeriodRange(topMarginPeriod);
@@ -276,7 +281,7 @@ export const DashboardView: React.FC = () => {
       })
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 3);
-  }, [sales, topMarginPeriod, searchFilter, customers]);
+  }, [sales, topMarginPeriod, searchFilter, customers, currentCycleStart]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -398,6 +403,17 @@ export const DashboardView: React.FC = () => {
           <p className="text-xs text-white/50">Visão analítica de faturamento, estoque e modalidades de pagamento</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+          <button
+            onClick={async () => {
+              if (confirm('Esta ação inicia um novo ciclo contábil e de faturamento mensal. Os saldos e débitos pendentes dos clientes NÃO serão afetados e continuarão em aberto até a quitação.')) {
+                await startNewMonth();
+                alert('Novo ciclo mensal iniciado com sucesso! Métricas do mês atual reiniciadas.');
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 border border-rose-500/50 rounded-xl text-xs sm:text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"
+          >
+            Iniciar Novo Mês
+          </button>
           <div className="flex items-center gap-1.5 bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm shadow-sm">
             <span className="text-white/60 font-medium">Período:</span>
             <select

@@ -291,10 +291,10 @@ export const InventoryView: React.FC = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
           <button
-            onClick={() => {
+            onClick={async () => {
               if (confirm('Esta ação inicia um novo ciclo contábil e de faturamento mensal. Os saldos e débitos pendentes dos clientes NÃO serão afetados e continuarão em aberto até a quitação.')) {
-                startNewMonth();
-                alert('Novo ciclo contábil e faturamento mensal iniciados com sucesso!');
+                await startNewMonth();
+                alert('Novo ciclo mensal iniciado com sucesso! Métricas do mês atual reiniciadas.');
               }
             }}
             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-xl sm:rounded-full text-xs sm:text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"

@@ -466,6 +466,25 @@ export const supabaseService = {
     return data;
   },
 
+  async saveCycleReset(timestamp: string): Promise<string> {
+    localStorage.setItem('current_cycle_start', timestamp);
+    try {
+      const currentSettings = await this.fetchMarketSettings();
+      const payload: any = {
+        ...(currentSettings || {}),
+        last_cycle_reset: timestamp,
+        updated_at: new Date().toISOString()
+      };
+      if (currentSettings?.id) {
+        payload.id = currentSettings.id;
+      }
+      await supabase.from('market_settings').upsert(payload);
+    } catch (err) {
+      console.warn('Aviso: Não foi possível sincronizar last_cycle_reset no Supabase, mantido em localStorage:', err);
+    }
+    return timestamp;
+  },
+
   async saveMarketSettings(settings: { id?: string; pix_key_type: string; pix_key: string; merchant_name: string; merchant_city: string }): Promise<any | null> {
     const { data, error } = await supabase
       .from('market_settings')

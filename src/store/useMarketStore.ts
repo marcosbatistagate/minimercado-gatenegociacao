@@ -68,7 +68,7 @@ interface MarketState {
   completeDebitSale: () => Promise<boolean>;
   settleDebts: (customerRe: string) => Promise<boolean>;
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
-  startNewMonth: () => void;
+  startNewMonth: () => Promise<void>;
   updateStockTimestamp: () => void;
   pixSettings: {
     id?: string;
@@ -135,23 +135,43 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   initData: async () => {
     try {
-      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales, fetchedAudits] = await Promise.all([
+      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales, fetchedAudits, marketSettings] = await Promise.all([
         supabaseService.fetchProducts(),
         supabaseService.fetchCustomers(),
         supabaseService.fetchCategories(),
         supabaseService.fetchSales(),
-        supabaseService.fetchStockAudits()
+        supabaseService.fetchStockAudits(),
+        supabaseService.fetchMarketSettings()
       ]);
       
+      const remoteCycleReset = marketSettings?.last_cycle_reset;
+      const localCycleReset = localStorage.getItem('current_cycle_start');
+      const finalCycleReset = remoteCycleReset || localCycleReset || (() => {
+        const d = new Date();
+        d.setDate(1);
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString();
+      })();
+
+      if (remoteCycleReset) {
+        localStorage.setItem('current_cycle_start', remoteCycleReset);
+      }
+
       set({ 
         products: fetchedProducts, 
         customers: fetchedCustomers,
         dbCategories: fetchedCategories,
         sales: fetchedSales,
-        stockAudits: fetchedAudits
+        stockAudits: fetchedAudits,
+        currentCycleStart: finalCycleReset,
+        pixSettings: marketSettings ? {
+          id: marketSettings.id,
+          pix_key_type: marketSettings.pix_key_type || 'random',
+          pix_key: marketSettings.pix_key || '',
+          merchant_name: marketSettings.merchant_name || 'Gremio Negociacao',
+          merchant_city: marketSettings.merchant_city || 'Sao Paulo'
+        } : get().pixSettings
       });
-
-      await get().fetchPixSettings();
 
       // Setup Realtime for products
       supabase
@@ -472,7 +492,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  startNewMonth: () => {
+  startNewMonth: async () => {
     const nowIso = new Date().toISOString();
     localStorage.setItem('current_cycle_start', nowIso);
     localStorage.setItem('last_stock_update', nowIso);
@@ -480,6 +500,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       currentCycleStart: nowIso,
       lastStockUpdate: nowIso
     });
+    try {
+      await supabaseService.saveCycleReset(nowIso);
+    } catch (e) {
+      console.warn('Aviso: Não foi possível salvar ciclo no Supabase:', e);
+    }
   },
 
   updateStockTimestamp: () => {
