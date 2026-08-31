@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
-import { QrCode, Search, Trash2, Shield, History, X, Eye, EyeOff } from 'lucide-react';
+import { QrCode, Search, Trash2, Shield, History, X, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
 import { QRCodeSVG } from 'qrcode.react';
 import { generatePixPayload } from '../utils/pixGenerator';
@@ -19,6 +19,7 @@ export const ClientTotemView: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyPeriod, setHistoryPeriod] = useState<'current_month' | 'previous_month' | '3_months' | 'all'>('current_month');
   const [newRe, setNewRe] = useState('');
   const [newName, setNewName] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -221,6 +222,83 @@ export const ClientTotemView: React.FC = () => {
 
     return { totalPaid, totalDebt, totalMonth, totalThreeMonths, itemsList };
   }, [sales, currentCustomer]);
+
+  // Specific Metrics for History Modal with dynamic Period Filtering
+  const historyData = useMemo(() => {
+    if (!currentCustomer) {
+      return {
+        filteredItems: [] as any[],
+        periodPaid: 0,
+        periodTotal: 0,
+        periodItemsQty: 0,
+        totalDebt: 0
+      };
+    }
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+
+    if (historyPeriod === 'current_month') {
+      startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    } else if (historyPeriod === 'previous_month') {
+      startDate = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
+      endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+    } else if (historyPeriod === '3_months') {
+      startDate = new Date(currentYear, currentMonth - 2, 1, 0, 0, 0, 0);
+    }
+
+    const allUserSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status !== 'cancelled');
+
+    // Total debt is ALWAYS calculated over ALL time
+    const totalDebt = allUserSales
+      .filter(s => s.payment_status === 'PENDING')
+      .reduce((sum, s) => sum + s.total_amount, 0);
+
+    // Filter sales for the selected period
+    const periodSales = allUserSales.filter(s => {
+      const saleDate = new Date(s.created_at);
+      if (startDate && saleDate < startDate) return false;
+      if (endDate && saleDate > endDate) return false;
+      return true;
+    });
+
+    let periodPaid = 0;
+    let periodTotal = 0;
+    let periodItemsQty = 0;
+    const filteredItems: any[] = [];
+
+    periodSales.forEach(s => {
+      periodTotal += s.total_amount;
+      if (s.payment_status === 'PAID') {
+        periodPaid += s.total_amount;
+      }
+      s.items.forEach(item => {
+        periodItemsQty += item.quantity;
+        filteredItems.push({
+          date: s.created_at,
+          productName: item.product.name,
+          unitPrice: item.product.price,
+          quantity: item.quantity,
+          subtotal: item.subtotal,
+          paymentStatus: s.payment_status
+        });
+      });
+    });
+
+    filteredItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return {
+      filteredItems,
+      periodPaid,
+      periodTotal,
+      periodItemsQty,
+      totalDebt
+    };
+  }, [sales, currentCustomer, historyPeriod]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -767,15 +845,15 @@ export const ClientTotemView: React.FC = () => {
               {/* KPIs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
-                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total Pago</span>
-                  <span className="text-base sm:text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalPaid)}</span>
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total Pago (Período)</span>
+                  <span className="text-base sm:text-lg font-bold text-emerald-400">{formatCurrency(historyData.periodPaid)}</span>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-2 justify-between">
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total em Débito</span>
-                    <span className="text-base sm:text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
+                    <span className="text-base sm:text-lg font-bold text-rose-400">{formatCurrency(historyData.totalDebt)}</span>
                   </div>
-                  {userMetrics.totalDebt > 0 ? (
+                  {historyData.totalDebt > 0 ? (
                     <button
                       onClick={handleOpenSettleDebtModal}
                       className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1 px-2 rounded-lg text-[10px] sm:text-xs transition-all mt-1"
@@ -789,18 +867,39 @@ export const ClientTotemView: React.FC = () => {
                   )}
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
-                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total do Mês</span>
-                  <span className="text-base sm:text-lg font-bold text-slate-300">{formatCurrency(userMetrics.totalMonth)}</span>
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium truncate">
+                    {historyPeriod === 'current_month' ? 'Total do Mês Atual' :
+                     historyPeriod === 'previous_month' ? 'Total do Mês Anterior' :
+                     historyPeriod === '3_months' ? 'Total em 3 Meses' :
+                     'Total do Histórico'}
+                  </span>
+                  <span className="text-base sm:text-lg font-bold text-slate-200">{formatCurrency(historyData.periodTotal)}</span>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
-                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Últimos 3 Meses</span>
-                  <span className="text-base sm:text-lg font-bold text-white">{formatCurrency(userMetrics.totalThreeMonths)}</span>
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Itens Adquiridos</span>
+                  <span className="text-base sm:text-lg font-bold text-white">{historyData.periodItemsQty} un.</span>
                 </div>
               </div>
 
               {/* History Table */}
               <div className="flex flex-col gap-3">
-                <h3 className="font-bold text-white text-base sm:text-lg">Produtos Adquiridos</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <h3 className="font-bold text-white text-base sm:text-lg">Produtos Adquiridos</h3>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-white/60 font-medium hidden sm:inline">Período:</label>
+                    <select
+                      value={historyPeriod}
+                      onChange={e => setHistoryPeriod(e.target.value as any)}
+                      className="bg-slate-950 border border-white/20 text-white rounded-xl py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500/60 transition-colors cursor-pointer font-medium"
+                    >
+                      <option value="current_month" className="bg-slate-950 text-white">Mês Atual</option>
+                      <option value="previous_month" className="bg-slate-950 text-white">Mês Anterior</option>
+                      <option value="3_months" className="bg-slate-950 text-white">Últimos 3 Meses</option>
+                      <option value="all" className="bg-slate-950 text-white">Todo o Histórico</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
                   <table className="w-full text-left border-collapse min-w-[550px]">
                     <thead>
@@ -814,7 +913,7 @@ export const ClientTotemView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="text-xs sm:text-sm">
-                      {userMetrics.itemsList.map((item, idx) => (
+                      {historyData.filteredItems.map((item, idx) => (
                         <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="p-2.5 sm:p-3 text-white/80 whitespace-nowrap">
                             {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.date))}
@@ -834,10 +933,14 @@ export const ClientTotemView: React.FC = () => {
                           </td>
                         </tr>
                       ))}
-                      {userMetrics.itemsList.length === 0 && (
+                      {historyData.filteredItems.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="p-6 text-center text-white/50 text-sm">
-                            Nenhum produto adquirido ainda.
+                          <td colSpan={6} className="p-8 text-center text-white/50 text-xs sm:text-sm">
+                            <div className="flex flex-col items-center justify-center gap-2 py-4">
+                              <ShoppingBag size={36} className="text-white/20" />
+                              <p className="font-medium text-white/70 text-sm sm:text-base">Nenhuma compra registrada neste período.</p>
+                              <span className="text-xs text-white/40">Alterne o seletor acima para consultar outros meses ou todo o histórico.</span>
+                            </div>
                           </td>
                         </tr>
                       )}
