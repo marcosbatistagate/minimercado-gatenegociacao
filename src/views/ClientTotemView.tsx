@@ -8,7 +8,7 @@ const formatCurrency = (value: number) => {
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -21,6 +21,97 @@ export const ClientTotemView: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const playBeep = (type: 'success' | 'error' = 'success') => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      if (type === 'success') {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
+        oscillator.stop(audioCtx.currentTime + 0.1);
+      } else {
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+        oscillator.stop(audioCtx.currentTime + 0.3);
+      }
+    } catch (e) {
+      console.error('AudioContext error:', e);
+    }
+  };
+
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (!currentCustomer) return;
+
+      const now = Date.now();
+      const isFast = now - lastKeyTime < 100;
+      lastKeyTime = now;
+
+      if (e.key === 'Enter') {
+        if (buffer.length > 0 && isFast) {
+          e.preventDefault();
+          const scannedCode = buffer;
+          buffer = '';
+
+          const product = products.find(p => p.code === scannedCode);
+          if (product) {
+            if (product.stock <= 0) {
+              setToast({ message: 'Produto fora de estoque!', type: 'error' });
+              playBeep('error');
+            } else {
+              addToCartByCode(product.code);
+              setToast({ message: `${product.name} adicionado ao carrinho!`, type: 'success' });
+              playBeep('success');
+            }
+          } else {
+            setToast({ message: 'Produto não cadastrado', type: 'error' });
+            playBeep('error');
+          }
+        } else {
+          buffer = '';
+        }
+        return;
+      }
+
+      if (/^[0-9]$/.test(e.key)) {
+        if (isFast || buffer === '') {
+          buffer += e.key;
+        } else {
+          buffer = e.key;
+        }
+      } else {
+        buffer = '';
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [currentCustomer, products, addToCartByCode]);
 
   const totalCart = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
 
@@ -570,6 +661,13 @@ export const ClientTotemView: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-300 ${
+          toast.type === 'success' ? 'bg-emerald-600 border border-emerald-400' : 'bg-rose-600 border border-rose-400'
+        }`}>
+          {toast.message}
         </div>
       )}
     </div>

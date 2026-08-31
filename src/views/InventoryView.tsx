@@ -39,6 +39,8 @@ export const InventoryView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +54,15 @@ export const InventoryView: React.FC = () => {
     stock: 0,
     min_stock: 0,
   });
+
+  const fallbackCategories = ['Bebidas', 'Doces & Chocolates', 'Salgados & Snacks', 'Fitness & Proteicos', 'Diversos'];
+  
+  const modalCategories = useMemo(() => {
+    if (dbCategories && dbCategories.length > 0) {
+      return dbCategories.map(c => c.name);
+    }
+    return fallbackCategories;
+  }, [dbCategories]);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map(p => p.category));
@@ -79,6 +90,8 @@ export const InventoryView: React.FC = () => {
   };
 
   const handleOpenModal = (product?: Product) => {
+    setShowCustomCategory(false);
+    setCustomCategory('');
     if (product) {
       setEditingProduct(product);
       setFormData({
@@ -109,17 +122,16 @@ export const InventoryView: React.FC = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
     setSaveError(null);
+    setShowCustomCategory(false);
+    setCustomCategory('');
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
     try {
-      // Find category ID or default to first category
-      let categoryId = dbCategories.find(c => c.name === formData.category)?.id;
-      if (!categoryId && dbCategories.length > 0) {
-        categoryId = dbCategories[0].id;
-      }
+      // Find category ID
+      const categoryId = dbCategories.find(c => c.name === formData.category)?.id;
       
       const payload = {
         code: formData.code.trim(),
@@ -336,15 +348,40 @@ export const InventoryView: React.FC = () => {
                   <label className="text-sm text-white/60">Categoria</label>
                   <select 
                     required 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})} 
+                    value={showCustomCategory ? 'NEW_CUSTOM' : formData.category} 
+                    onChange={e => {
+                      if (e.target.value === 'NEW_CUSTOM') {
+                        setShowCustomCategory(true);
+                        setFormData({...formData, category: customCategory});
+                      } else {
+                        setShowCustomCategory(false);
+                        setFormData({...formData, category: e.target.value});
+                      }
+                    }} 
                     className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50"
                   >
                     <option value="">Selecione uma categoria...</option>
-                    {dbCategories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    {modalCategories.map(catName => (
+                      <option key={catName} value={catName}>{catName}</option>
                     ))}
+                    <option value="NEW_CUSTOM">+ Nova Categoria...</option>
                   </select>
+                  {showCustomCategory && (
+                    <div className="mt-2 space-y-1">
+                      <label className="text-xs text-white/60">Nome da Nova Categoria</label>
+                      <input 
+                        required 
+                        type="text" 
+                        value={customCategory} 
+                        onChange={e => {
+                          setCustomCategory(e.target.value);
+                          setFormData({...formData, category: e.target.value});
+                        }} 
+                        placeholder="Digite o nome da categoria"
+                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                  )}
                   {formData.category && categoryDescriptions[formData.category] && (
                     <p className="text-xs text-white/40 mt-1 italic">
                       {categoryDescriptions[formData.category]}
