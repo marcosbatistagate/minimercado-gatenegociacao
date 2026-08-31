@@ -21,11 +21,7 @@ export const DashboardView: React.FC = () => {
   const { sales, products, customers, settleDebts, stockAudits, currentCycleStart, startNewMonth } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
-
-  const [globalPeriod, setGlobalPeriod] = useState<DashboardPeriod>('current_month');
-  const [chartPeriod, setChartPeriod] = useState<DashboardPeriod>('current_month');
-  const [topSalesPeriod, setTopSalesPeriod] = useState<DashboardPeriod>('current_month');
-  const [topMarginPeriod, setTopMarginPeriod] = useState<DashboardPeriod>('current_month');
+  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('current_month');
 
   // Debt Clear Modal State
   const [selectedDebtCustomer, setSelectedDebtCustomer] = useState<{ re: string; name: string; total: number } | null>(null);
@@ -125,7 +121,7 @@ export const DashboardView: React.FC = () => {
   };
 
   const activeSales = useMemo(() => {
-    const { startDate, endDate } = getPeriodRange(globalPeriod);
+    const { startDate, endDate } = getPeriodRange(selectedPeriod);
     return sales.filter(s => {
       if (s.status === 'cancelled') return false;
       const saleDate = new Date(s.created_at);
@@ -133,12 +129,20 @@ export const DashboardView: React.FC = () => {
       if (endDate && saleDate > endDate) return false;
       return true;
     });
-  }, [sales, globalPeriod, currentCycleStart]);
+  }, [sales, selectedPeriod, currentCycleStart]);
+
+  const filteredSales = useMemo(() => {
+    if (!searchFilter) return activeSales;
+    const lowerSearch = searchFilter.toLowerCase();
+    return activeSales.filter(s => {
+      const matchRe = s.customerRe?.toLowerCase().includes(lowerSearch);
+      const customer = customers.find(c => c.re === s.customerRe);
+      const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+      return matchRe || matchName;
+    });
+  }, [activeSales, searchFilter, customers]);
 
   const chartData = useMemo(() => {
-    const today = new Date();
-    const { startDate, endDate } = getPeriodRange(chartPeriod);
-
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
     
     // Initialize stats for all active products
@@ -151,25 +155,18 @@ export const DashboardView: React.FC = () => {
       };
     });
 
-    sales.forEach(sale => {
-      if (sale.status !== 'cancelled') {
-        const saleDate = new Date(sale.created_at);
-        const afterStart = !startDate || saleDate >= startDate;
-        const beforeEnd = !endDate || saleDate <= endDate;
-        if (afterStart && beforeEnd && saleDate <= today) {
-          sale.items.forEach(item => {
-            if (item.product?.id && productStats[item.product.id]) {
-              productStats[item.product.id].amount += item.subtotal;
-              productStats[item.product.id].quantity += item.quantity;
-            }
-          });
+    filteredSales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.product?.id && productStats[item.product.id]) {
+          productStats[item.product.id].amount += item.subtotal;
+          productStats[item.product.id].quantity += item.quantity;
         }
-      }
+      });
     });
 
-    // Return all products sorted by name or amount
+    // Return all products sorted by name
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
-  }, [sales, products, chartPeriod, currentCycleStart]);
+  }, [filteredSales, products]);
 
   const chartHeight = 320;
   const paddingLeft = 55;
@@ -205,73 +202,32 @@ export const DashboardView: React.FC = () => {
   const yAxisTicksAmount = Array.from({ length: yTicks }, (_, i) => (maxAmount / (yTicks - 1)) * i);
   const yAxisTicksQuantity = Array.from({ length: yTicks }, (_, i) => (maxQuantity / (yTicks - 1)) * i);
 
-  const filteredSales = useMemo(() => {
-    if (!searchFilter) return activeSales;
-    const lowerSearch = searchFilter.toLowerCase();
-    return activeSales.filter(s => {
-      const matchRe = s.customerRe?.toLowerCase().includes(lowerSearch);
-      const customer = customers.find(c => c.re === s.customerRe);
-      const matchName = customer?.name.toLowerCase().includes(lowerSearch);
-      return matchRe || matchName;
-    });
-  }, [activeSales, searchFilter, customers]);
-
   const topProductsBySales = useMemo(() => {
-    const { startDate, endDate } = getPeriodRange(topSalesPeriod);
     const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
-    sales.forEach(sale => {
-      if (sale.status !== 'cancelled') {
-        const saleDate = new Date(sale.created_at);
-        const afterStart = !startDate || saleDate >= startDate;
-        const beforeEnd = !endDate || saleDate <= endDate;
-        if (afterStart && beforeEnd) {
-          if (searchFilter) {
-            const lowerSearch = searchFilter.toLowerCase();
-            const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
-            const customer = customers.find(c => c.re === sale.customerRe);
-            const matchName = customer?.name.toLowerCase().includes(lowerSearch);
-            if (!matchRe && !matchName) return;
+    filteredSales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.product?.id) {
+          if (!counts[item.product.id]) {
+            counts[item.product.id] = { product: item.product, qty: 0 };
           }
-          sale.items.forEach(item => {
-            if (item.product?.id) {
-              if (!counts[item.product.id]) {
-                counts[item.product.id] = { product: item.product, qty: 0 };
-              }
-              counts[item.product.id].qty += item.quantity;
-            }
-          });
+          counts[item.product.id].qty += item.quantity;
         }
-      }
+      });
     });
     return Object.values(counts)
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 3);
-  }, [sales, products, topSalesPeriod, searchFilter, customers, currentCycleStart]);
+  }, [filteredSales, products]);
 
   const topProductsByMargin = useMemo(() => {
-    const { startDate, endDate } = getPeriodRange(topMarginPeriod);
     const soldProductsMap = new Map<string, Product>();
 
-    sales.forEach(sale => {
-      if (sale.status !== 'cancelled') {
-        const saleDate = new Date(sale.created_at);
-        const afterStart = !startDate || saleDate >= startDate;
-        const beforeEnd = !endDate || saleDate <= endDate;
-        if (afterStart && beforeEnd) {
-          if (searchFilter) {
-            const lowerSearch = searchFilter.toLowerCase();
-            const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
-            const customer = customers.find(c => c.re === sale.customerRe);
-            const matchName = customer?.name.toLowerCase().includes(lowerSearch);
-            if (!matchRe && !matchName) return;
-          }
-          sale.items.forEach(item => {
-            if (item.product?.id) {
-              soldProductsMap.set(item.product.id, item.product);
-            }
-          });
+    filteredSales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.product?.id) {
+          soldProductsMap.set(item.product.id, item.product);
         }
-      }
+      });
     });
 
     return Array.from(soldProductsMap.values())
@@ -281,7 +237,7 @@ export const DashboardView: React.FC = () => {
       })
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 3);
-  }, [sales, topMarginPeriod, searchFilter, customers, currentCycleStart]);
+  }, [filteredSales]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -417,8 +373,8 @@ export const DashboardView: React.FC = () => {
           <div className="flex items-center gap-1.5 bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm shadow-sm">
             <span className="text-white/60 font-medium">Período:</span>
             <select
-              value={globalPeriod}
-              onChange={e => setGlobalPeriod(e.target.value as DashboardPeriod)}
+              value={selectedPeriod}
+              onChange={e => setSelectedPeriod(e.target.value as DashboardPeriod)}
               className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs sm:text-sm"
             >
               <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
@@ -544,21 +500,9 @@ export const DashboardView: React.FC = () => {
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Award size={64} className="text-amber-500" />
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 relative z-10">
-              <div className="flex items-center gap-2 text-white/80">
-                <Award size={20} className="text-amber-400" />
-                <span className="font-bold text-sm sm:text-base text-white">Top 3 Mais Vendidos</span>
-              </div>
-              <select
-                value={topSalesPeriod}
-                onChange={e => setTopSalesPeriod(e.target.value as DashboardPeriod)}
-                className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-amber-500/50 text-xs cursor-pointer font-medium"
-              >
-                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
-                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
-                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
-                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-              </select>
+            <div className="flex items-center gap-2 text-white/80 relative z-10">
+              <Award size={20} className="text-amber-400" />
+              <span className="font-bold text-sm sm:text-base text-white">Top 3 Mais Vendidos</span>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
               {topProductsBySales.map((item, idx) => (
@@ -589,21 +533,9 @@ export const DashboardView: React.FC = () => {
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Percent size={64} className="text-violet-500" />
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 relative z-10">
-              <div className="flex items-center gap-2 text-white/80">
-                <Percent size={20} className="text-violet-400" />
-                <span className="font-bold text-sm sm:text-base text-white">Top 3 Maior Margem</span>
-              </div>
-              <select
-                value={topMarginPeriod}
-                onChange={e => setTopMarginPeriod(e.target.value as DashboardPeriod)}
-                className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-violet-500/50 text-xs cursor-pointer font-medium"
-              >
-                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
-                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
-                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
-                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-              </select>
+            <div className="flex items-center gap-2 text-white/80 relative z-10">
+              <Percent size={20} className="text-violet-400" />
+              <span className="font-bold text-sm sm:text-base text-white">Top 3 Maior Margem</span>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
               {topProductsByMargin.map((item, idx) => (
@@ -871,28 +803,16 @@ export const DashboardView: React.FC = () => {
               <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
               <p className="text-xs sm:text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos produtos</p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              {/* Legenda do Gráfico */}
-              <div className="flex items-center gap-3 text-xs font-medium">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
-                  <span className="text-white/70">Faturamento (R$)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
-                  <span className="text-white/70">Qtde Vendida (un)</span>
-                </div>
+            {/* Legenda do Gráfico */}
+            <div className="flex items-center gap-3 text-xs font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+                <span className="text-white/70">Faturamento (R$)</span>
               </div>
-              <select
-                value={chartPeriod}
-                onChange={e => setChartPeriod(e.target.value as DashboardPeriod)}
-                className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-xs sm:text-sm cursor-pointer ml-auto sm:ml-0"
-              >
-                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
-                <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
-                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
-                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-              </select>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
+                <span className="text-white/70">Qtde Vendida (un)</span>
+              </div>
             </div>
           </div>
 
