@@ -49,6 +49,11 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
       const rawPaymentStatus = (s.payment_status || '').toLowerCase();
       const rawStatus = (s.status || '').toLowerCase();
       const rawMethod = (s.payment_method || '').toUpperCase();
+
+      if (rawPaymentStatus === 'paid' || rawStatus === 'completed' || rawMethod === 'PIX' || rawMethod === 'DEBIT_PAID') {
+        return false;
+      }
+
       return (
         rawPaymentStatus === 'pending' ||
         rawPaymentStatus === 'debit' ||

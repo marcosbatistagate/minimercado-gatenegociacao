@@ -141,18 +141,24 @@ export const supabaseService = {
   },
 
   async fetchCustomers(): Promise<UserCustomer[]> {
-    const { data, error } = await supabase.from('customers').select('re, name, password');
+    const { data, error } = await supabase.from('customers').select('*');
     if (error) {
       console.error('Error fetching customers:', error);
       return [];
     }
-    return data;
+    return (data || []).map((c: any) => ({
+      id: c.id,
+      re: c.re,
+      name: c.name,
+      password: c.password,
+      debt: c.debt ? Number(c.debt) : 0
+    }));
   },
 
   async fetchCustomerByRe(re: string): Promise<UserCustomer | null> {
     const { data, error } = await supabase
       .from('customers')
-      .select('re, name, password')
+      .select('*')
       .eq('re', re)
       .maybeSingle();
       
@@ -160,7 +166,14 @@ export const supabaseService = {
       console.error('Error fetching customer by RE:', error);
       return null;
     }
-    return data;
+    if (!data) return null;
+    return {
+      id: data.id,
+      re: data.re,
+      name: data.name,
+      password: data.password,
+      debt: data.debt ? Number(data.debt) : 0
+    };
   },
 
   async saveCustomer(re: string, name: string, password?: string): Promise<UserCustomer | null> {
@@ -276,17 +289,26 @@ export const supabaseService = {
       const rawPaymentStatus = (s.payment_status || '').toLowerCase();
       const rawMethod = (s.payment_method || '').toUpperCase();
 
-      const isDebit = 
+      const isPaid = 
+        rawPaymentStatus === 'paid' || 
+        rawPaymentStatus === 'completed' ||
+        rawStatus === 'completed' || 
+        rawStatus === 'paid' ||
+        rawMethod === 'PIX' ||
+        rawMethod === 'DEBIT_PAID';
+
+      const isDebit = !isPaid && (
         rawPaymentStatus === 'pending' || 
         rawPaymentStatus === 'debit' ||
         rawStatus === 'pending' || 
         rawStatus === 'debit' || 
-        rawMethod === 'DEBIT';
+        rawMethod === 'DEBIT'
+      );
 
       return {
         id: s.id,
         created_at: s.created_at,
-        payment_method: isDebit ? 'DEBIT' : 'PIX',
+        payment_method: isDebit ? 'DEBIT' : (rawMethod === 'DEBIT_PAID' ? 'DEBIT_PAID' : 'PIX'),
         total_amount: Number(s.total_amount),
         status: isDebit ? 'pending' : (s.status || 'completed'),
         customerRe: s.customer_re,
@@ -309,18 +331,78 @@ export const supabaseService = {
     });
   },
 
-  async updatePaymentStatus(customerRe: string, newStatus: 'PAID' | 'PENDING' = 'PAID'): Promise<boolean> {
-    const { error } = await supabase
-      .from('sales')
-      .update({ payment_status: newStatus, status: 'completed' })
-      .eq('customer_re', customerRe)
-      .or('payment_status.eq.PENDING,payment_status.eq.pending,payment_status.eq.debit,payment_method.eq.DEBIT,status.eq.pending,status.eq.debit');
+  async updatePaymentStatus(customerRe: string): Promise<boolean> {
+    try {
+      // 1. Zerar o débito na tabela customers (por RE e por ID se existir)
+      const { data: customer, error: findCustError } = await supabase
+        .from('customers')
+        .select('id, re')
+        .eq('re', customerRe)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error updating payment status:', error);
-      return false;
+      if (findCustError) {
+        console.warn('Aviso ao localizar cliente por RE:', findCustError);
+      }
+
+      if (customer?.id) {
+        const { error: customerErrorById } = await supabase
+          .from('customers')
+          .update({ debt: 0 })
+          .eq('id', customer.id);
+
+        if (customerErrorById) {
+          console.error('Erro ao zerar debt por id:', customerErrorById);
+          throw customerErrorById;
+        }
+      }
+
+      const { error: customerErrorByRe } = await supabase
+        .from('customers')
+        .update({ debt: 0 })
+        .eq('re', customerRe);
+
+      if (customerErrorByRe) {
+        console.error('Erro ao zerar debt por re:', customerErrorByRe);
+        throw customerErrorByRe;
+      }
+
+      // 2. Atualizar todas as vendas desse cliente para 'completed' / 'paid'
+      const { error: salesErrorByRe } = await supabase
+        .from('sales')
+        .update({ 
+          status: 'completed',
+          payment_status: 'paid',
+          payment_method: 'DEBIT_PAID'
+        })
+        .eq('customer_re', customerRe)
+        .neq('status', 'cancelled');
+
+      if (salesErrorByRe) {
+        console.error('Erro ao atualizar vendas por customer_re:', salesErrorByRe);
+        throw salesErrorByRe;
+      }
+
+      if (customer?.id) {
+        const { error: salesErrorById } = await supabase
+          .from('sales')
+          .update({ 
+            status: 'completed',
+            payment_status: 'paid',
+            payment_method: 'DEBIT_PAID'
+          })
+          .eq('customer_id', customer.id)
+          .neq('status', 'cancelled');
+
+        if (salesErrorById) {
+          console.warn('Aviso ao atualizar vendas por customer_id:', salesErrorById);
+        }
+      }
+
+      return true;
+    } catch (err: any) {
+      console.error('Erro crítico em updatePaymentStatus:', err);
+      throw err;
     }
-    return true;
   },
 
   async fetchStockAudits(): Promise<any[]> {

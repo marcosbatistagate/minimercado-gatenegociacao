@@ -23,7 +23,7 @@ export interface CartItem {
   subtotal: number;
 }
 
-export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | 'PIX' | 'DEBIT' | null;
+export type PaymentMethod = 'money' | 'credit_card' | 'debit_card' | 'pix' | 'PIX' | 'DEBIT' | 'DEBIT_PAID' | null;
 
 export interface Sale {
   id: string;
@@ -442,13 +442,21 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   settleDebts: async (customerRe) => {
-    const success = await supabaseService.updatePaymentStatus(customerRe, 'PAID');
-    if (success) {
-      const updatedSales = await supabaseService.fetchSales();
-      set({ sales: updatedSales });
+    try {
+      await supabaseService.updatePaymentStatus(customerRe);
+      const [updatedSales, updatedCustomers] = await Promise.all([
+        supabaseService.fetchSales(),
+        supabaseService.fetchCustomers()
+      ]);
+      set({ 
+        sales: updatedSales, 
+        customers: updatedCustomers 
+      });
       return true;
+    } catch (err: any) {
+      console.error('Erro no settleDebts do useMarketStore:', err);
+      throw err;
     }
-    return false;
   },
 
   addStockAudit: async (productId, productName, expectedStock, realStock) => {

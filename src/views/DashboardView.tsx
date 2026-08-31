@@ -63,15 +63,14 @@ export const DashboardView: React.FC = () => {
     setIsSubmittingDebtClear(true);
     setDebtPasswordError(null);
     try {
-      const ok = await settleDebts(selectedDebtCustomer.re);
-      if (ok) {
-        alert(`Débito de ${selectedDebtCustomer.name} (RE: ${selectedDebtCustomer.re}) quitado com sucesso!`);
-        handleCloseDebtClearModal();
-      } else {
-        setDebtPasswordError('Erro ao quitar débitos no banco de dados.');
-      }
+      await settleDebts(selectedDebtCustomer.re);
+      alert(`Débito de ${selectedDebtCustomer.name} (RE: ${selectedDebtCustomer.re}) quitado com sucesso!`);
+      handleCloseDebtClearModal();
     } catch (err: any) {
-      setDebtPasswordError(err.message || 'Erro ao processar a baixa manual.');
+      console.error('Erro ao baixar débito no Supabase:', err);
+      const errorMessage = err?.message || 'Erro ao processar a baixa manual no banco de dados.';
+      setDebtPasswordError(errorMessage);
+      alert('Erro ao baixar débito: ' + errorMessage);
     } finally {
       setIsSubmittingDebtClear(false);
     }
@@ -302,6 +301,11 @@ export const DashboardView: React.FC = () => {
       const rawPaymentStatus = (s.payment_status || '').toLowerCase();
       const rawStatus = (s.status || '').toLowerCase();
       const rawMethod = (s.payment_method || '').toUpperCase();
+
+      if (rawPaymentStatus === 'paid' || rawStatus === 'completed' || rawMethod === 'PIX' || rawMethod === 'DEBIT_PAID') {
+        return false;
+      }
+
       return (
         rawPaymentStatus === 'pending' ||
         rawPaymentStatus === 'debit' ||
@@ -347,6 +351,11 @@ export const DashboardView: React.FC = () => {
       const rawPaymentStatus = (s.payment_status || '').toLowerCase();
       const rawStatus = (s.status || '').toLowerCase();
       const rawMethod = (s.payment_method || '').toUpperCase();
+
+      if (rawPaymentStatus === 'paid' || rawStatus === 'completed' || rawMethod === 'PIX' || rawMethod === 'DEBIT_PAID') {
+        return false;
+      }
+
       return (
         rawPaymentStatus === 'pending' ||
         rawPaymentStatus === 'debit' ||
@@ -634,10 +643,14 @@ export const DashboardView: React.FC = () => {
                   const customerName = sale.customerRe 
                     ? (customers.find(c => c.re === sale.customerRe)?.name || 'Cliente')
                     : 'Caixa Avulso';
-                  const isDebit = (sale.payment_status || '').toLowerCase() === 'pending' || 
+                  const isDebit = ((sale.payment_status || '').toLowerCase() === 'pending' || 
                                   (sale.payment_status || '').toLowerCase() === 'debit' ||
                                   (sale.payment_method || '').toUpperCase() === 'DEBIT' ||
-                                  (sale.status || '').toLowerCase() === 'pending';
+                                  (sale.status || '').toLowerCase() === 'pending') &&
+                                  (sale.payment_status || '').toLowerCase() !== 'paid' &&
+                                  (sale.status || '').toLowerCase() !== 'completed' &&
+                                  (sale.payment_method || '').toUpperCase() !== 'PIX' &&
+                                  (sale.payment_method || '').toUpperCase() !== 'DEBIT_PAID';
 
                   return sale.items.map((item, idx) => (
                     <tr key={`${sale.id}-${idx}`} className="hover:bg-white/5 transition-colors">
