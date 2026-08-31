@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type Product } from '../store/useMarketStore';
-import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent } from 'lucide-react';
+import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent, Eye, EyeOff } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
 
@@ -26,6 +26,56 @@ export const DashboardView: React.FC = () => {
   const [chartPeriod, setChartPeriod] = useState<DashboardPeriod>('current_month');
   const [topSalesPeriod, setTopSalesPeriod] = useState<DashboardPeriod>('current_month');
   const [topMarginPeriod, setTopMarginPeriod] = useState<DashboardPeriod>('current_month');
+
+  // Debt Clear Modal State
+  const [selectedDebtCustomer, setSelectedDebtCustomer] = useState<{ re: string; name: string; total: number } | null>(null);
+  const [showDebtClearModal, setShowDebtClearModal] = useState(false);
+  const [debtAdminPassword, setDebtAdminPassword] = useState('');
+  const [showDebtAdminPassword, setShowDebtAdminPassword] = useState(false);
+  const [debtPasswordError, setDebtPasswordError] = useState<string | null>(null);
+  const [isSubmittingDebtClear, setIsSubmittingDebtClear] = useState(false);
+
+  const handleOpenDebtClearModal = (debtCustomer: { re: string; name: string; total: number }) => {
+    setSelectedDebtCustomer(debtCustomer);
+    setDebtAdminPassword('');
+    setShowDebtAdminPassword(false);
+    setDebtPasswordError(null);
+    setShowDebtClearModal(true);
+  };
+
+  const handleCloseDebtClearModal = () => {
+    setShowDebtClearModal(false);
+    setSelectedDebtCustomer(null);
+    setDebtAdminPassword('');
+    setShowDebtAdminPassword(false);
+    setDebtPasswordError(null);
+  };
+
+  const handleConfirmDebtClear = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDebtCustomer) return;
+
+    if (debtAdminPassword !== 'delta0309') {
+      setDebtPasswordError('Senha de administrador incorreta.');
+      return;
+    }
+
+    setIsSubmittingDebtClear(true);
+    setDebtPasswordError(null);
+    try {
+      const ok = await settleDebts(selectedDebtCustomer.re);
+      if (ok) {
+        alert(`Débito de ${selectedDebtCustomer.name} (RE: ${selectedDebtCustomer.re}) quitado com sucesso!`);
+        handleCloseDebtClearModal();
+      } else {
+        setDebtPasswordError('Erro ao quitar débitos no banco de dados.');
+      }
+    } catch (err: any) {
+      setDebtPasswordError(err.message || 'Erro ao processar a baixa manual.');
+    } finally {
+      setIsSubmittingDebtClear(false);
+    }
+  };
 
   const [hoveredBar, setHoveredBar] = useState<{ 
     name: string; 
@@ -1006,19 +1056,16 @@ export const DashboardView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="text-xs sm:text-sm">
-              {pendingDebts.map(debt => (
-                <tr key={debt.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-3 sm:p-4 text-white font-medium">{debt.name}</td>
-                  <td className="p-3 sm:p-4 text-white/80">{debt.re}</td>
-                  <td className="p-3 sm:p-4 text-rose-400 font-bold text-right">{formatCurrency(debt.total)}</td>
+              {pendingDebts.map(debtCustomer => (
+                <tr key={debtCustomer.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-3 sm:p-4 text-white font-medium">{debtCustomer.name}</td>
+                  <td className="p-3 sm:p-4 text-white/80">{debtCustomer.re}</td>
+                  <td className="p-3 sm:p-4 text-rose-400 font-bold text-right">{formatCurrency(debtCustomer.total)}</td>
                   <td className="p-3 sm:p-4 text-center">
                     <button
-                      onClick={async () => {
-                        const ok = await settleDebts(debt.re);
-                        if (ok) alert('Débitos quitados com sucesso!');
-                        else alert('Erro ao quitar débitos.');
-                      }}
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all duration-300 text-xs sm:text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      type="button"
+                      onClick={() => handleOpenDebtClearModal(debtCustomer)}
+                      className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-1.5 px-4 rounded-lg text-sm shadow-md transition-all duration-150"
                     >
                       Quitar Débito
                     </button>
@@ -1182,6 +1229,117 @@ export const DashboardView: React.FC = () => {
               <span className="text-white/60 font-medium text-xs sm:text-sm">Total:</span>
               <span className="text-xl sm:text-2xl font-bold text-white">{formatCurrency(selectedSale.total_amount)}</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Debt Clear Confirmation Modal with Admin Password */}
+      {showDebtClearModal && selectedDebtCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl shadow-black/80">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 bg-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white font-jakarta">
+                    Baixa Manual de Débito
+                  </h3>
+                  <p className="text-xs text-white/50">Confirmação de Quitação Administrativa</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseDebtClearModal}
+                className="text-white/60 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleConfirmDebtClear} className="p-4 sm:p-6 flex flex-col gap-4">
+              {/* Warning Alert Banner */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 flex items-start gap-3 text-amber-200">
+                <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed font-medium">
+                  A quitação prioritária deve ser feita pelo policial via QR Code PIX no Totem. Esta baixa manual é uma exceção administrativa.
+                </p>
+              </div>
+
+              {/* Customer and Debt Details */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-2.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-white/60">Policial:</span>
+                  <span className="text-white font-semibold text-sm">{selectedDebtCustomer.name}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-white/60">RE:</span>
+                  <span className="text-white/90 font-mono font-medium">{selectedDebtCustomer.re}</span>
+                </div>
+                <div className="border-t border-white/10 pt-2 flex justify-between items-center">
+                  <span className="text-xs text-white/60">Valor Total a Baixar:</span>
+                  <span className="text-base sm:text-lg font-bold text-rose-400">
+                    {formatCurrency(selectedDebtCustomer.total)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Password Input with Eye Toggle */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-white/80">
+                  Senha do Administrador:
+                </label>
+                <div className="relative">
+                  <input
+                    type={showDebtAdminPassword ? 'text' : 'password'}
+                    value={debtAdminPassword}
+                    onChange={e => {
+                      setDebtAdminPassword(e.target.value);
+                      if (debtPasswordError) setDebtPasswordError(null);
+                    }}
+                    placeholder="Digite a senha de admin"
+                    autoFocus
+                    required
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl py-2.5 pl-3.5 pr-11 text-sm text-white placeholder-white/40 focus:outline-none focus:border-red-500 transition-colors font-sans"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowDebtAdminPassword(!showDebtAdminPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/90 transition-colors p-1"
+                  >
+                    {showDebtAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {debtPasswordError && (
+                  <span className="text-xs text-rose-400 font-medium animate-in fade-in">
+                    {debtPasswordError}
+                  </span>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10 mt-1">
+                <button
+                  type="button"
+                  onClick={handleCloseDebtClearModal}
+                  disabled={isSubmittingDebtClear}
+                  className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDebtClear}
+                  className="px-5 py-2 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-red-900/30 transition-all duration-150 flex items-center gap-2"
+                >
+                  {isSubmittingDebtClear ? 'Baixando...' : 'Confirmar Baixa'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
