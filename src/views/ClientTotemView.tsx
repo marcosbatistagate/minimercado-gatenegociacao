@@ -286,27 +286,21 @@ export const ClientTotemView: React.FC = () => {
         e.preventDefault();
         const success = await completePixSale();
         if (success) {
-          setToast({ message: 'Venda PIX finalizada com sucesso!', type: 'success' });
+          setToast({ message: 'Venda registrada com sucesso!', type: 'success' });
           playBeep('success');
-          setTimeout(() => {
-            logoutCustomer();
-          }, 2000);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentCustomer, cart, completePixSale, logoutCustomer]);
+  }, [currentCustomer, cart, completePixSale]);
 
   const handleFinalizeDebit = async () => {
     if (cart.length > 0) {
       const success = await completeDebitSale();
       if (success) {
-        setToast({ message: 'Débito registrado com sucesso!', type: 'success' });
+        setToast({ message: 'Venda registrada com sucesso!', type: 'success' });
         playBeep('success');
-        setTimeout(() => {
-          logoutCustomer();
-        }, 2000);
       }
     }
   };
@@ -315,11 +309,8 @@ export const ClientTotemView: React.FC = () => {
     if (cart.length > 0) {
       const success = await completePixSale();
       if (success) {
-        setToast({ message: 'Venda PIX finalizada com sucesso!', type: 'success' });
+        setToast({ message: 'Venda registrada com sucesso!', type: 'success' });
         playBeep('success');
-        setTimeout(() => {
-          logoutCustomer();
-        }, 2000);
       }
     }
   };
