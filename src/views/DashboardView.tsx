@@ -15,7 +15,7 @@ const formatDate = (isoString: string) => {
   }).format(new Date(isoString));
 };
 
-type DashboardPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months' | 'all';
+type DashboardPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months';
 
 export const DashboardView: React.FC = () => {
   const { sales, products, customers, settleDebts, stockAudits } = useMarketStore();
@@ -40,9 +40,6 @@ export const DashboardView: React.FC = () => {
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
 
-    if (period === 'all') {
-      return { startDate: null, endDate: null };
-    }
     if (period === 'current_month') {
       return {
         startDate: new Date(currentYear, currentMonth, 1, 0, 0, 0, 0),
@@ -67,7 +64,10 @@ export const DashboardView: React.FC = () => {
         endDate: null
       };
     }
-    return { startDate: null, endDate: null };
+    return {
+      startDate: new Date(currentYear, currentMonth, 1, 0, 0, 0, 0),
+      endDate: null
+    };
   };
 
   const activeSales = useMemo(() => {
@@ -353,7 +353,6 @@ export const DashboardView: React.FC = () => {
               <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
               <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
               <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-              <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
             </select>
           </div>
           <input 
@@ -487,7 +486,6 @@ export const DashboardView: React.FC = () => {
                 <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -533,7 +531,6 @@ export const DashboardView: React.FC = () => {
                 <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
             <div className="flex flex-col gap-2.5 mt-1 relative z-10">
@@ -819,7 +816,6 @@ export const DashboardView: React.FC = () => {
                 <option value="previous_month" className="bg-slate-900 text-white">Mês Anterior</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
                 <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
-                <option value="all" className="bg-slate-900 text-white">Geral (Todo o Período)</option>
               </select>
             </div>
           </div>

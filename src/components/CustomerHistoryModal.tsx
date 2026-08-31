@@ -7,7 +7,7 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-export type HistoryPeriod = 'current_month' | 'previous_month' | '3_months' | 'all';
+export type HistoryPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months';
 
 interface CustomerHistoryModalProps {
   isOpen: boolean;
@@ -39,6 +39,8 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
     } else if (period === 'previous_month') {
       startDate = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
       endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+    } else if (period === '2_months') {
+      startDate = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
     } else if (period === '3_months') {
       startDate = new Date(currentYear, currentMonth - 2, 1, 0, 0, 0, 0);
     }
@@ -168,8 +170,8 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
               <span className="text-[11px] sm:text-xs text-white/60 font-medium truncate">
                 {period === 'current_month' ? 'Total do Mês Atual' :
                  period === 'previous_month' ? 'Total do Mês Anterior' :
-                 period === '3_months' ? 'Total em 3 Meses' :
-                 'Total do Período'}
+                 period === '2_months' ? 'Total em 2 Meses' :
+                 'Total em 3 Meses'}
               </span>
               <span className="text-base sm:text-lg font-bold text-slate-200">{formatCurrency(historyData.periodTotal)}</span>
             </div>
@@ -194,8 +196,8 @@ export const CustomerHistoryModal: React.FC<CustomerHistoryModalProps> = ({
                 >
                   <option value="current_month" className="bg-slate-950 text-white">Mês Atual</option>
                   <option value="previous_month" className="bg-slate-950 text-white">Mês Anterior</option>
+                  <option value="2_months" className="bg-slate-950 text-white">Últimos 2 Meses</option>
                   <option value="3_months" className="bg-slate-950 text-white">Últimos 3 Meses</option>
-                  <option value="all" className="bg-slate-950 text-white">Todo o Período</option>
                 </select>
               </div>
             </div>
