@@ -124,39 +124,39 @@ export const AuditView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 p-6 overflow-auto">
+    <div className="flex flex-col h-full gap-5 sm:gap-6 p-4 sm:p-6 overflow-auto">
       <FadeIn delay="100">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-violet-600/20 border border-violet-500/30 rounded-xl text-violet-400">
-              <ClipboardCheck size={28} />
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-white/10 pb-4 w-full">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2.5 sm:p-3 bg-violet-600/20 border border-violet-500/30 rounded-xl text-violet-400">
+              <ClipboardCheck size={24} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white font-jakarta">Conferência Diária de Estoque</h1>
-              <p className="text-sm text-white/60">Auditoria física matutina do mercado baseada nas vendas de ontem</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-white font-jakarta">Conferência Diária de Estoque</h1>
+              <p className="text-xs sm:text-sm text-white/60">Auditoria física matutina do mercado baseada nas vendas de ontem</p>
             </div>
           </div>
-          <div className="flex flex-wrap w-full md:w-auto items-center gap-3">
+          <div className="flex flex-wrap w-full lg:w-auto items-center gap-2 sm:gap-3">
             <button
               onClick={autofillAllExpected}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-medium text-sm transition-all duration-300"
+              className="px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-medium text-xs sm:text-sm transition-all duration-300"
             >
               Preencher com Esperado
             </button>
             <button
               onClick={handleRegisterAllDiscrepancies}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold text-sm transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold text-xs sm:text-sm transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] flex items-center gap-1.5 sm:gap-2"
             >
               <Save size={16} />
-              Registrar Todas Divergências
+              Registrar Divergências
             </button>
-            <div className="relative flex-1 md:w-80 min-w-[200px]">
+            <div className="relative flex-1 sm:w-64 min-w-[180px]">
               <input 
                 type="text" 
                 placeholder="Buscar produto por nome..." 
                 value={auditSearch}
                 onChange={e => setAuditSearch(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 w-full text-sm"
+                className="bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 w-full text-xs sm:text-sm"
               />
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             </div>
@@ -164,9 +164,9 @@ export const AuditView: React.FC = () => {
               onClick={handleRefresh}
               disabled={isRefreshing}
               title="Atualizar dados"
-              className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
+              className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
             >
-              <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-violet-400' : 'text-white'} />
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-violet-400' : 'text-white'} />
             </button>
           </div>
         </div>
@@ -174,10 +174,10 @@ export const AuditView: React.FC = () => {
 
       <FadeIn delay="200">
         <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+          <div className="overflow-x-auto w-full shadow-inner">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5">
+                <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
                   <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Inicial</th>
                   <th className="p-4 text-white/60 font-medium text-sm text-center">Vendas de Ontem</th>

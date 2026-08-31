@@ -277,15 +277,15 @@ export const InventoryView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-4">
+    <div className="flex flex-col h-full gap-5 sm:gap-6 p-4 sm:p-6 overflow-auto">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-white/10 pb-4 w-full">
         <div>
-          <h1 className="text-2xl font-bold text-white font-jakarta">Gestão de Estoque</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white font-jakarta">Gestão de Estoque</h1>
           <p className="text-xs text-white/50 mt-1">
             Última atualização do estoque: {formatUpdateTimestamp(lastStockUpdate)}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
           <button
             onClick={() => {
               if (confirm('Tem certeza que deseja zerar os indicadores do mês e reiniciar a planilha de estoque?')) {
@@ -293,42 +293,42 @@ export const InventoryView: React.FC = () => {
                 alert('Planilha de estoque reiniciada para o novo mês!');
               }
             }}
-            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-full text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-xl sm:rounded-full text-xs sm:text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"
           >
             Iniciar Novo Mês
           </button>
           <button
             onClick={handleOpenConfigModal}
-            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-full text-sm font-medium text-slate-300 hover:bg-slate-700 transition-all duration-300"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-800 border border-slate-700 rounded-xl sm:rounded-full text-xs sm:text-sm font-medium text-slate-300 hover:bg-slate-700 transition-all duration-300"
           >
             Configurar PIX
           </button>
           <button 
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 pl-4 pr-4 py-2.5 bg-black/60 border border-violet-500 rounded-full text-sm font-medium text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.4),inset_0_0_10px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300"
+            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-black/60 border border-violet-500 rounded-xl sm:rounded-full text-xs sm:text-sm font-medium text-white hover:bg-violet-500/10 hover:border-violet-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.4),inset_0_0_10px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Novo Produto
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input
             type="text"
             placeholder="Buscar por nome ou código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 sm:py-2.5 pl-10 pr-4 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50"
           />
         </div>
-        <div className="flex flex-col gap-1 min-w-[200px]">
+        <div className="flex flex-col gap-1 sm:w-64 min-w-[180px]">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-primary-500/50 appearance-none w-full"
+            className="bg-white/5 border border-white/10 rounded-xl py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm text-white focus:outline-none focus:border-primary-500/50 appearance-none w-full"
           >
             <option value="">Todas Categorias</option>
             {categories.map(cat => (
@@ -344,22 +344,22 @@ export const InventoryView: React.FC = () => {
       </div>
 
       <FadeIn delay="100" className="flex-1 min-h-0 flex flex-col w-full">
-        <div className="flex-1 overflow-auto -mx-4 sm:mx-0 glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-        <table className="w-full text-left border-collapse">
+        <div className="flex-1 overflow-x-auto overflow-y-auto w-full shadow-inner border border-white/10 rounded-2xl glass-effect bg-white/5 backdrop-blur-md">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
-            <tr className="border-b border-white/10">
-              <th className="p-4 text-white/60 font-medium text-sm">Código</th>
-              <th className="p-4 text-white/60 font-medium text-sm">Nome</th>
-              <th className="p-4 text-left font-medium text-white/60">Categoria</th>
-              <th className="p-4 text-left font-medium text-white/60">Pr. Custo</th>
-              <th className="p-4 text-left font-medium text-white/60">Pr. Venda</th>
-              <th className="p-4 text-left font-medium text-white/60">Margem (%)</th>
-              <th className="p-4 text-left font-medium text-white/60">Lucro Un.</th>
-              <th className="p-4 text-left font-medium text-white/60">Qtd. Vendida</th>
-              <th className="p-4 text-left font-medium text-white/60">Qtd. Paga</th>
-              <th className="p-4 text-left font-medium text-white/60">Qtd. a Receber</th>
-              <th className="p-4 text-left font-medium text-white/60">Estoque</th>
-              <th className="p-4 text-left font-medium text-white/60">Ações</th>
+            <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 font-semibold uppercase">
+              <th className="p-3 sm:p-4 font-medium">Código</th>
+              <th className="p-3 sm:p-4 font-medium">Nome</th>
+              <th className="p-3 sm:p-4 text-left font-medium">Categoria</th>
+              <th className="p-3 sm:p-4 text-left font-medium">Pr. Custo</th>
+              <th className="p-3 sm:p-4 text-left font-medium">Pr. Venda</th>
+              <th className="p-3 sm:p-4 text-left font-medium">Margem (%)</th>
+              <th className="p-3 sm:p-4 text-left font-medium">Lucro Un.</th>
+              <th className="p-3 sm:p-4 text-center font-medium">Qtd. Vendida</th>
+              <th className="p-3 sm:p-4 text-center font-medium">Qtd. Paga</th>
+              <th className="p-3 sm:p-4 text-center font-medium">Qtd. a Receber</th>
+              <th className="p-3 sm:p-4 text-center font-medium">Estoque</th>
+              <th className="p-3 sm:p-4 text-center font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -431,19 +431,19 @@ export const InventoryView: React.FC = () => {
       </FadeIn>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-xl font-bold text-white font-jakarta">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-lg md:max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300 m-3 sm:m-4">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+              <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">
                 {editingProduct ? 'Editar Produto' : 'Novo Produto'}
               </h2>
-              <button onClick={handleCloseModal} className="text-white/60 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={handleCloseModal} className="text-white/60 hover:text-white transition-colors p-1">
+                <X size={22} />
               </button>
             </div>
             
             <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-auto">
-              <div className="p-6 flex flex-col gap-4">
+              <div className="p-4 sm:p-6 flex flex-col gap-4">
                 {/* Entry Type Toggle */}
                 <div className="flex items-center gap-2 p-1 bg-black/40 border border-white/10 rounded-xl">
                   <button
@@ -726,11 +726,11 @@ export const InventoryView: React.FC = () => {
                 </div>
               )}
               
-              <div className="p-6 border-t border-white/10 flex justify-end gap-3 mt-auto bg-black/20">
-                <button type="button" onClick={handleCloseModal} className="px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium">
+              <div className="p-4 sm:p-6 border-t border-white/10 flex justify-end gap-3 mt-auto bg-black/20">
+                <button type="button" onClick={handleCloseModal} className="px-4 sm:px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium text-xs sm:text-sm">
                   Cancelar
                 </button>
-                <button type="submit" className="px-5 py-2 rounded-xl text-white bg-primary-600 hover:bg-primary-500 transition-colors font-medium shadow-lg shadow-emerald-600/20">
+                <button type="submit" className="px-4 sm:px-5 py-2 rounded-xl text-white bg-primary-600 hover:bg-primary-500 transition-colors font-medium shadow-lg shadow-emerald-600/20 text-xs sm:text-sm">
                   {editingProduct ? 'Salvar Alterações' : 'Cadastrar Produto'}
                 </button>
               </div>
@@ -739,24 +739,24 @@ export const InventoryView: React.FC = () => {
         </div>
       )}
       {isConfigModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-lg overflow-hidden flex flex-col shadow-2xl shadow-black/40">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-xl font-bold text-white font-jakarta">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto m-3 sm:m-4 shadow-2xl shadow-black/40 flex flex-col">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+              <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">
                 Configurações do Mercado (PIX)
               </h2>
-              <button onClick={() => setIsConfigModalOpen(false)} className="text-white/60 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={() => setIsConfigModalOpen(false)} className="text-white/60 hover:text-white transition-colors p-1">
+                <X size={22} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveConfig} className="flex flex-col p-6 gap-4">
+            <form onSubmit={handleSaveConfig} className="flex flex-col p-4 sm:p-6 gap-4">
               <div className="space-y-1">
-                <label className="text-sm text-white/60 font-medium">Tipo de Chave PIX</label>
+                <label className="text-xs sm:text-sm text-white/60 font-medium">Tipo de Chave PIX</label>
                 <select
                   value={configForm.pix_key_type}
                   onChange={e => setConfigForm({...configForm, pix_key_type: e.target.value})}
-                  className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="CPF" className="bg-slate-800 text-white">CPF</option>
                   <option value="CNPJ" className="bg-slate-800 text-white">CNPJ</option>
@@ -767,38 +767,38 @@ export const InventoryView: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/60 font-medium">Chave PIX</label>
+                <label className="text-xs sm:text-sm text-white/60 font-medium">Chave PIX</label>
                 <input
                   required
                   type="text"
                   value={configForm.pix_key}
                   onChange={e => setConfigForm({...configForm, pix_key: e.target.value})}
                   placeholder="Ex: 123.456.789-00 ou email@domain.com"
-                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/60 font-medium">Nome do Beneficiário/Titular</label>
+                <label className="text-xs sm:text-sm text-white/60 font-medium">Nome do Beneficiário/Titular</label>
                 <input
                   required
                   type="text"
                   value={configForm.merchant_name}
                   onChange={e => setConfigForm({...configForm, merchant_name: e.target.value})}
                   placeholder="Ex: Gremio Negociacao"
-                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/60 font-medium">Cidade do Beneficiário</label>
+                <label className="text-xs sm:text-sm text-white/60 font-medium">Cidade do Beneficiário</label>
                 <input
                   required
                   type="text"
                   value={configForm.merchant_city}
                   onChange={e => setConfigForm({...configForm, merchant_city: e.target.value})}
                   placeholder="Ex: Sao Paulo"
-                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-800 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -806,13 +806,13 @@ export const InventoryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsConfigModalOpen(false)}
-                  className="px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium text-sm"
+                  className="px-4 sm:px-5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors font-medium text-xs sm:text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 transition-colors font-medium text-sm"
+                  className="px-4 sm:px-5 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 transition-colors font-medium text-xs sm:text-sm"
                 >
                   Salvar Configurações
                 </button>

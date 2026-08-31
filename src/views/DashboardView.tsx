@@ -210,20 +210,20 @@ export const DashboardView: React.FC = () => {
   }, [activeSales, customers]);
 
   return (
-    <div className="flex flex-col h-full gap-6 p-6 overflow-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
+    <div className="flex flex-col h-full gap-5 sm:gap-6 p-4 sm:p-6 overflow-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 w-full">
+        <h1 className="text-xl sm:text-2xl font-bold text-white font-jakarta">Dashboard & Métricas</h1>
         <input 
           type="text" 
           placeholder="Filtrar por RE ou Nome..." 
           value={searchFilter}
           onChange={e => setSearchFilter(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 min-w-[240px]"
+          className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 w-full sm:w-auto min-w-[200px] sm:min-w-[260px]"
         />
       </div>
       
       {/* KPIs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Preço de Venda (Faturamento) */}
         <FadeIn delay="100">
           <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-2 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
@@ -390,17 +390,17 @@ export const DashboardView: React.FC = () => {
         </FadeIn>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Payment Methods Panel */}
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
-          <h2 className="text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
-          <div className="flex flex-col gap-4">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
+          <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
+          <div className="flex flex-col gap-3 sm:gap-4">
             {(Object.entries(paymentMethodLabels) as [NonNullable<PaymentMethod>, string][]).map(([key, label]) => {
               const amount = paymentDistribution[key] || 0;
               const percentage = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
               return (
                 <div key={key} className="flex flex-col gap-1">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-white/80">{label}</span>
                     <span className="text-white font-medium">{formatCurrency(amount)} ({percentage.toFixed(1)}%)</span>
                   </div>
@@ -418,22 +418,22 @@ export const DashboardView: React.FC = () => {
 
         {/* Recent Sales History */}
         <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden col-span-1 lg:col-span-2 flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-          <div className="p-6 border-b border-white/10">
-            <h2 className="text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
+          <div className="p-4 sm:p-6 border-b border-white/10">
+            <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
           </div>
-          <div className="overflow-x-auto flex-1 -mx-4 sm:mx-0 custom-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+          <div className="overflow-x-auto flex-1 w-full shadow-inner border-t border-white/5">
+            <table className="w-full text-left border-collapse min-w-[550px]">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="p-4 text-white/60 font-medium text-sm">Data/Hora</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Cliente</th>
-                  <th className="p-4 text-white/60 font-medium text-sm">Produto(s) Comprado(s)</th>
-                  <th className="p-4 text-white/60 font-medium text-sm text-center">Qtd.</th>
-                  <th className="p-4 text-white/60 font-medium text-sm text-right">Valor Unitário</th>
-                  <th className="p-4 text-white/60 font-medium text-sm text-right">Valor Total Pago</th>
+                <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
+                  <th className="p-3 sm:p-4 font-medium">Data/Hora</th>
+                  <th className="p-3 sm:p-4 font-medium">Cliente</th>
+                  <th className="p-3 sm:p-4 font-medium">Produto(s)</th>
+                  <th className="p-3 sm:p-4 text-center font-medium">Qtd.</th>
+                  <th className="p-3 sm:p-4 text-right font-medium">Preço Un.</th>
+                  <th className="p-3 sm:p-4 text-right font-medium">Total</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-xs sm:text-sm">
                 {filteredSales.map(sale => {
                   const customerName = sale.customerRe 
                     ? (customers.find(c => c.re === sale.customerRe)?.name || 'Cliente')
@@ -443,24 +443,24 @@ export const DashboardView: React.FC = () => {
                     <tr key={`${sale.id}-${idx}`} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       {idx === 0 && (
                         <>
-                          <td className="p-4 text-white/80" rowSpan={sale.items.length}>
+                          <td className="p-3 sm:p-4 text-white/80 whitespace-nowrap" rowSpan={sale.items.length}>
                             {formatDate(sale.created_at)}
                           </td>
-                          <td className="p-4 text-white/80" rowSpan={sale.items.length}>
+                          <td className="p-3 sm:p-4 text-white/80" rowSpan={sale.items.length}>
                             {sale.customerRe ? `${customerName} (RE: ${sale.customerRe})` : 'Caixa Avulso'}
                           </td>
                         </>
                       )}
-                      <td className="p-4 text-white font-medium">{item.product.name}</td>
-                      <td className="p-4 text-white/80 text-center">{item.quantity}</td>
-                      <td className="p-4 text-white/80 text-right">{formatCurrency(item.product.price)}</td>
-                      <td className="p-4 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
+                      <td className="p-3 sm:p-4 text-white font-medium">{item.product.name}</td>
+                      <td className="p-3 sm:p-4 text-white/80 text-center">{item.quantity}</td>
+                      <td className="p-3 sm:p-4 text-white/80 text-right">{formatCurrency(item.product.price)}</td>
+                      <td className="p-3 sm:p-4 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
                     </tr>
                   ));
                 })}
                 {filteredSales.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium text-sm">
                       Nenhuma venda encontrada.
                     </td>
                   </tr>
@@ -473,28 +473,28 @@ export const DashboardView: React.FC = () => {
 
       {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col gap-4 relative shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 relative shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <div>
-              <h2 className="text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
-              <p className="text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos produtos</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Evolução do Faturamento por Produto</h2>
+              <p className="text-xs sm:text-sm text-white/60">Comparativo de receita (BRL) e volume (unidades) dos produtos</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
               {/* Legenda do Gráfico */}
-              <div className="flex items-center gap-4 text-xs font-medium">
+              <div className="flex items-center gap-3 text-xs font-medium">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
                   <span className="text-white/70">Faturamento (R$)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
                   <span className="text-white/70">Qtde Vendida (un)</span>
                 </div>
               </div>
               <select
                 value={chartPeriod}
                 onChange={e => setChartPeriod(e.target.value as any)}
-                className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-sm cursor-pointer"
+                className="bg-white/5 border border-white/10 text-white rounded-xl py-1.5 px-3 focus:outline-none focus:border-primary-500/50 text-xs sm:text-sm cursor-pointer ml-auto sm:ml-0"
               >
                 <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
                 <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
@@ -503,12 +503,12 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full min-w-full flex-1 min-h-[350px] p-0 m-0 overflow-hidden">
+          <div className="w-full overflow-x-auto min-w-full flex-1 min-h-[320px] p-0 m-0">
             <svg 
               viewBox={`0 0 ${svgWidth} ${chartHeight}`}
               width="100%"
               height="100%"
-              className="w-full h-full"
+              className="w-full h-full min-w-[500px]"
             >
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -679,32 +679,32 @@ export const DashboardView: React.FC = () => {
       </FadeIn>
 
       {/* Debits management section */}
-      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-        <h2 className="text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+        <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Controle de Débitos (Policiais com Contas Pendentes)</h2>
+        <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
+          <table className="w-full text-left border-collapse min-w-[550px]">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="p-4 text-white/60 font-medium text-sm">Policial</th>
-                <th className="p-4 text-white/60 font-medium text-sm">RE</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-right">Total Devido</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
+              <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
+                <th className="p-3 sm:p-4 font-medium">Policial</th>
+                <th className="p-3 sm:p-4 font-medium">RE</th>
+                <th className="p-3 sm:p-4 font-medium text-right">Total Devido</th>
+                <th className="p-3 sm:p-4 font-medium text-center">Ações</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-xs sm:text-sm">
               {pendingDebts.map(debt => (
                 <tr key={debt.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 text-white font-medium">{debt.name}</td>
-                  <td className="p-4 text-white/80">{debt.re}</td>
-                  <td className="p-4 text-rose-400 font-bold text-right">{formatCurrency(debt.total)}</td>
-                  <td className="p-4 text-center">
+                  <td className="p-3 sm:p-4 text-white font-medium">{debt.name}</td>
+                  <td className="p-3 sm:p-4 text-white/80">{debt.re}</td>
+                  <td className="p-3 sm:p-4 text-rose-400 font-bold text-right">{formatCurrency(debt.total)}</td>
+                  <td className="p-3 sm:p-4 text-center">
                     <button
                       onClick={async () => {
                         const ok = await settleDebts(debt.re);
                         if (ok) alert('Débitos quitados com sucesso!');
                         else alert('Erro ao quitar débitos.');
                       }}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all duration-300 text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all duration-300 text-xs sm:text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                     >
                       Quitar Débito
                     </button>
@@ -713,7 +713,7 @@ export const DashboardView: React.FC = () => {
               ))}
               {pendingDebts.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium text-sm">
                     Nenhum débito pendente.
                   </td>
                 </tr>
@@ -724,42 +724,42 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Divergências de Estoque Registradas */}
-      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
         <div>
-          <h2 className="text-xl font-bold text-white font-jakarta flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta flex items-center gap-2">
             Divergências de Estoque Registradas
           </h2>
-          <p className="text-sm text-white/60">Histórico de conflitos identificados na conferência diária de estoque</p>
+          <p className="text-xs sm:text-sm text-white/60">Histórico de conflitos identificados na conferência diária de estoque</p>
         </div>
-        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+        <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
+          <table className="w-full text-left border-collapse min-w-[550px]">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="p-4 text-white/60 font-medium text-sm">Data do Registro</th>
-                <th className="p-4 text-white/60 font-medium text-sm">Produto</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Esperado</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Estoque Atual Real</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Diferença</th>
+              <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
+                <th className="p-3 sm:p-4 font-medium">Data do Registro</th>
+                <th className="p-3 sm:p-4 font-medium">Produto</th>
+                <th className="p-3 sm:p-4 font-medium text-center">Esperado</th>
+                <th className="p-3 sm:p-4 font-medium text-center">Real</th>
+                <th className="p-3 sm:p-4 font-medium text-center">Diferença</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-xs sm:text-sm">
               {stockAudits.map(audit => {
                 const diff = audit.real_stock - audit.expected_stock;
                 const diffText = diff > 0 ? `+${diff}` : diff;
                 const diffClass = diff > 0 ? 'text-emerald-400' : 'text-rose-400';
                 return (
                   <tr key={audit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white/80">{formatDate(audit.created_at)}</td>
-                    <td className="p-4 text-white font-medium">{audit.product_name}</td>
-                    <td className="p-4 text-center text-white/80">{audit.expected_stock} un.</td>
-                    <td className="p-4 text-center text-white font-bold">{audit.real_stock} un.</td>
-                    <td className={`p-4 text-center font-bold ${diffClass}`}>{diffText} un.</td>
+                    <td className="p-3 sm:p-4 text-white/80 whitespace-nowrap">{formatDate(audit.created_at)}</td>
+                    <td className="p-3 sm:p-4 text-white font-medium">{audit.product_name}</td>
+                    <td className="p-3 sm:p-4 text-center text-white/80">{audit.expected_stock} un.</td>
+                    <td className="p-3 sm:p-4 text-center text-white font-bold">{audit.real_stock} un.</td>
+                    <td className={`p-3 sm:p-4 text-center font-bold ${diffClass}`}>{diffText} un.</td>
                   </tr>
                 );
               })}
               {stockAudits.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium text-sm">
                     Nenhuma divergência de estoque registrada até o momento.
                   </td>
                 </tr>
@@ -770,25 +770,25 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Clientes e Redefinição de Senhas */}
-      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-        <h2 className="text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0 custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+        <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Gestão de Policiais cadastrados e Senhas</h2>
+        <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
+          <table className="w-full text-left border-collapse min-w-[550px]">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="p-4 text-white/60 font-medium text-sm">Policial / Cliente</th>
-                <th className="p-4 text-white/60 font-medium text-sm">RE</th>
-                <th className="p-4 text-white/60 font-medium text-sm">Status Acesso</th>
-                <th className="p-4 text-white/60 font-medium text-sm text-center">Ações</th>
+              <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
+                <th className="p-3 sm:p-4 font-medium">Policial / Cliente</th>
+                <th className="p-3 sm:p-4 font-medium">RE</th>
+                <th className="p-3 sm:p-4 font-medium">Status Acesso</th>
+                <th className="p-3 sm:p-4 font-medium text-center">Ações</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-xs sm:text-sm">
               {customers.map(customer => (
                 <tr key={customer.re} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 text-white font-medium">{customer.name}</td>
-                  <td className="p-4 text-white/80">{customer.re}</td>
-                  <td className="p-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                  <td className="p-3 sm:p-4 text-white font-medium">{customer.name}</td>
+                  <td className="p-3 sm:p-4 text-white/80">{customer.re}</td>
+                  <td className="p-3 sm:p-4">
+                    <span className={`px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold border ${
                       customer.password 
                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
@@ -796,7 +796,7 @@ export const DashboardView: React.FC = () => {
                       {customer.password ? 'Senha Ativa' : 'Sem Senha Configurada'}
                     </span>
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-3 sm:p-4 text-center">
                     <button
                       onClick={async () => {
                         const newPass = prompt(`Digite a nova senha para o RE ${customer.re} (mínimo 4 dígitos):`);
@@ -814,7 +814,7 @@ export const DashboardView: React.FC = () => {
                           alert('Erro ao atualizar senha.');
                         }
                       }}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-all duration-300 text-xs border border-white/10"
+                      className="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-all duration-300 text-xs border border-white/10"
                     >
                       Redefinir Senha
                     </button>
@@ -823,7 +823,7 @@ export const DashboardView: React.FC = () => {
               ))}
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium text-sm">
                     Nenhum cliente cadastrado.
                   </td>
                 </tr>
@@ -835,38 +835,38 @@ export const DashboardView: React.FC = () => {
 
       {/* Sale Items Modal */}
       {selectedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-white/10 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col m-3 sm:m-4 shadow-2xl shadow-black/60">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
               <div>
-                <h2 className="text-xl font-bold text-white font-jakarta">
+                <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">
                   Venda #{selectedSale.id}
                 </h2>
-                <p className="text-sm text-white/60">{formatDate(selectedSale.created_at)}</p>
+                <p className="text-xs sm:text-sm text-white/60">{formatDate(selectedSale.created_at)}</p>
               </div>
-              <button onClick={() => setSelectedSale(null)} className="text-white/60 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={() => setSelectedSale(null)} className="text-white/60 hover:text-white transition-colors p-1">
+                <X size={22} />
               </button>
             </div>
             
-            <div className="p-6 flex flex-col flex-1 overflow-auto gap-4">
+            <div className="p-4 sm:p-6 flex flex-col flex-1 overflow-y-auto gap-3 sm:gap-4">
               {selectedSale.items.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-                  <div className="flex flex-col">
-                    <span className="text-white font-medium">{item.product.name}</span>
-                    <span className="text-sm text-white/60">{item.quantity}x {formatCurrency(item.product.price)}</span>
+                <div key={idx} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0 text-xs sm:text-sm">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-white font-medium truncate">{item.product.name}</span>
+                    <span className="text-xs text-white/60">{item.quantity}x {formatCurrency(item.product.price)}</span>
                   </div>
-                  <span className="text-white font-bold">{formatCurrency(item.subtotal)}</span>
+                  <span className="text-white font-bold shrink-0">{formatCurrency(item.subtotal)}</span>
                 </div>
               ))}
               {selectedSale.items.length === 0 && (
-                <p className="text-white/50 text-center py-4">Nenhum item encontrado.</p>
+                <p className="text-white/50 text-center py-4 text-xs sm:text-sm">Nenhum item encontrado.</p>
               )}
             </div>
             
-            <div className="p-6 border-t border-white/10 flex justify-between items-center bg-black/20">
-              <span className="text-white/60 font-medium">Total:</span>
-              <span className="text-2xl font-bold text-white">{formatCurrency(selectedSale.total_amount)}</span>
+            <div className="p-4 sm:p-6 border-t border-white/10 flex justify-between items-center bg-black/20">
+              <span className="text-white/60 font-medium text-xs sm:text-sm">Total:</span>
+              <span className="text-xl sm:text-2xl font-bold text-white">{formatCurrency(selectedSale.total_amount)}</span>
             </div>
           </div>
         </div>

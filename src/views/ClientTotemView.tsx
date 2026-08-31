@@ -34,6 +34,13 @@ export const ClientTotemView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [adminError, setAdminError] = useState('');
 
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleOpenSettleDebtModal = () => {
     if (!pixSettings || !pixSettings.pix_key) {
       alert('Chave PIX não configurada no sistema. Por favor, contate o administrador.');
@@ -363,7 +370,7 @@ export const ClientTotemView: React.FC = () => {
   if (!currentCustomer) {
     return (
       <div 
-        className="flex flex-col min-h-screen relative overflow-hidden bg-black"
+        className="flex flex-col min-h-screen w-full relative overflow-x-hidden bg-black"
         style={{
           backgroundImage: 'url(/bg.png)',
           backgroundSize: 'cover',
@@ -375,21 +382,21 @@ export const ClientTotemView: React.FC = () => {
         {/* Degradê extra na parte inferior para garantir contraste */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"></div>
 
-        <div className="flex-none p-4 sm:p-6 relative z-20">
-          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-3 px-6 py-4 w-full max-w-md sm:max-w-xl mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
-            <img src="/negociacao.png" alt="Logo Negociação" className="w-12 h-12 sm:w-14 sm:h-14 object-contain mx-auto sm:mx-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+        <div className="flex-none p-4 sm:p-6 relative z-20 w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-3 px-4 sm:px-6 py-3 sm:py-4 w-full max-w-md sm:max-w-xl mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
+            <img src="/negociacao.png" alt="Logo Negociação" className="w-10 h-10 sm:w-14 sm:h-14 object-contain mx-auto sm:mx-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             <h1 className="text-base sm:text-xl font-bold tracking-tight text-white text-center sm:text-left font-jakarta">
               Minimercado Gremio Negociação
             </h1>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10">
-          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 w-11/12 max-w-md flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10 w-full">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-5 sm:p-8 w-full max-w-md flex flex-col gap-5 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
-              <p className="text-white/80">Identifique-se para começar suas compras</p>
-              <p className="text-white/80">A Equipe de Negociação agradece</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white font-jakarta mb-2">Autoatendimento</h2>
+              <p className="text-sm sm:text-base text-white/80">Identifique-se para começar suas compras</p>
+              <p className="text-xs sm:text-sm text-white/60">A Equipe de Negociação agradece</p>
             </div>
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
@@ -405,7 +412,7 @@ export const ClientTotemView: React.FC = () => {
                     setLoginError('');
                   }}
                   placeholder="Digite seu RE" 
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50"
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-base sm:text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50"
                 />
               </div>
 
@@ -421,7 +428,7 @@ export const ClientTotemView: React.FC = () => {
                       setLoginError('');
                     }}
                     placeholder="Digite sua senha" 
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors"
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-base sm:text-lg text-white text-center focus:outline-none focus:border-primary-500/50 transition-colors"
                   />
                 </div>
               )}
@@ -438,14 +445,14 @@ export const ClientTotemView: React.FC = () => {
                       setShowPasswordInput(false);
                       setLoginError('');
                     }}
-                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300 mt-2"
+                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300 mt-2 text-sm sm:text-base"
                   >
                     Voltar
                   </button>
                 )}
                 <button 
                   type="submit"
-                  className={`${showPasswordInput ? 'w-2/3' : 'w-full'} py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 mt-2`}
+                  className={`${showPasswordInput ? 'w-2/3' : 'w-full'} py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 mt-2 text-sm sm:text-base`}
                 >
                   {showPasswordInput ? 'Confirmar Senha' : 'Acessar Terminal'}
                 </button>
@@ -454,13 +461,13 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 flex justify-between items-center relative z-10 w-full mt-auto">
-          <span className="text-xs text-white/30 font-medium">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative z-10 w-full mt-auto">
+          <span className="text-xs text-white/30 font-medium text-center sm:text-left">
             Desenvolvido por: Delta Negociação - 2026
           </span>
           <button 
             onClick={handleOpenAdminModal}
-            className="flex items-center gap-2 px-5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300 text-xs sm:text-sm"
           >
             <Shield size={18} />
             <span className="font-medium">Área de Gestão</span>
@@ -469,22 +476,22 @@ export const ClientTotemView: React.FC = () => {
 
         {/* Modal de Acesso à Área de Gestão / Admin */}
         {showAdminModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="glass-effect bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6 shadow-2xl shadow-black/40 hover:border-violet-500/40 transition-all duration-300">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+            <div className="glass-effect bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto m-4 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-2xl shadow-black/40 hover:border-violet-500/40 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-violet-500/20 border border-violet-500/30 rounded-xl text-violet-400">
-                    <Shield size={22} />
+                  <div className="p-2 sm:p-2.5 bg-violet-500/20 border border-violet-500/30 rounded-xl text-violet-400">
+                    <Shield size={20} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white font-jakarta">Área de Gestão</h2>
-                    <p className="text-xs text-white/60">Acesso restrito ao painel administrativo</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Área de Gestão</h2>
+                    <p className="text-[11px] sm:text-xs text-white/60">Acesso restrito ao painel administrativo</p>
                   </div>
                 </div>
                 <button 
                   type="button"
                   onClick={() => setShowAdminModal(false)} 
-                  className="text-white/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors p-1"
                 >
                   <X size={20} />
                 </button>
@@ -503,13 +510,13 @@ export const ClientTotemView: React.FC = () => {
                         setAdminError('');
                       }}
                       placeholder="Digite a senha de administrador" 
-                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 transition-colors"
+                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 transition-colors text-sm sm:text-base"
                     />
                     <button
                       type="button"
                       tabIndex={-1}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -523,13 +530,13 @@ export const ClientTotemView: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setShowAdminModal(false)}
-                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300"
+                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300 text-sm sm:text-base"
                   >
                     Cancelar
                   </button>
                   <button 
                     type="submit"
-                    className="w-2/3 py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/20 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300"
+                    className="w-2/3 py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/20 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 text-sm sm:text-base"
                   >
                     Acessar Gestão
                   </button>
@@ -541,18 +548,18 @@ export const ClientTotemView: React.FC = () => {
 
         {/* Register Modal */}
         {showRegisterModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="glass-effect bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6 shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+            <div className="glass-effect bg-slate-900/95 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto m-4 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-2xl shadow-black/40 hover:border-emerald-500/40 transition-all duration-300">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white font-jakarta">Primeiro Acesso / Configurar Senha</h2>
-                <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white">
-                  <span className="text-xl">X</span>
+                <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">Primeiro Acesso / Configurar Senha</h2>
+                <button onClick={() => setShowRegisterModal(false)} className="text-white/60 hover:text-white p-1">
+                  <X size={20} />
                 </button>
               </div>
-              <p className="text-white/80 text-sm">Configure seu acesso para o RE <strong>{newRe}</strong>.</p>
-              <form onSubmit={handleRegister} className="flex flex-col gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-white/60">Nome Completo</label>
+              <p className="text-white/80 text-xs sm:text-sm">Configure seu acesso para o RE <strong>{newRe}</strong>.</p>
+              <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-xs text-white/60 font-medium">Nome Completo</label>
                   <input 
                     autoFocus
                     type="text" 
@@ -560,11 +567,11 @@ export const ClientTotemView: React.FC = () => {
                     onChange={e => setNewName(e.target.value)}
                     placeholder="Nome do Policial" 
                     required
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-white/60">Senha de Acesso (Mínimo 4 dígitos)</label>
+                <div className="space-y-1 col-span-1">
+                  <label className="text-xs text-white/60 font-medium">Senha (Mín. 4 dígitos)</label>
                   <input 
                     type="password" 
                     value={newPassword} 
@@ -572,11 +579,11 @@ export const ClientTotemView: React.FC = () => {
                     placeholder="Digite a Senha" 
                     required
                     minLength={4}
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-white/60">Confirme a Senha</label>
+                <div className="space-y-1 col-span-1">
+                  <label className="text-xs text-white/60 font-medium">Confirme a Senha</label>
                   <input 
                     type="password" 
                     value={confirmPassword} 
@@ -584,10 +591,10 @@ export const ClientTotemView: React.FC = () => {
                     placeholder="Confirme a Senha" 
                     required
                     minLength={4}
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50"
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500/50 text-sm sm:text-base"
                   />
                 </div>
-                <button type="submit" className="w-full py-3 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors mt-2">
+                <button type="submit" className="sm:col-span-2 w-full py-3 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors mt-2 text-sm sm:text-base">
                   Cadastrar e Acessar
                 </button>
               </form>
@@ -595,74 +602,74 @@ export const ClientTotemView: React.FC = () => {
           </div>
         )}
 
-
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-900 pb-20 sm:pb-0">
+    <div className="flex flex-col min-h-screen w-full bg-slate-900 pb-20 sm:pb-0 overflow-x-hidden">
       {/* Header */}
-      <header className="glass-effect bg-white/5 border-b border-white/10 px-4 py-3 md:px-8 md:py-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-white font-jakarta">Olá, {currentCustomer.name}</h1>
-          <p className="text-sm text-white/60">RE: {currentCustomer.re}</p>
+      <header className="glass-effect bg-white/5 border-b border-white/10 px-4 py-3 md:px-8 md:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white font-jakarta truncate">Olá, {currentCustomer.name}</h1>
+          <p className="text-xs sm:text-sm text-white/60">RE: {currentCustomer.re}</p>
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 ml-auto">
           <button
             onClick={() => setShowHistoryModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl text-white/80 hover:text-white transition-all duration-300 text-xs md:text-sm"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl text-white/80 hover:text-white transition-all duration-300 text-xs sm:text-sm"
           >
             <History size={16} />
             <span>Extrato / Histórico</span>
           </button>
-          <div className="text-right shrink-0">
-            <p className="text-white/60 text-[10px] md:text-sm">Total Comprado (Mês)</p>
-            <p className="text-base md:text-xl font-bold text-emerald-400">{formatCurrency(userMetrics.totalMonth)}</p>
+          <div className="text-right shrink-0 bg-white/5 border border-white/10 px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl">
+            <p className="text-white/60 text-[10px] sm:text-xs">Total Comprado (Mês)</p>
+            <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalMonth)}</p>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-x-hidden overflow-y-auto lg:overflow-hidden">
         {/* Left Column - Scanning and Cart */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-4 min-w-0 min-h-[340px] lg:min-h-0">
           <form onSubmit={handleBarcodeSubmit} className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={24} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={22} />
             <input 
               autoFocus
               type="text" 
               value={barcodeInput}
               onChange={e => setBarcodeInput(e.target.value)}
               placeholder="Bipe ou digite o código do produto..." 
-              className="w-full bg-white/5 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-xl text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 shadow-lg"
+              className="w-full bg-white/5 border border-white/20 rounded-2xl py-3.5 sm:py-4 pl-12 pr-4 text-base sm:text-xl text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 shadow-lg"
             />
           </form>
 
-          <div className="flex-1 glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-            <div className="p-4 border-b border-white/10">
-              <h2 className="font-bold text-white/80">Carrinho de Compras</h2>
+          <div className="flex-1 glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out min-h-[220px]">
+            <div className="p-3.5 sm:p-4 border-b border-white/10">
+              <h2 className="font-bold text-white/80 text-sm sm:text-base">Carrinho de Compras</h2>
             </div>
-            <div className="flex-1 overflow-auto p-4 flex flex-col gap-2">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-2 max-h-[380px] lg:max-h-none">
               {cart.map(item => (
-                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/10 p-3 rounded-xl">
-                  <div className="flex flex-col">
-                    <span className="text-white font-medium">{item.product.name}</span>
-                    <span className="text-sm text-white/60">{item.quantity}x {formatCurrency(item.product.price)}</span>
+                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/10 p-2.5 sm:p-3 rounded-xl gap-2">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-white font-medium text-sm sm:text-base truncate">{item.product.name}</span>
+                    <span className="text-xs sm:text-sm text-white/60">{item.quantity}x {formatCurrency(item.product.price)}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-bold text-white">{formatCurrency(item.subtotal)}</span>
+                  <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                    <span className="text-base sm:text-lg font-bold text-white">{formatCurrency(item.subtotal)}</span>
                     <button 
                       onClick={() => removeFromCart(item.product.id)}
-                      className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 rounded-lg transition-colors"
+                      className="p-1.5 sm:p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 rounded-lg transition-colors"
+                      title="Remover item"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>
               ))}
               {cart.length === 0 && (
-                <div className="flex-1 flex items-center justify-center text-white/40">
-                  <p>Bipe um produto para adicionar ao carrinho</p>
+                <div className="flex-1 flex items-center justify-center text-white/40 py-8">
+                  <p className="text-sm sm:text-base text-center">Bipe um produto para adicionar ao carrinho</p>
                 </div>
               )}
             </div>
@@ -670,33 +677,33 @@ export const ClientTotemView: React.FC = () => {
         </div>
 
         {/* Right Column - Totals and PIX */}
-        <div className="w-full lg:w-96 flex flex-col gap-4">
-          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-6 flex-1 justify-center shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+        <div className="w-full lg:w-96 lg:max-w-md flex flex-col gap-4 shrink-0 min-w-0">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 flex flex-col items-center gap-4 sm:gap-6 flex-1 justify-center shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out w-full max-w-sm mx-auto lg:max-w-none">
             <div className="text-center">
-              <span className="text-white/60 font-medium text-sm">Total da Compra</span>
-              <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400 py-2">
+              <span className="text-white/60 font-medium text-xs sm:text-sm">Total da Compra</span>
+              <h2 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400 py-1 sm:py-2">
                 {formatCurrency(totalCart)}
               </h2>
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="font-bold text-white text-lg">Pague com PIX</h3>
-              <p className="text-white/60 text-sm">Escaneie o QR Code abaixo</p>
+              <h3 className="font-bold text-white text-base sm:text-lg">Pague com PIX</h3>
+              <p className="text-white/60 text-xs sm:text-sm">Escaneie o QR Code abaixo</p>
             </div>
             
-            <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="bg-white p-3 sm:p-4 rounded-xl flex items-center justify-center shadow-lg w-full max-w-[220px] sm:max-w-[260px] mx-auto aspect-square">
               {cart.length === 0 ? (
-                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center text-slate-500 text-xs text-center p-2 font-medium">
-                  <QrCode size={48} className="mb-3 text-slate-400" />
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs text-center p-2 font-medium">
+                  <QrCode size={40} className="mb-2 text-slate-400" />
                   Adicione produtos para gerar o QR Code
                 </div>
               ) : !pixSettings || !pixSettings.pix_key ? (
-                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center text-rose-500 text-xs text-center p-2 font-medium">
-                  <QrCode size={48} className="mb-3 text-rose-300" />
+                <div className="w-full h-full flex flex-col items-center justify-center text-rose-500 text-xs text-center p-2 font-medium">
+                  <QrCode size={40} className="mb-2 text-rose-300" />
                   Chave PIX não configurada
                 </div>
               ) : (
-                <QRCodeSVG value={pixPayload} size={220} />
+                <QRCodeSVG value={pixPayload} size={isMobile ? 180 : 220} className="max-w-full max-h-full" />
               )}
             </div>
             {cart.length > 0 && pixPayload && (
@@ -710,23 +717,24 @@ export const ClientTotemView: React.FC = () => {
               >
                 Copiar código PIX (Copia e Cola)
               </button>
-            )}            <button 
+            )}
+            <button 
               disabled={cart.length === 0}
               onClick={handleFinalize}
-              className="w-full py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 hover:border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg glow border border-transparent"
+              className="w-full py-3.5 sm:py-4 mt-2 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-500 hover:border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-base sm:text-lg glow border border-transparent"
             >
               Finalizar Compra (PIX Realizado)
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={handleFinalizeDebit}
-              className="w-full py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 border border-transparent hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-base"
+              className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 border border-transparent hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
             >
               Pagar Depois (Registrar em Débito)
             </button>
             <button
               onClick={() => logoutCustomer()}
-              className="w-full py-3 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300"
+              className="w-full py-2.5 sm:py-3 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300 text-xs sm:text-sm"
             >
               Cancelar e Sair
             </button>
@@ -739,38 +747,38 @@ export const ClientTotemView: React.FC = () => {
 
       {/* History and Dashboard Modal */}
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-lg md:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col m-4 shadow-2xl shadow-black/50">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
               <div>
-                <h2 className="text-xl font-bold text-white font-jakarta">
+                <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">
                   Extrato e Histórico de Compras
                 </h2>
-                <p className="text-sm text-white/60">RE: {currentCustomer.re} | {currentCustomer.name}</p>
+                <p className="text-xs sm:text-sm text-white/60">RE: {currentCustomer.re} | {currentCustomer.name}</p>
               </div>
-              <button onClick={() => setShowHistoryModal(false)} className="text-white/60 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={() => setShowHistoryModal(false)} className="text-white/60 hover:text-white transition-colors p-1">
+                <X size={22} />
               </button>
             </div>
             
-            <div className="p-6 overflow-auto flex-1 flex flex-col gap-6">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-5 sm:gap-6">
               {/* KPIs Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
-                  <span className="text-xs text-white/60 font-medium">Total Pago</span>
-                  <span className="text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalPaid)}</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total Pago</span>
+                  <span className="text-base sm:text-lg font-bold text-emerald-400">{formatCurrency(userMetrics.totalPaid)}</span>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-2 justify-between">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-2 justify-between">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-white/60 font-medium">Total em Débito</span>
-                    <span className="text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
+                    <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total em Débito</span>
+                    <span className="text-base sm:text-lg font-bold text-rose-400">{formatCurrency(userMetrics.totalDebt)}</span>
                   </div>
                   {userMetrics.totalDebt > 0 ? (
                     <button
                       onClick={handleOpenSettleDebtModal}
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1.5 px-3 rounded-lg text-[10px] md:text-xs transition-all mt-1"
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1 px-2 rounded-lg text-[10px] sm:text-xs transition-all mt-1"
                     >
-                      Quitar Débito via PIX
+                      Quitar PIX
                     </button>
                   ) : (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mt-1 self-start">
@@ -778,43 +786,43 @@ export const ClientTotemView: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
-                  <span className="text-xs text-white/60 font-medium">Total do Mês</span>
-                  <span className="text-lg font-bold text-slate-300">{formatCurrency(userMetrics.totalMonth)}</span>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Total do Mês</span>
+                  <span className="text-base sm:text-lg font-bold text-slate-300">{formatCurrency(userMetrics.totalMonth)}</span>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-1">
-                  <span className="text-xs text-white/60 font-medium">Últimos 3 Meses</span>
-                  <span className="text-lg font-bold text-white">{formatCurrency(userMetrics.totalThreeMonths)}</span>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex flex-col gap-1">
+                  <span className="text-[11px] sm:text-xs text-white/60 font-medium">Últimos 3 Meses</span>
+                  <span className="text-base sm:text-lg font-bold text-white">{formatCurrency(userMetrics.totalThreeMonths)}</span>
                 </div>
               </div>
 
               {/* History Table */}
               <div className="flex flex-col gap-3">
-                <h3 className="font-bold text-white text-lg">Produtos Adquiridos</h3>
-                <div className="overflow-x-auto -mx-4 sm:mx-0 border border-white/10 rounded-xl">
-                  <table className="w-full text-left border-collapse min-w-[600px]">
+                <h3 className="font-bold text-white text-base sm:text-lg">Produtos Adquiridos</h3>
+                <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
+                  <table className="w-full text-left border-collapse min-w-[550px]">
                     <thead>
-                      <tr className="border-b border-white/10 bg-white/5 text-xs text-white/60 font-semibold uppercase">
-                        <th className="p-3">Data/Hora</th>
-                        <th className="p-3">Produto</th>
-                        <th className="p-3 text-right">Valor Unitário</th>
-                        <th className="p-3 text-center">Qtd.</th>
-                        <th className="p-3 text-right">Subtotal</th>
-                        <th className="p-3 text-center">Status</th>
+                      <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 font-semibold uppercase">
+                        <th className="p-2.5 sm:p-3">Data/Hora</th>
+                        <th className="p-2.5 sm:p-3">Produto</th>
+                        <th className="p-2.5 sm:p-3 text-right">Valor Unitário</th>
+                        <th className="p-2.5 sm:p-3 text-center">Qtd.</th>
+                        <th className="p-2.5 sm:p-3 text-right">Subtotal</th>
+                        <th className="p-2.5 sm:p-3 text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm">
+                    <tbody className="text-xs sm:text-sm">
                       {userMetrics.itemsList.map((item, idx) => (
                         <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-3 text-white/80">
+                          <td className="p-2.5 sm:p-3 text-white/80 whitespace-nowrap">
                             {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.date))}
                           </td>
-                          <td className="p-3 text-white font-medium">{item.productName}</td>
-                          <td className="p-3 text-white/80 text-right">{formatCurrency(item.unitPrice)}</td>
-                          <td className="p-3 text-white/80 text-center">{item.quantity}</td>
-                          <td className="p-3 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
-                          <td className="p-3 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                          <td className="p-2.5 sm:p-3 text-white font-medium">{item.productName}</td>
+                          <td className="p-2.5 sm:p-3 text-white/80 text-right">{formatCurrency(item.unitPrice)}</td>
+                          <td className="p-2.5 sm:p-3 text-white/80 text-center">{item.quantity}</td>
+                          <td className="p-2.5 sm:p-3 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
+                          <td className="p-2.5 sm:p-3 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold border ${
                               item.paymentStatus === 'PENDING' 
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
                                 : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
@@ -826,7 +834,7 @@ export const ClientTotemView: React.FC = () => {
                       ))}
                       {userMetrics.itemsList.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="p-6 text-center text-white/50">
+                          <td colSpan={6} className="p-6 text-center text-white/50 text-sm">
                             Nenhum produto adquirido ainda.
                           </td>
                         </tr>
@@ -837,10 +845,10 @@ export const ClientTotemView: React.FC = () => {
               </div>
             </div>
             
-            <div className="p-6 border-t border-white/10 flex justify-end bg-black/20">
+            <div className="p-4 sm:p-6 border-t border-white/10 flex justify-end bg-black/20">
               <button 
                 onClick={() => setShowHistoryModal(false)}
-                className="px-5 py-2.5 rounded-xl font-bold text-white bg-white/10 hover:bg-white/20 transition-colors"
+                className="px-5 py-2 rounded-xl font-bold text-white bg-white/10 hover:bg-white/20 transition-colors text-sm"
               >
                 Fechar
               </button>
@@ -848,27 +856,28 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
       )}
+
       {showSettleDebtModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col shadow-2xl shadow-black/60 p-6 gap-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-effect bg-slate-900 border border-white/20 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto m-4 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-2xl shadow-black/60">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white font-jakarta">
+              <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta">
                 Quitar Débito via PIX
               </h2>
-              <button onClick={() => setShowSettleDebtModal(false)} className="text-white/60 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={() => setShowSettleDebtModal(false)} className="text-white/60 hover:text-white transition-colors p-1">
+                <X size={22} />
               </button>
             </div>
 
             <div className="text-center">
-              <span className="text-white/60 font-medium text-sm">Valor do Débito</span>
-              <h3 className="text-4xl font-bold text-rose-400 py-1">
+              <span className="text-white/60 font-medium text-xs sm:text-sm">Valor do Débito</span>
+              <h3 className="text-3xl sm:text-4xl font-bold text-rose-400 py-1">
                 {formatCurrency(userMetrics.totalDebt)}
               </h3>
             </div>
 
-            <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-lg self-center">
-              <QRCodeSVG value={settleDebtPayload} size={200} />
+            <div className="bg-white p-3 sm:p-4 rounded-xl flex items-center justify-center shadow-lg self-center max-w-[200px] sm:max-w-[240px]">
+              <QRCodeSVG value={settleDebtPayload} size={isMobile ? 160 : 200} />
             </div>
 
             {settleDebtPayload && (
@@ -886,21 +895,22 @@ export const ClientTotemView: React.FC = () => {
 
             <button
               onClick={handleConfirmSettleDebt}
-              className="w-full py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] transition-all duration-300 text-base"
+              className="w-full py-3 sm:py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.99] transition-all duration-300 text-sm sm:text-base"
             >
               Confirmar Pagamento Realizado
             </button>
             <button
               onClick={() => setShowSettleDebtModal(false)}
-              className="w-full py-2.5 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300 text-sm"
+              className="w-full py-2 sm:py-2.5 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.99] transition-all duration-300 text-xs sm:text-sm"
             >
               Voltar
             </button>
           </div>
         </div>
       )}
+
       {toast && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-300 ${
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-lg font-bold text-white text-xs sm:text-sm transition-all duration-300 ${
           toast.type === 'success' ? 'bg-emerald-600 border border-emerald-400' : 'bg-rose-600 border border-rose-400'
         }`}>
           {toast.message}

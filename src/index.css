@@ -67,6 +67,11 @@
 }
 
 @layer base {
+  html, body, #root {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
