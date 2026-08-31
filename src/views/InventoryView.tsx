@@ -104,19 +104,31 @@ export const InventoryView: React.FC = () => {
     return formData.cost_price;
   }, [entryType, boxCost, unitsPerBox, formData.cost_price]);
 
+  const currentExistingProduct = useMemo(() => {
+    if (editingProduct) return editingProduct;
+    if (formData.code.trim()) {
+      return products.find(p => p.code.trim().toLowerCase() === formData.code.trim().toLowerCase()) || null;
+    }
+    return null;
+  }, [editingProduct, formData.code, products]);
+
   const boxAddedUnits = useMemo(() => {
     return (Number(boxCount) || 0) * (Number(unitsPerBox) || 0);
   }, [boxCount, unitsPerBox]);
 
   const totalCalculatedStock = useMemo(() => {
+    const target = currentExistingProduct;
     if (entryType === 'box') {
-      if (editingProduct && addStockToExisting) {
-        return (Number(editingProduct.stock) || 0) + boxAddedUnits;
+      if (target && addStockToExisting) {
+        return (Number(target.stock) || 0) + boxAddedUnits;
       }
       return boxAddedUnits;
     }
-    return formData.stock;
-  }, [entryType, editingProduct, addStockToExisting, boxAddedUnits, formData.stock]);
+    if (target) {
+      return (Number(target.stock) || 0) + (Number(formData.stock) || 0);
+    }
+    return Number(formData.stock) || 0;
+  }, [entryType, currentExistingProduct, addStockToExisting, boxAddedUnits, formData.stock]);
 
   const fallbackCategories = ['Bebidas', 'Doces & Chocolates', 'Salgados & Snacks', 'Fitness & Proteicos', 'Diversos'];
   
@@ -168,7 +180,7 @@ export const InventoryView: React.FC = () => {
         category: product.category,
         cost_price: product.cost_price,
         price: product.price,
-        stock: product.stock,
+        stock: 0, // Entrada incremental padrão 0
         min_stock: product.min_stock,
       });
       if (product.cost_price > 0) {
@@ -213,9 +225,15 @@ export const InventoryView: React.FC = () => {
         ? calculatedUnitCost
         : Number(formData.cost_price) || 0;
 
+      const targetExisting = editingProduct || products.find(p => p.code.trim().toLowerCase() === formData.code.trim().toLowerCase());
+
       const finalStock = entryType === 'box'
-        ? totalCalculatedStock
-        : Number(formData.stock) || 0;
+        ? (targetExisting && addStockToExisting
+            ? (Number(targetExisting.stock) || 0) + boxAddedUnits
+            : boxAddedUnits)
+        : (targetExisting
+            ? (Number(targetExisting.stock) || 0) + (Number(formData.stock) || 0)
+            : Number(formData.stock) || 0);
 
       const payload = {
         code: formData.code.trim(),
@@ -229,8 +247,8 @@ export const InventoryView: React.FC = () => {
 
       console.log('Enviando produto:', payload);
 
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, payload, categoryId);
+      if (targetExisting) {
+        await updateProduct(targetExisting.id, payload, categoryId);
         alert('Produto atualizado com sucesso!');
       } else {
         await addProduct(payload, categoryId);
@@ -240,7 +258,7 @@ export const InventoryView: React.FC = () => {
       handleCloseModal();
       await initData();
     } catch (err: any) {
-      alert('Erro ao cadastrar produto: ' + err.message);
+      alert('Erro ao salvar produto: ' + err.message);
       setSaveError(err.message || 'Erro ao salvar produto no banco de dados.');
     }
   };
@@ -550,16 +568,30 @@ export const InventoryView: React.FC = () => {
 
                   {/* Mode specific stock inputs */}
                   {entryType === 'unit' ? (
-                    <div className="space-y-1">
-                      <label className="text-sm text-white/60">Estoque Atual (Unidades)</label>
+                    <div className="space-y-1 sm:col-span-2">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <label className="text-sm text-white/60 font-medium">Quantidade (Entrada / Adicionar)</label>
+                        {currentExistingProduct && (
+                          <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                            Estoque remanescente atual: {currentExistingProduct.stock} un
+                          </span>
+                        )}
+                      </div>
                       <input 
                         required 
                         type="number" 
                         min="0"
                         value={formData.stock} 
                         onChange={e => setFormData({...formData, stock: Number(e.target.value)})} 
+                        placeholder="Qtd de itens entrando"
                         className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary-500/50" 
                       />
+                      {currentExistingProduct && (
+                        <p className="text-[11px] text-white/50">
+                          Novo estoque total resultante será: <strong className="text-emerald-400 font-semibold">{currentExistingProduct.stock + (Number(formData.stock) || 0)} un</strong>
+                          {formData.stock === 0 && ' (nenhuma nova unidade será somada)'}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -576,7 +608,7 @@ export const InventoryView: React.FC = () => {
                         />
                       </div>
 
-                      <div className="space-y-1 sm:col-span-2">
+                      <div className="space-y-1">
                         <label className="text-sm text-white/60 font-medium">Unidades por Caixa / Display</label>
                         <input 
                           required 
@@ -598,10 +630,10 @@ export const InventoryView: React.FC = () => {
                           </span>
                           <span className="text-[11px] text-white/50">
                             ({boxCount} {boxCount === 1 ? 'caixa' : 'caixas'} × {unitsPerBox} un. = {boxAddedUnits} novas unidades
-                            {editingProduct && addStockToExisting ? ` + ${editingProduct.stock} un. atuais` : ''})
+                            {currentExistingProduct && addStockToExisting ? ` + ${currentExistingProduct.stock} un. atuais` : ''})
                           </span>
                         </div>
-                        {editingProduct && (
+                        {currentExistingProduct && (
                           <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer bg-black/30 px-3 py-1.5 rounded-lg border border-white/10 hover:border-emerald-500/40 transition-colors">
                             <input 
                               type="checkbox" 
@@ -609,7 +641,7 @@ export const InventoryView: React.FC = () => {
                               onChange={e => setAddStockToExisting(e.target.checked)}
                               className="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500" 
                             />
-                            <span>Somar ao estoque atual ({editingProduct.stock} un.)</span>
+                            <span>Somar ao estoque atual ({currentExistingProduct.stock} un.)</span>
                           </label>
                         )}
                       </div>
