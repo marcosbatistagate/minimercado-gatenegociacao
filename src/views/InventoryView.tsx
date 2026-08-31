@@ -71,8 +71,8 @@ export const InventoryView: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchSearch = p.name.toLowerCase().trim().includes(searchTerm.toLowerCase().trim()) || 
+                          p.code.toLowerCase().trim().includes(searchTerm.toLowerCase().trim());
       const matchCategory = categoryFilter ? p.category === categoryFilter : true;
       return matchSearch && matchCategory;
     });

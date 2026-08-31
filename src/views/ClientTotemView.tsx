@@ -76,7 +76,7 @@ export const ClientTotemView: React.FC = () => {
           const scannedCode = buffer;
           buffer = '';
 
-          const product = products.find(p => p.code === scannedCode);
+          const product = products.find(p => p.code.trim() === scannedCode.trim());
           if (product) {
             if (product.stock <= 0) {
               setToast({ message: 'Produto fora de estoque!', type: 'error' });
@@ -244,8 +244,22 @@ export const ClientTotemView: React.FC = () => {
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (barcodeInput.trim()) {
-      addToCartByCode(barcodeInput.trim());
+    const query = barcodeInput.trim();
+    if (query) {
+      const product = products.find(p => p.code.trim() === query);
+      if (product) {
+        if (product.stock <= 0) {
+          setToast({ message: 'Produto fora de estoque!', type: 'error' });
+          playBeep('error');
+        } else {
+          addToCartByCode(product.code);
+          setToast({ message: `${product.name} adicionado ao carrinho!`, type: 'success' });
+          playBeep('success');
+        }
+      } else {
+        setToast({ message: 'Produto não cadastrado', type: 'error' });
+        playBeep('error');
+      }
       setBarcodeInput('');
     }
   };

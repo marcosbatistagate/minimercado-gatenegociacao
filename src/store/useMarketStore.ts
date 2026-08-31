@@ -132,7 +132,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   addToCartByCode: (codeOrName) => {
     const state = get();
     const product = state.products.find(
-      p => p.code === codeOrName || p.name.toLowerCase() === codeOrName.toLowerCase()
+      p => p.code.trim() === codeOrName.trim() || p.name.toLowerCase().trim() === codeOrName.toLowerCase().trim()
     );
 
     if (product) {
