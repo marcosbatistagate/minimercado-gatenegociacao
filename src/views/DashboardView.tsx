@@ -26,8 +26,12 @@ export const DashboardView: React.FC = () => {
   const [searchFilter, setSearchFilter] = useState('');
 
   const activeSales = useMemo(() => {
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
     const cycleStart = new Date(currentCycleStart);
-    return sales.filter(s => new Date(s.created_at) >= cycleStart);
+    // Uses the latest timestamp between currentCycleStart and start of current civil month
+    const effectiveStart = cycleStart > startOfCurrentMonth ? cycleStart : startOfCurrentMonth;
+    return sales.filter(s => s.status !== 'cancelled' && new Date(s.created_at) >= effectiveStart);
   }, [sales, currentCycleStart]);
 
   const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
@@ -41,15 +45,13 @@ export const DashboardView: React.FC = () => {
 
   const chartData = useMemo(() => {
     const today = new Date();
-    let startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    let startDate = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
 
     if (chartPeriod === '2_months') {
-      startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1, 0, 0, 0, 0);
     } else if (chartPeriod === '3_months') {
-      startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+      startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1, 0, 0, 0, 0);
     }
-    
-    startDate.setHours(0, 0, 0, 0);
 
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
     
@@ -63,7 +65,7 @@ export const DashboardView: React.FC = () => {
       };
     });
 
-    activeSales.forEach(sale => {
+    sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
         if (saleDate >= startDate && saleDate <= today) {
@@ -79,7 +81,7 @@ export const DashboardView: React.FC = () => {
 
     // Return all products sorted by name or amount
     return Object.values(productStats).sort((a, b) => a.name.localeCompare(b.name));
-  }, [activeSales, products, chartPeriod]);
+  }, [sales, products, chartPeriod]);
 
   const chartHeight = 320;
   const paddingLeft = 55;
@@ -193,11 +195,11 @@ export const DashboardView: React.FC = () => {
     return dist;
   }, [filteredSales]);
 
-  // Aggregate pending debts per client
+  // Aggregate pending debts per client across ALL time (never reset by monthly cycle)
   const pendingDebts = useMemo(() => {
     const debtsMap: Record<string, { re: string, name: string, total: number }> = {};
-    activeSales.forEach(s => {
-      if (s.payment_status === 'PENDING' && s.customerRe) {
+    sales.forEach(s => {
+      if (s.payment_status === 'PENDING' && s.status !== 'cancelled' && s.customerRe) {
         const customer = customers.find(c => c.re === s.customerRe);
         const name = customer ? customer.name : 'Desconhecido';
         if (!debtsMap[s.customerRe]) {
@@ -207,7 +209,7 @@ export const DashboardView: React.FC = () => {
       }
     });
     return Object.values(debtsMap);
-  }, [activeSales, customers]);
+  }, [sales, customers]);
 
   return (
     <div className="flex flex-col h-full gap-5 sm:gap-6 p-4 sm:p-6 overflow-auto">

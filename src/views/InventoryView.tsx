@@ -30,7 +30,11 @@ export const InventoryView: React.FC = () => {
   };
 
   const isSaleInCurrentCycle = (saleDateStr: string) => {
-    return new Date(saleDateStr) >= new Date(currentCycleStart);
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const cycleStart = new Date(currentCycleStart);
+    const effectiveStart = cycleStart > startOfCurrentMonth ? cycleStart : startOfCurrentMonth;
+    return new Date(saleDateStr) >= effectiveStart;
   };
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -288,9 +292,9 @@ export const InventoryView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
           <button
             onClick={() => {
-              if (confirm('Tem certeza que deseja zerar os indicadores do mês e reiniciar a planilha de estoque?')) {
+              if (confirm('Esta ação inicia um novo ciclo contábil e de faturamento mensal. Os saldos e débitos pendentes dos clientes NÃO serão afetados e continuarão em aberto até a quitação.')) {
                 startNewMonth();
-                alert('Planilha de estoque reiniciada para o novo mês!');
+                alert('Novo ciclo contábil e faturamento mensal iniciados com sucesso!');
               }
             }}
             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-rose-950/40 border border-rose-500/50 rounded-xl sm:rounded-full text-xs sm:text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 transition-all duration-300"

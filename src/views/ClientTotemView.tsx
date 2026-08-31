@@ -11,7 +11,7 @@ const formatCurrency = (value: number) => {
 };
 
 export const ClientTotemView: React.FC = () => {
-  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, currentCycleStart, products, pixSettings, settleDebts } = useMarketStore();
+  const { currentCustomer, loginCustomer, registerCustomer, cart, addToCartByCode, removeFromCart, completePixSale, completeDebitSale, logoutCustomer, switchInstance, sales, products, pixSettings, settleDebts } = useMarketStore();
 
   const [reInput, setReInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -168,11 +168,13 @@ export const ClientTotemView: React.FC = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    const startOfCurrentMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    ninetyDaysAgo.setHours(0, 0, 0, 0);
 
-    const cycleStart = new Date(currentCycleStart);
-    const userSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status === 'completed' && new Date(s.created_at) >= cycleStart);
+    // All valid non-cancelled sales for the customer regardless of month cycle (preserves all pending debits)
+    const allUserSales = sales.filter(s => s.customerRe === currentCustomer.re && s.status !== 'cancelled');
 
     let totalPaid = 0;
     let totalDebt = 0;
@@ -180,19 +182,19 @@ export const ClientTotemView: React.FC = () => {
     let totalThreeMonths = 0;
     const itemsList: any[] = [];
 
-    userSales.forEach(s => {
+    allUserSales.forEach(s => {
       const saleDate = new Date(s.created_at);
       const saleAmount = s.total_amount;
 
-      // 1. Payment status totals
+      // 1. Payment status totals (ALL accumulated pending debits are strictly preserved)
       if (s.payment_status === 'PENDING') {
         totalDebt += saleAmount;
       } else {
         totalPaid += saleAmount;
       }
 
-      // 2. Monthly total
-      if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+      // 2. Monthly total - strictly filtered by current civil month (created_at >= primeiro dia do mês)
+      if (saleDate >= startOfCurrentMonth) {
         totalMonth += saleAmount;
       }
 
@@ -201,7 +203,7 @@ export const ClientTotemView: React.FC = () => {
         totalThreeMonths += saleAmount;
       }
 
-      // 4. Products mapping
+      // 4. Products mapping for extrato / history
       s.items.forEach(item => {
         itemsList.push({
           date: s.created_at,
