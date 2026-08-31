@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
-import { QrCode, Search, Trash2, Shield, History, X } from 'lucide-react';
+import { QrCode, Search, Trash2, Shield, History, X, Eye, EyeOff } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
 import { QRCodeSVG } from 'qrcode.react';
 import { generatePixPayload } from '../utils/pixGenerator';
@@ -28,6 +28,11 @@ export const ClientTotemView: React.FC = () => {
 
   const [showSettleDebtModal, setShowSettleDebtModal] = useState(false);
   const [settleDebtPayload, setSettleDebtPayload] = useState('');
+
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [adminError, setAdminError] = useState('');
 
   const handleOpenSettleDebtModal = () => {
     if (!pixSettings || !pixSettings.pix_key) {
@@ -299,12 +304,24 @@ export const ClientTotemView: React.FC = () => {
     }
   };
 
-  const handleAdminAccess = () => {
-    const password = prompt('Digite a senha administrativa:');
-    if (password === 'delta0309') {
+  const handleOpenAdminModal = () => {
+    setAdminPassword('');
+    setShowPassword(false);
+    setAdminError('');
+    setShowAdminModal(true);
+  };
+
+  const handleAdminSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPassword === 'delta0309') {
+      setShowAdminModal(false);
+      setAdminPassword('');
+      setShowPassword(false);
+      setAdminError('');
       switchInstance('admin');
-    } else if (password !== null) {
-      alert('Senha incorreta!');
+    } else {
+      setAdminError('Senha incorreta! Tente novamente.');
+      playBeep('error');
     }
   };
 
@@ -442,13 +459,85 @@ export const ClientTotemView: React.FC = () => {
             Desenvolvido por: Delta Negociação - 2026
           </span>
           <button 
-            onClick={handleAdminAccess}
+            onClick={handleOpenAdminModal}
             className="flex items-center gap-2 px-5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300"
           >
             <Shield size={18} />
             <span className="font-medium">Área de Gestão</span>
           </button>
         </div>
+
+        {/* Modal de Acesso à Área de Gestão / Admin */}
+        {showAdminModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="glass-effect bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-2xl w-11/12 max-w-md overflow-hidden flex flex-col p-6 gap-6 shadow-2xl shadow-black/40 hover:border-violet-500/40 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-violet-500/20 border border-violet-500/30 rounded-xl text-violet-400">
+                    <Shield size={22} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white font-jakarta">Área de Gestão</h2>
+                    <p className="text-xs text-white/60">Acesso restrito ao painel administrativo</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowAdminModal(false)} 
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAdminSubmit} className="flex flex-col gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80">Senha de Acesso</label>
+                  <div className="relative">
+                    <input 
+                      autoFocus
+                      type={showPassword ? 'text' : 'password'}
+                      value={adminPassword}
+                      onChange={e => {
+                        setAdminPassword(e.target.value);
+                        setAdminError('');
+                      }}
+                      placeholder="Digite a senha de administrador" 
+                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {adminError && (
+                    <p className="text-rose-400 text-sm font-medium">{adminError}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-2 mt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setShowAdminModal(false)}
+                    className="w-1/3 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-all duration-300"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    className="w-2/3 py-3 bg-black/60 border border-violet-500 rounded-xl font-bold text-white hover:bg-violet-500/20 hover:border-violet-400 hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-300"
+                  >
+                    Acessar Gestão
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Register Modal */}
         {showRegisterModal && (
