@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useMarketStore, type Sale } from '../store/useMarketStore';
+import { useMarketStore, type Sale, type Product } from '../store/useMarketStore';
 import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
@@ -196,7 +196,8 @@ export const DashboardView: React.FC = () => {
 
   const topProductsByMargin = useMemo(() => {
     const { startDate, endDate } = getPeriodRange(topMarginPeriod);
-    const soldProductIds = new Set<string>();
+    const soldProductsMap = new Map<string, Product>();
+
     sales.forEach(sale => {
       if (sale.status !== 'cancelled') {
         const saleDate = new Date(sale.created_at);
@@ -212,25 +213,21 @@ export const DashboardView: React.FC = () => {
           }
           sale.items.forEach(item => {
             if (item.product?.id) {
-              soldProductIds.add(item.product.id);
+              soldProductsMap.set(item.product.id, item.product);
             }
           });
         }
       }
     });
 
-    const targetProducts = searchFilter || soldProductIds.size > 0
-      ? products.filter(p => soldProductIds.has(p.id))
-      : products;
-
-    return [...targetProducts]
+    return Array.from(soldProductsMap.values())
       .map(p => {
         const margin = p.cost_price > 0 ? ((p.price - p.cost_price) / p.cost_price) * 100 : 0;
         return { product: p, margin };
       })
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 3);
-  }, [products, sales, topMarginPeriod, searchFilter, customers]);
+  }, [sales, topMarginPeriod, searchFilter, customers]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -550,7 +547,7 @@ export const DashboardView: React.FC = () => {
                 </div>
               ))}
               {topProductsByMargin.length === 0 && (
-                <p className="text-white/40 text-xs sm:text-sm py-3 text-center">Nenhum produto cadastrado ou vendido no período.</p>
+                <p className="text-white/40 text-xs sm:text-sm py-3 text-center">Nenhuma venda registrada no período.</p>
               )}
             </div>
           </div>
