@@ -62,8 +62,8 @@ interface MarketState {
   loginCustomer: (re: string, password?: string) => Promise<boolean>;
   logoutCustomer: () => void;
   switchInstance: (instance: 'client' | 'admin') => void;
-  completePixSale: () => Promise<void>;
-  completeDebitSale: () => Promise<void>;
+  completePixSale: () => Promise<boolean>;
+  completeDebitSale: () => Promise<boolean>;
   settleDebts: (customerRe: string) => Promise<void>;
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
   startNewMonth: () => void;
@@ -352,7 +352,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     const state = get();
     if (state.cart.length === 0) {
       alert('Carrinho vazio!');
-      return;
+      return false;
     }
     
     const total_amount = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
@@ -383,9 +383,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         receivedAmount: 0
       });
       
-      alert('Venda PIX finalizada com sucesso!');
-    } catch (err) {
-      alert('Erro ao processar venda PIX.');
+      return true;
+    } catch (err: any) {
+      console.error('Detalhe do erro ao processar PIX:', err);
+      alert(err.message || 'Erro ao processar venda PIX.');
+      return false;
     }
   },
 
@@ -393,7 +395,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     const state = get();
     if (state.cart.length === 0) {
       alert('Carrinho vazio!');
-      return;
+      return false;
     }
     
     const total_amount = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
@@ -425,9 +427,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         receivedAmount: 0
       });
       
-      alert('Débito registrado com sucesso!');
-    } catch (err) {
-      alert('Erro ao processar venda em débito.');
+      return true;
+    } catch (err: any) {
+      console.error('Detalhe do erro ao processar débito:', err);
+      alert(err.message || 'Erro ao processar venda em débito.');
+      return false;
     }
   },
 

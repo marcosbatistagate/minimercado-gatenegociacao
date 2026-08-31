@@ -281,11 +281,17 @@ export const ClientTotemView: React.FC = () => {
   };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === 'F4' && currentCustomer && cart.length > 0) {
         e.preventDefault();
-        completePixSale();
-        logoutCustomer();
+        const success = await completePixSale();
+        if (success) {
+          setToast({ message: 'Venda PIX finalizada com sucesso!', type: 'success' });
+          playBeep('success');
+          setTimeout(() => {
+            logoutCustomer();
+          }, 2000);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -294,15 +300,27 @@ export const ClientTotemView: React.FC = () => {
 
   const handleFinalizeDebit = async () => {
     if (cart.length > 0) {
-      await completeDebitSale();
-      logoutCustomer();
+      const success = await completeDebitSale();
+      if (success) {
+        setToast({ message: 'Débito registrado com sucesso!', type: 'success' });
+        playBeep('success');
+        setTimeout(() => {
+          logoutCustomer();
+        }, 2000);
+      }
     }
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     if (cart.length > 0) {
-      completePixSale();
-      logoutCustomer();
+      const success = await completePixSale();
+      if (success) {
+        setToast({ message: 'Venda PIX finalizada com sucesso!', type: 'success' });
+        playBeep('success');
+        setTimeout(() => {
+          logoutCustomer();
+        }, 2000);
+      }
     }
   };
 
