@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useMarketStore, type Sale, type PaymentMethod } from '../store/useMarketStore';
+import { useMarketStore, type Sale } from '../store/useMarketStore';
 import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
@@ -13,11 +13,6 @@ const formatDate = (isoString: string) => {
     dateStyle: 'short', 
     timeStyle: 'short' 
   }).format(new Date(isoString));
-};
-
-const paymentMethodLabels: Partial<Record<NonNullable<PaymentMethod>, string>> = {
-  pix: 'PIX',
-  DEBIT: 'Débito (Pagar Depois)'
 };
 
 export const DashboardView: React.FC = () => {
@@ -35,6 +30,9 @@ export const DashboardView: React.FC = () => {
   }, [sales, currentCycleStart]);
 
   const [chartPeriod, setChartPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
+  const [topSalesPeriod, setTopSalesPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
+  const [topMarginPeriod, setTopMarginPeriod] = useState<'current_month' | '2_months' | '3_months'>('current_month');
+
   const [hoveredBar, setHoveredBar] = useState<{ 
     name: string; 
     amount: number; 
@@ -43,15 +41,20 @@ export const DashboardView: React.FC = () => {
     y: number;
   } | null>(null);
 
-  const chartData = useMemo(() => {
+  const getPeriodStartDate = (period: 'current_month' | '2_months' | '3_months') => {
     const today = new Date();
     let startDate = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
-
-    if (chartPeriod === '2_months') {
+    if (period === '2_months') {
       startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1, 0, 0, 0, 0);
-    } else if (chartPeriod === '3_months') {
+    } else if (period === '3_months') {
       startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1, 0, 0, 0, 0);
     }
+    return startDate;
+  };
+
+  const chartData = useMemo(() => {
+    const today = new Date();
+    const startDate = getPeriodStartDate(chartPeriod);
 
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
     
@@ -129,9 +132,17 @@ export const DashboardView: React.FC = () => {
   }, [activeSales, searchFilter, customers]);
 
   const topProductsBySales = useMemo(() => {
+    const startDate = getPeriodStartDate(topSalesPeriod);
     const counts: Record<string, { product: typeof products[0]; qty: number }> = {};
-    filteredSales.forEach(sale => {
-      if (sale.status !== 'cancelled') {
+    sales.forEach(sale => {
+      if (sale.status !== 'cancelled' && new Date(sale.created_at) >= startDate) {
+        if (searchFilter) {
+          const lowerSearch = searchFilter.toLowerCase();
+          const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
+          const customer = customers.find(c => c.re === sale.customerRe);
+          const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+          if (!matchRe && !matchName) return;
+        }
         sale.items.forEach(item => {
           if (item.product?.id) {
             if (!counts[item.product.id]) {
@@ -145,12 +156,20 @@ export const DashboardView: React.FC = () => {
     return Object.values(counts)
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 3);
-  }, [filteredSales, products]);
+  }, [sales, products, topSalesPeriod, searchFilter, customers]);
 
   const topProductsByMargin = useMemo(() => {
+    const startDate = getPeriodStartDate(topMarginPeriod);
     const soldProductIds = new Set<string>();
-    filteredSales.forEach(sale => {
-      if (sale.status !== 'cancelled') {
+    sales.forEach(sale => {
+      if (sale.status !== 'cancelled' && new Date(sale.created_at) >= startDate) {
+        if (searchFilter) {
+          const lowerSearch = searchFilter.toLowerCase();
+          const matchRe = sale.customerRe?.toLowerCase().includes(lowerSearch);
+          const customer = customers.find(c => c.re === sale.customerRe);
+          const matchName = customer?.name.toLowerCase().includes(lowerSearch);
+          if (!matchRe && !matchName) return;
+        }
         sale.items.forEach(item => {
           if (item.product?.id) {
             soldProductIds.add(item.product.id);
@@ -159,7 +178,7 @@ export const DashboardView: React.FC = () => {
       }
     });
 
-    const targetProducts = searchFilter 
+    const targetProducts = searchFilter || soldProductIds.size > 0
       ? products.filter(p => soldProductIds.has(p.id))
       : products;
 
@@ -170,7 +189,7 @@ export const DashboardView: React.FC = () => {
       })
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 3);
-  }, [products, filteredSales, searchFilter]);
+  }, [products, sales, topMarginPeriod, searchFilter, customers]);
 
   const totalRevenue = useMemo(() => filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0), [filteredSales]);
   
@@ -185,14 +204,39 @@ export const DashboardView: React.FC = () => {
   
   const criticalStockItems = useMemo(() => products.filter(p => p.stock <= p.min_stock).length, [products]);
 
-  const paymentDistribution = useMemo(() => {
-    const dist: Record<string, number> = { money: 0, credit_card: 0, debit_card: 0, pix: 0, DEBIT: 0 };
+  const paymentSummary = useMemo(() => {
+    let immediateCount = 0;
+    let immediateTotal = 0;
+    let debitCount = 0;
+    let debitTotal = 0;
+
     filteredSales.forEach(s => {
-      if (s.payment_method) {
-        dist[s.payment_method] = (dist[s.payment_method] || 0) + s.total_amount;
+      if (s.status !== 'cancelled') {
+        if (s.payment_status === 'PENDING' || s.payment_method === 'DEBIT') {
+          debitCount++;
+          debitTotal += s.total_amount;
+        } else {
+          immediateCount++;
+          immediateTotal += s.total_amount;
+        }
       }
     });
-    return dist;
+
+    const grandTotal = immediateTotal + debitTotal;
+    const totalCount = immediateCount + debitCount;
+    const immediatePct = grandTotal > 0 ? (immediateTotal / grandTotal) * 100 : 0;
+    const debitPct = grandTotal > 0 ? (debitTotal / grandTotal) * 100 : 0;
+
+    return {
+      immediateCount,
+      immediateTotal,
+      immediatePct,
+      debitCount,
+      debitTotal,
+      debitPct,
+      grandTotal,
+      totalCount
+    };
   }, [filteredSales]);
 
   // Aggregate pending debts per client across ALL time (never reset by monthly cycle)
@@ -327,32 +371,43 @@ export const DashboardView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Mais Vendidos */}
         <FadeIn delay="300">
-          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Award size={64} className="text-amber-500" />
             </div>
-            <div className="flex items-center gap-2 text-white/60 relative z-10">
-              <Award size={20} className="text-amber-400" />
-              <span className="font-medium text-white/80">Top 3 Produtos Mais Vendidos</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 relative z-10">
+              <div className="flex items-center gap-2 text-white/80">
+                <Award size={20} className="text-amber-400" />
+                <span className="font-bold text-sm sm:text-base text-white">Top 3 Mais Vendidos</span>
+              </div>
+              <select
+                value={topSalesPeriod}
+                onChange={e => setTopSalesPeriod(e.target.value as any)}
+                className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-amber-500/50 text-xs cursor-pointer font-medium"
+              >
+                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
+                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+              </select>
             </div>
-            <div className="flex flex-col gap-3 mt-2 relative z-10">
+            <div className="flex flex-col gap-2.5 mt-1 relative z-10">
               {topProductsBySales.map((item, idx) => (
-                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-4 py-2 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      idx === 0 ? 'bg-amber-400 text-black' :
+                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-3 sm:px-4 py-2 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
+                      idx === 0 ? 'bg-amber-400 text-black shadow-[0_0_10px_rgba(251,191,36,0.5)]' :
                       idx === 1 ? 'bg-slate-300 text-black' :
                       'bg-amber-700 text-white'
                     }`}>
                       {idx + 1}
                     </span>
-                    <span className="text-white font-medium text-sm">{item.product.name}</span>
+                    <span className="text-white font-medium text-xs sm:text-sm truncate">{item.product.name}</span>
                   </div>
-                  <span className="text-emerald-400 font-bold text-sm">{item.qty} un.</span>
+                  <span className="text-emerald-400 font-bold text-xs sm:text-sm whitespace-nowrap pl-2">{item.qty} un.</span>
                 </div>
               ))}
               {topProductsBySales.length === 0 && (
-                <p className="text-white/40 text-sm py-2">Nenhuma venda registrada ainda.</p>
+                <p className="text-white/40 text-xs sm:text-sm py-3 text-center">Nenhuma venda registrada no período.</p>
               )}
             </div>
           </div>
@@ -360,32 +415,43 @@ export const DashboardView: React.FC = () => {
 
         {/* Maior Margem de Lucro */}
         <FadeIn delay="500">
-          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
+          <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Percent size={64} className="text-violet-500" />
             </div>
-            <div className="flex items-center gap-2 text-white/60 relative z-10">
-              <Percent size={20} className="text-violet-400" />
-              <span className="font-medium text-white/80">Top 3 Maior Margem de Lucro</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 relative z-10">
+              <div className="flex items-center gap-2 text-white/80">
+                <Percent size={20} className="text-violet-400" />
+                <span className="font-bold text-sm sm:text-base text-white">Top 3 Maior Margem</span>
+              </div>
+              <select
+                value={topMarginPeriod}
+                onChange={e => setTopMarginPeriod(e.target.value as any)}
+                className="bg-slate-900/90 border border-white/10 text-white rounded-xl py-1 px-2.5 focus:outline-none focus:border-violet-500/50 text-xs cursor-pointer font-medium"
+              >
+                <option value="current_month" className="bg-slate-900 text-white">Mês Atual</option>
+                <option value="2_months" className="bg-slate-900 text-white">Últimos 2 Meses</option>
+                <option value="3_months" className="bg-slate-900 text-white">Últimos 3 Meses</option>
+              </select>
             </div>
-            <div className="flex flex-col gap-3 mt-2 relative z-10">
+            <div className="flex flex-col gap-2.5 mt-1 relative z-10">
               {topProductsByMargin.map((item, idx) => (
-                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-4 py-2 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      idx === 0 ? 'bg-amber-400 text-black' :
+                <div key={item.product.id} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl px-3 sm:px-4 py-2 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
+                      idx === 0 ? 'bg-amber-400 text-black shadow-[0_0_10px_rgba(251,191,36,0.5)]' :
                       idx === 1 ? 'bg-slate-300 text-black' :
                       'bg-amber-700 text-white'
                     }`}>
                       {idx + 1}
                     </span>
-                    <span className="text-white font-medium text-sm">{item.product.name}</span>
+                    <span className="text-white font-medium text-xs sm:text-sm truncate">{item.product.name}</span>
                   </div>
-                  <span className="text-violet-400 font-bold text-sm">{item.margin.toFixed(0)}%</span>
+                  <span className="text-violet-400 font-bold text-xs sm:text-sm whitespace-nowrap pl-2">{item.margin.toFixed(0)}%</span>
                 </div>
               ))}
               {topProductsByMargin.length === 0 && (
-                <p className="text-white/40 text-sm py-2">Nenhum produto cadastrado.</p>
+                <p className="text-white/40 text-xs sm:text-sm py-3 text-center">Nenhum produto cadastrado ou vendido no período.</p>
               )}
             </div>
           </div>
@@ -394,27 +460,129 @@ export const DashboardView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Payment Methods Panel */}
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
-          <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {(Object.entries(paymentMethodLabels) as [NonNullable<PaymentMethod>, string][]).map(([key, label]) => {
-              const amount = paymentDistribution[key] || 0;
-              const percentage = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
-              return (
-                <div key={key} className="flex flex-col gap-1">
-                  <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-white/80">{label}</span>
-                    <span className="text-white font-medium">{formatCurrency(amount)} ({percentage.toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-primary-500 h-2 rounded-full" 
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
+            <span className="text-[11px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
+              {paymentSummary.totalCount} transações
+            </span>
+          </div>
+
+          {/* Donut Chart */}
+          <div className="flex flex-col items-center justify-center gap-2 py-1">
+            <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
+              <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
+                <defs>
+                  <linearGradient id="immediateDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#10B981" />
+                    <stop offset="100%" stopColor="#059669" />
+                  </linearGradient>
+                  <linearGradient id="debitDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#A78BFA" />
+                    <stop offset="100%" stopColor="#7C3AED" />
+                  </linearGradient>
+                </defs>
+                {/* Background Ring */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="48"
+                  fill="transparent"
+                  stroke="rgba(255, 255, 255, 0.08)"
+                  strokeWidth="14"
+                />
+                {paymentSummary.grandTotal > 0 && (
+                  <>
+                    {/* Immediate Payment Segment */}
+                    {paymentSummary.immediateTotal > 0 && (
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r="48"
+                        fill="transparent"
+                        stroke="url(#immediateDonutGrad)"
+                        strokeWidth="14"
+                        strokeDasharray={`${(paymentSummary.immediatePct / 100) * 301.59} 301.59`}
+                        strokeDashoffset="0"
+                        strokeLinecap="round"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    )}
+                    {/* Debit Payment Segment */}
+                    {paymentSummary.debitTotal > 0 && (
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r="48"
+                        fill="transparent"
+                        stroke="url(#debitDonutGrad)"
+                        strokeWidth="14"
+                        strokeDasharray={`${(paymentSummary.debitPct / 100) * 301.59} 301.59`}
+                        strokeDashoffset={-((paymentSummary.immediatePct / 100) * 301.59)}
+                        strokeLinecap="round"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    )}
+                  </>
+                )}
+              </svg>
+              {/* Donut Center Label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+                <span className="text-[10px] text-white/50 uppercase font-medium tracking-wider">Total</span>
+                <span className="text-xs sm:text-sm font-bold text-white leading-tight">
+                  {formatCurrency(paymentSummary.grandTotal).replace(',00', '')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Breakdown Items */}
+          <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
+            {/* Pagamento Imediato */}
+            <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="text-white/90 font-medium">Pagamento Imediato</span>
                 </div>
-              );
-            })}
+                <span className="font-bold text-emerald-400">
+                  {formatCurrency(paymentSummary.immediateTotal)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-white/60">
+                <span>{paymentSummary.immediateCount} transações</span>
+                <span className="font-semibold text-emerald-300/80">{paymentSummary.immediatePct.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-0.5">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${paymentSummary.immediatePct}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Pagar Depois (Débito) */}
+            <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                  <span className="text-white/90 font-medium">Pagar Depois (Débito)</span>
+                </div>
+                <span className="font-bold text-violet-400">
+                  {formatCurrency(paymentSummary.debitTotal)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-white/60">
+                <span>{paymentSummary.debitCount} em aberto</span>
+                <span className="font-semibold text-violet-300/80">{paymentSummary.debitPct.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-0.5">
+                <div 
+                  className="bg-gradient-to-r from-violet-500 to-purple-400 h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${paymentSummary.debitPct}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
