@@ -309,17 +309,29 @@ export const DashboardView: React.FC = () => {
       );
     };
 
+    // 1. Scan customers with positive debt from table
+    customers.forEach(c => {
+      const cDebt = (c as any).debt ? Number((c as any).debt) : 0;
+      if (cDebt > 0) {
+        debtsMap[c.re] = { re: c.re, name: c.name, total: cDebt };
+      }
+    });
+
+    // 2. Aggregate all pending sales across all time
     sales.forEach(s => {
       if (isSaleDebit(s) && s.status !== 'cancelled' && s.customerRe) {
         const customer = customers.find(c => c.re === s.customerRe);
-        const name = customer ? customer.name : 'Desconhecido';
+        const name = customer ? customer.name : 'Policial';
         if (!debtsMap[s.customerRe]) {
           debtsMap[s.customerRe] = { re: s.customerRe, name, total: 0 };
         }
         debtsMap[s.customerRe].total += s.total_amount;
       }
     });
-    return Object.values(debtsMap);
+
+    return Object.values(debtsMap)
+      .filter(d => d.total > 0)
+      .sort((a, b) => b.total - a.total);
   }, [sales, customers]);
 
   return (
@@ -548,172 +560,56 @@ export const DashboardView: React.FC = () => {
         </FadeIn>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Payment Methods Panel */}
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out col-span-1 lg:col-span-1">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
-            <span className="text-[11px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
-              {paymentSummary.totalCount} transações
+      {/* 1ª Dobra: Vendas Recentes (Largura total w-full) */}
+      <FadeIn delay="300">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden w-full flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
+          <div className="p-4 sm:p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
+              <p className="text-xs text-white/50">Histórico detalhado de transações realizadas no período selecionado</p>
+            </div>
+            <span className="text-xs text-white/60 bg-white/5 border border-white/10 px-3 py-1 rounded-xl">
+              {filteredSales.length} {filteredSales.length === 1 ? 'venda' : 'vendas'}
             </span>
           </div>
-
-          {/* Donut Chart (innerRadius: 35, outerRadius: 55, r: 45, strokeWidth: 20) */}
-          <div className="flex flex-col items-center justify-center gap-2 py-1">
-            <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
-              <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
-                <defs>
-                  <linearGradient id="immediateDonutGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#10B981" />
-                    <stop offset="100%" stopColor="#059669" />
-                  </linearGradient>
-                  <linearGradient id="debitDonutGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#A78BFA" />
-                    <stop offset="100%" stopColor="#7C3AED" />
-                  </linearGradient>
-                </defs>
-                {/* Background Ring */}
-                <circle
-                  cx="70"
-                  cy="70"
-                  r="45"
-                  fill="transparent"
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeWidth="20"
-                />
-                {paymentSummary.grandTotal > 0 && (
-                  <>
-                    {/* Immediate Payment Segment */}
-                    {paymentSummary.immediateTotal > 0 && (
-                      <circle
-                        cx="70"
-                        cy="70"
-                        r="45"
-                        fill="transparent"
-                        stroke="url(#immediateDonutGrad)"
-                        strokeWidth="20"
-                        strokeDasharray={`${(paymentSummary.immediatePct / 100) * 282.74} 282.74`}
-                        strokeDashoffset="0"
-                        strokeLinecap="round"
-                        className="transition-all duration-700 ease-out"
-                      />
-                    )}
-                    {/* Debit Payment Segment */}
-                    {paymentSummary.debitTotal > 0 && (
-                      <circle
-                        cx="70"
-                        cy="70"
-                        r="45"
-                        fill="transparent"
-                        stroke="url(#debitDonutGrad)"
-                        strokeWidth="20"
-                        strokeDasharray={`${(paymentSummary.debitPct / 100) * 282.74} 282.74`}
-                        strokeDashoffset={-((paymentSummary.immediatePct / 100) * 282.74)}
-                        strokeLinecap="round"
-                        className="transition-all duration-700 ease-out"
-                      />
-                    )}
-                  </>
-                )}
-              </svg>
-              {/* Donut Center Label */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
-                <span className="text-[10px] text-white/50 uppercase font-medium tracking-wider">Total</span>
-                <span className="text-xs sm:text-sm font-bold text-white leading-tight">
-                  {formatCurrency(paymentSummary.grandTotal).replace(',00', '')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Breakdown Items with Badges, Currency and Percentages */}
-          <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
-            {/* Pagamento Imediato (PIX) */}
-            <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {paymentSummary.immediateCount} transações
-                  </span>
-                  <span className="text-white/90 font-medium">Pagamento Imediato (PIX)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-emerald-400">
-                    {formatCurrency(paymentSummary.immediateTotal)}
-                  </span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {paymentSummary.immediatePct.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-1">
-                <div 
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${paymentSummary.immediatePct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Pagar Depois (Débito) */}
-            <div className="flex flex-col gap-1.5 bg-white/5 border border-white/5 p-3 rounded-xl">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                    {paymentSummary.debitCount} transações
-                  </span>
-                  <span className="text-white/90 font-medium">Pagar Depois (Débito)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-violet-400">
-                    {formatCurrency(paymentSummary.debitTotal)}
-                  </span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                    {paymentSummary.debitPct.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden mt-1">
-                <div 
-                  className="bg-gradient-to-r from-violet-500 to-purple-400 h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${paymentSummary.debitPct}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Sales History */}
-        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden col-span-1 lg:col-span-2 flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
-          <div className="p-4 sm:p-6 border-b border-white/10">
-            <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
-          </div>
-          <div className="overflow-x-auto flex-1 w-full shadow-inner border-t border-white/5">
-            <table className="w-full text-left border-collapse min-w-[550px]">
+          <div className="overflow-x-auto w-full shadow-inner">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
-                  <th className="p-3 sm:p-4 font-medium">Data/Hora</th>
-                  <th className="p-3 sm:p-4 font-medium">Cliente</th>
-                  <th className="p-3 sm:p-4 font-medium">Produto(s)</th>
-                  <th className="p-3 sm:p-4 text-center font-medium">Qtd.</th>
-                  <th className="p-3 sm:p-4 text-right font-medium">Preço Un.</th>
-                  <th className="p-3 sm:p-4 text-right font-medium">Total</th>
+                <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase tracking-wider">
+                  <th className="p-3 sm:p-4 font-semibold">Data/Hora</th>
+                  <th className="p-3 sm:p-4 font-semibold">Cliente</th>
+                  <th className="p-3 sm:p-4 font-semibold">Produto(s)</th>
+                  <th className="p-3 sm:p-4 text-center font-semibold">Qtd.</th>
+                  <th className="p-3 sm:p-4 text-right font-semibold">Preço Un.</th>
+                  <th className="p-3 sm:p-4 text-right font-semibold">Subtotal</th>
+                  <th className="p-3 sm:p-4 text-center font-semibold">Status Pagamento</th>
                 </tr>
               </thead>
-              <tbody className="text-xs sm:text-sm">
+              <tbody className="text-xs sm:text-sm divide-y divide-white/5">
                 {filteredSales.map(sale => {
                   const customerName = sale.customerRe 
                     ? (customers.find(c => c.re === sale.customerRe)?.name || 'Cliente')
                     : 'Caixa Avulso';
+                  const isDebit = (sale.payment_status || '').toLowerCase() === 'pending' || 
+                                  (sale.payment_status || '').toLowerCase() === 'debit' ||
+                                  (sale.payment_method || '').toUpperCase() === 'DEBIT' ||
+                                  (sale.status || '').toLowerCase() === 'pending';
 
                   return sale.items.map((item, idx) => (
-                    <tr key={`${sale.id}-${idx}`} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={`${sale.id}-${idx}`} className="hover:bg-white/5 transition-colors">
                       {idx === 0 && (
                         <>
-                          <td className="p-3 sm:p-4 text-white/80 whitespace-nowrap" rowSpan={sale.items.length}>
+                          <td className="p-3 sm:p-4 text-white/80 whitespace-nowrap align-top" rowSpan={sale.items.length}>
                             {formatDate(sale.created_at)}
                           </td>
-                          <td className="p-3 sm:p-4 text-white/80" rowSpan={sale.items.length}>
-                            {sale.customerRe ? `${customerName} (RE: ${sale.customerRe})` : 'Caixa Avulso'}
+                          <td className="p-3 sm:p-4 text-white/80 align-top" rowSpan={sale.items.length}>
+                            {sale.customerRe ? (
+                              <span className="font-medium text-white">
+                                {customerName} <span className="text-white/50 text-xs">(RE: {sale.customerRe})</span>
+                              </span>
+                            ) : (
+                              <span className="text-white/60 italic">Caixa Avulso</span>
+                            )}
                           </td>
                         </>
                       )}
@@ -721,13 +617,24 @@ export const DashboardView: React.FC = () => {
                       <td className="p-3 sm:p-4 text-white/80 text-center">{item.quantity}</td>
                       <td className="p-3 sm:p-4 text-white/80 text-right">{formatCurrency(item.product.price)}</td>
                       <td className="p-3 sm:p-4 text-white font-semibold text-right">{formatCurrency(item.subtotal)}</td>
+                      {idx === 0 && (
+                        <td className="p-3 sm:p-4 text-center align-top" rowSpan={sale.items.length}>
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold border ${
+                            isDebit 
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          }`}>
+                            {isDebit ? 'Em Débito' : 'Pago (PIX)'}
+                          </span>
+                        </td>
+                      )}
                     </tr>
                   ));
                 })}
                 {filteredSales.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium text-sm">
-                      Nenhuma venda encontrada.
+                    <td colSpan={7} className="py-8 text-center text-slate-400 font-medium text-sm">
+                      Nenhuma venda encontrada no período.
                     </td>
                   </tr>
                 )}
@@ -735,7 +642,153 @@ export const DashboardView: React.FC = () => {
             </table>
           </div>
         </div>
-      </div>
+      </FadeIn>
+
+      {/* 2ª Dobra: Métodos de Pagamento (Destaque Horizontal w-full) */}
+      <FadeIn delay="500">
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-7 flex flex-col gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out w-full">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Métodos de Pagamento</h2>
+              <p className="text-xs text-white/50">Proporção e volume entre transações imediatas (PIX) e compras em débito</p>
+            </div>
+            <span className="text-xs font-semibold text-white/70 bg-white/5 border border-white/10 px-3 py-1 rounded-xl">
+              {paymentSummary.totalCount} transações totais
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Donut Chart (Colunas 1 a 4) */}
+            <div className="md:col-span-4 flex flex-col items-center justify-center p-2">
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+                <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
+                  <defs>
+                    <linearGradient id="immediateDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#059669" />
+                    </linearGradient>
+                    <linearGradient id="debitDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#A78BFA" />
+                      <stop offset="100%" stopColor="#7C3AED" />
+                    </linearGradient>
+                  </defs>
+                  {/* Background Ring */}
+                  <circle
+                    cx="70"
+                    cy="70"
+                    r="45"
+                    fill="transparent"
+                    stroke="rgba(255, 255, 255, 0.08)"
+                    strokeWidth="20"
+                  />
+                  {paymentSummary.grandTotal > 0 && (
+                    <>
+                      {/* Immediate Payment Segment */}
+                      {paymentSummary.immediateTotal > 0 && (
+                        <circle
+                          cx="70"
+                          cy="70"
+                          r="45"
+                          fill="transparent"
+                          stroke="url(#immediateDonutGrad)"
+                          strokeWidth="20"
+                          strokeDasharray={`${(paymentSummary.immediatePct / 100) * 282.74} 282.74`}
+                          strokeDashoffset="0"
+                          strokeLinecap="round"
+                          className="transition-all duration-700 ease-out"
+                        />
+                      )}
+                      {/* Debit Payment Segment */}
+                      {paymentSummary.debitTotal > 0 && (
+                        <circle
+                          cx="70"
+                          cy="70"
+                          r="45"
+                          fill="transparent"
+                          stroke="url(#debitDonutGrad)"
+                          strokeWidth="20"
+                          strokeDasharray={`${(paymentSummary.debitPct / 100) * 282.74} 282.74`}
+                          strokeDashoffset={-((paymentSummary.immediatePct / 100) * 282.74)}
+                          strokeLinecap="round"
+                          className="transition-all duration-700 ease-out"
+                        />
+                      )}
+                    </>
+                  )}
+                </svg>
+                {/* Donut Center Label */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+                  <span className="text-[10px] sm:text-xs text-white/50 uppercase font-semibold tracking-wider">Total</span>
+                  <span className="text-sm sm:text-base font-bold text-white leading-tight">
+                    {formatCurrency(paymentSummary.grandTotal).replace(',00', '')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cards Informativos Lado a Lado (Colunas 5 a 12) */}
+            <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Pagamento Imediato (PIX) */}
+              <div className="bg-white/5 border border-white/10 p-4 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-white font-semibold text-sm sm:text-base flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                    Pagamento Imediato (PIX)
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {paymentSummary.immediatePct.toFixed(1)}%
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl sm:text-3xl font-bold text-emerald-400">
+                    {formatCurrency(paymentSummary.immediateTotal)}
+                  </span>
+                  <span className="text-xs text-white/60 font-medium">
+                    {paymentSummary.immediateCount} {paymentSummary.immediateCount === 1 ? 'transação realizada' : 'transações realizadas'}
+                  </span>
+                </div>
+
+                <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden mt-1">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${paymentSummary.immediatePct}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Pagar Depois (Débito) */}
+              <div className="bg-white/5 border border-white/10 p-4 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 hover:bg-white/10 hover:border-violet-500/30 transition-all duration-300">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-white font-semibold text-sm sm:text-base flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]" />
+                    Pagar Depois (Débito)
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    {paymentSummary.debitPct.toFixed(1)}%
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl sm:text-3xl font-bold text-violet-400">
+                    {formatCurrency(paymentSummary.debitTotal)}
+                  </span>
+                  <span className="text-xs text-white/60 font-medium">
+                    {paymentSummary.debitCount} {paymentSummary.debitCount === 1 ? 'transação em aberto' : 'transações em aberto'}
+                  </span>
+                </div>
+
+                <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden mt-1">
+                  <div 
+                    className="bg-gradient-to-r from-violet-500 to-purple-400 h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${paymentSummary.debitPct}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
 
       {/* Gráfico de Evolução de Vendas por Produto */}
       <FadeIn delay="300">
