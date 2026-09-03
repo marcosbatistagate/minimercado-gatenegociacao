@@ -25,7 +25,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ className = '' }) => {
         {/* Centro (Missão do Sistema) */}
         <div className="text-center">
           <span className="text-slate-500 hidden lg:inline">
-            Minimercado & Controle Patrimonial
+            Minimercado e Gestão de dados
           </span>
         </div>
 
