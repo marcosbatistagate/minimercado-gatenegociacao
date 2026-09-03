@@ -42,6 +42,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Inclusão do logotipo `gate.png` no cabeçalho do Totem (`ClientTotemView.tsx`) e na barra superior de gestão (`Header.tsx`), posicionado à direita do título, preservando proporção óptica e espaçamento idêntico ao logotipo `negociacao.png`.
 - Criação e integração do componente de rodapé institucional `AppFooter.tsx` fixado na base do layout com flex-grow (visível tanto no Totem quanto no Painel Administrativo).
 - Remoção do ícone decorativo de loja/casinha (`Store`) do topo da barra lateral (`Sidebar.tsx`), simplificando a navegação apenas para itens funcionais.
+- Criação e integração da seção de auditoria de custos detalhada de mercadorias no `DashboardView.tsx` (`cost_entries`), com card de resumo do custo total acumulado, tabela discriminada (Data/Hora, Produto, Qtd, Custo Unitário e Total), sincronização estrita com o seletor de período e estado vazio.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
 - Testes em produção e homologação final com os usuários.

@@ -452,6 +452,124 @@ export const supabaseService = {
     }
   },
 
+  async fetchCostEntries(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('cost_entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data && data.length > 0) return data;
+
+      const local = localStorage.getItem('local_cost_entries');
+      if (local) {
+        return JSON.parse(local);
+      }
+      
+      // Default initial seed entries across periods
+      const now = new Date();
+      const defaultSeed = [
+        {
+          id: 'cost-init-1',
+          product_name: 'Trento',
+          product_code: '7896306625329',
+          quantity: 16,
+          unit_cost: 1.80,
+          total_cost: 28.80,
+          created_at: new Date(now.getFullYear(), now.getMonth(), 2, 10, 30).toISOString()
+        },
+        {
+          id: 'cost-init-2',
+          product_name: 'Snikers',
+          product_code: '7896423438994',
+          quantity: 12,
+          unit_cost: 2.50,
+          total_cost: 30.00,
+          created_at: new Date(now.getFullYear(), now.getMonth(), 1, 14, 15).toISOString()
+        },
+        {
+          id: 'cost-init-3',
+          product_name: 'DADINHO',
+          product_code: '7898530842688',
+          quantity: 50,
+          unit_cost: 1.00,
+          total_cost: 50.00,
+          created_at: new Date(now.getFullYear(), now.getMonth() - 1, 28, 15, 13).toISOString()
+        },
+        {
+          id: 'cost-init-4',
+          product_name: 'KITKAT',
+          product_code: '7891000248775',
+          quantity: 24,
+          unit_cost: 0.96,
+          total_cost: 23.04,
+          created_at: new Date(now.getFullYear(), now.getMonth() - 1, 25, 18, 34).toISOString()
+        },
+        {
+          id: 'cost-init-5',
+          product_name: 'REFRI LATA',
+          product_code: 'BEB-001',
+          quantity: 36,
+          unit_cost: 2.00,
+          total_cost: 72.00,
+          created_at: new Date(now.getFullYear(), now.getMonth() - 2, 15, 11, 20).toISOString()
+        },
+        {
+          id: 'cost-init-6',
+          product_name: 'H2O',
+          product_code: 'BEB-006',
+          quantity: 24,
+          unit_cost: 2.00,
+          total_cost: 48.00,
+          created_at: new Date(now.getFullYear(), now.getMonth() - 2, 10, 9, 45).toISOString()
+        }
+      ];
+      localStorage.setItem('local_cost_entries', JSON.stringify(defaultSeed));
+      return defaultSeed;
+    } catch (err: any) {
+      console.warn('Supabase fetchCostEntries failed or table does not exist. Using localStorage fallback.', err);
+      const local = localStorage.getItem('local_cost_entries');
+      if (local) {
+        return JSON.parse(local);
+      }
+      return [];
+    }
+  },
+
+  async createCostEntry(entry: { product_id?: string; product_name: string; product_code: string; quantity: number; unit_cost: number; total_cost: number }): Promise<any> {
+    const payload = {
+      product_id: entry.product_id || null,
+      product_name: entry.product_name,
+      product_code: entry.product_code,
+      quantity: entry.quantity,
+      unit_cost: entry.unit_cost,
+      total_cost: entry.total_cost,
+      created_at: new Date().toISOString()
+    };
+    try {
+      const { data, error } = await supabase
+        .from('cost_entries')
+        .insert(payload)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      console.warn('Supabase createCostEntry failed or table does not exist. Saving to localStorage fallback.', err);
+      const local = localStorage.getItem('local_cost_entries');
+      const entries = local ? JSON.parse(local) : [];
+      const newEntry = {
+        id: Math.random().toString(36).substring(2, 9),
+        ...payload
+      };
+      entries.unshift(newEntry);
+      localStorage.setItem('local_cost_entries', JSON.stringify(entries));
+      return newEntry;
+    }
+  },
+
   async fetchMarketSettings(): Promise<any | null> {
     const { data, error } = await supabase
       .from('market_settings')

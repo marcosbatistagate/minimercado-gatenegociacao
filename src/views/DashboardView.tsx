@@ -15,10 +15,24 @@ const formatDate = (isoString: string) => {
   }).format(new Date(isoString));
 };
 
+const formatCostDate = (isoString: string) => {
+  try {
+    const d = new Date(isoString);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year}, ${hours}:${minutes}`;
+  } catch {
+    return isoString;
+  }
+};
+
 type DashboardPeriod = 'current_month' | 'previous_month' | '2_months' | '3_months';
 
 export const DashboardView: React.FC = () => {
-  const { sales, products, customers, settleDebts, stockAudits, currentCycleStart, startNewMonth } = useMarketStore();
+  const { sales, products, customers, settleDebts, stockAudits, currentCycleStart, startNewMonth, costEntries } = useMarketStore();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('current_month');
@@ -141,6 +155,20 @@ export const DashboardView: React.FC = () => {
       return matchRe || matchName;
     });
   }, [activeSales, searchFilter, customers]);
+
+  const filteredCostEntries = useMemo(() => {
+    const { startDate, endDate } = getPeriodRange(selectedPeriod);
+    return (costEntries || []).filter(entry => {
+      const entryDate = new Date(entry.created_at);
+      if (startDate && entryDate < startDate) return false;
+      if (endDate && entryDate > endDate) return false;
+      return true;
+    });
+  }, [costEntries, selectedPeriod, currentCycleStart]);
+
+  const totalPeriodCost = useMemo(() => {
+    return filteredCostEntries.reduce((sum, entry) => sum + (Number(entry.total_cost) || 0), 0);
+  }, [filteredCostEntries]);
 
   const chartData = useMemo(() => {
     const productStats: Record<string, { id: string; name: string; amount: number; quantity: number }> = {};
@@ -1025,6 +1053,76 @@ export const DashboardView: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-slate-400 font-medium text-sm">
                     Nenhum débito pendente.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Registro Detalhado de Custos (Entradas / Mercadorias) */}
+      <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 transition-colors duration-200 w-full">
+        {/* Cabeçalho da Seção com Card de Resumo */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-white font-jakarta flex items-center gap-2">
+              <Receipt size={22} className="text-emerald-400 shrink-0" />
+              Registro Detalhado de Custos (Entradas / Mercadorias)
+            </h2>
+            <p className="text-xs sm:text-sm text-white/60 mt-1">
+              Histórico discriminado de aquisição e reposição de itens no período selecionado
+            </p>
+          </div>
+
+          {/* Card de Resumo no Cabeçalho da Seção */}
+          <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex flex-col items-start sm:items-end justify-center shrink-0">
+            <span className="text-white/60 text-xs font-medium">Custo Total Acumulado</span>
+            <span className="text-lg sm:text-2xl font-bold text-emerald-400 font-jakarta">
+              {formatCurrency(totalPeriodCost)}
+            </span>
+          </div>
+        </div>
+
+        {/* Tabela de Detalhamento dos Registros de Custo */}
+        <div className="overflow-x-auto w-full shadow-inner border border-white/10 rounded-xl">
+          <table className="w-full text-left border-collapse min-w-[620px]">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5 text-[11px] sm:text-xs text-white/60 uppercase">
+                <th className="p-3 sm:p-4 font-medium">DATA/HORA</th>
+                <th className="p-3 sm:p-4 font-medium">PRODUTO</th>
+                <th className="p-3 sm:p-4 font-medium text-center">QUANTIDADE</th>
+                <th className="p-3 sm:p-4 font-medium text-right">CUSTO UNITÁRIO</th>
+                <th className="p-3 sm:p-4 font-medium text-right">CUSTO TOTAL</th>
+              </tr>
+            </thead>
+            <tbody className="text-xs sm:text-sm">
+              {filteredCostEntries.map((entry) => (
+                <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-3 sm:p-4 text-white/80 whitespace-nowrap font-mono text-xs">
+                    {formatCostDate(entry.created_at)}
+                  </td>
+                  <td className="p-3 sm:p-4">
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-white">{entry.product_name}</span>
+                      <span className="text-[11px] text-white/50 font-mono">{entry.product_code}</span>
+                    </div>
+                  </td>
+                  <td className="p-3 sm:p-4 text-center font-medium text-white/90 whitespace-nowrap">
+                    {entry.quantity} un.
+                  </td>
+                  <td className="p-3 sm:p-4 text-right text-white/80 whitespace-nowrap">
+                    {formatCurrency(entry.unit_cost)}
+                  </td>
+                  <td className="p-3 sm:p-4 text-right font-bold text-emerald-400 whitespace-nowrap">
+                    {formatCurrency(entry.total_cost)}
+                  </td>
+                </tr>
+              ))}
+              {filteredCostEntries.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium text-sm">
+                    Nenhum registro de custo cadastrado no período selecionado.
                   </td>
                 </tr>
               )}

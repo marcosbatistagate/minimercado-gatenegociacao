@@ -36,10 +36,22 @@ export interface Sale {
   payment_status: 'PAID' | 'PENDING';
 }
 
+export interface CostEntry {
+  id: string;
+  created_at: string;
+  product_id?: string;
+  product_name: string;
+  product_code: string;
+  quantity: number;
+  unit_cost: number;
+  total_cost: number;
+}
+
 interface MarketState {
   products: Product[];
   cart: CartItem[];
   sales: Sale[];
+  costEntries: CostEntry[];
   paymentMethod: PaymentMethod;
   receivedAmount: number;
   currentCustomer: UserCustomer | null;
@@ -68,6 +80,7 @@ interface MarketState {
   completeDebitSale: () => Promise<boolean>;
   settleDebts: (customerRe: string) => Promise<boolean>;
   addStockAudit: (productId: string, productName: string, expectedStock: number, realStock: number) => Promise<void>;
+  addCostEntry: (entry: Omit<CostEntry, 'id' | 'created_at'>) => Promise<void>;
   startNewMonth: () => Promise<void>;
   updateStockTimestamp: () => void;
   pixSettings: {
@@ -84,6 +97,7 @@ interface MarketState {
 export const useMarketStore = create<MarketState>((set, get) => ({
   products: [],
   cart: [],
+  costEntries: [],
   pixSettings: {
     pix_key_type: 'random',
     pix_key: '',
@@ -135,12 +149,13 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   initData: async () => {
     try {
-      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales, fetchedAudits, marketSettings] = await Promise.all([
+      const [fetchedProducts, fetchedCustomers, fetchedCategories, fetchedSales, fetchedAudits, fetchedCosts, marketSettings] = await Promise.all([
         supabaseService.fetchProducts(),
         supabaseService.fetchCustomers(),
         supabaseService.fetchCategories(),
         supabaseService.fetchSales(),
         supabaseService.fetchStockAudits(),
+        supabaseService.fetchCostEntries(),
         supabaseService.fetchMarketSettings()
       ]);
       
@@ -163,6 +178,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         dbCategories: fetchedCategories,
         sales: fetchedSales,
         stockAudits: fetchedAudits,
+        costEntries: fetchedCosts,
         currentCycleStart: finalCycleReset,
         pixSettings: marketSettings ? {
           id: marketSettings.id,
@@ -489,6 +505,19 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       }
     } catch (err) {
       console.error('Error saving stock audit:', err);
+    }
+  },
+
+  addCostEntry: async (entry) => {
+    try {
+      const saved = await supabaseService.createCostEntry(entry);
+      if (saved) {
+        set(state => ({
+          costEntries: [saved, ...state.costEntries]
+        }));
+      }
+    } catch (err) {
+      console.error('Error saving cost entry:', err);
     }
   },
 

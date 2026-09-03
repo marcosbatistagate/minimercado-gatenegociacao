@@ -13,7 +13,7 @@ const categoryDescriptions: Record<string, string> = {
 };
 
 export const InventoryView: React.FC = () => {
-  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth, pixSettings, updatePixSettings } = useMarketStore();
+  const { products, sales, addProduct, updateProduct, deleteProduct, dbCategories, initData, lastStockUpdate, currentCycleStart, startNewMonth, pixSettings, updatePixSettings, addCostEntry } = useMarketStore();
 
   const formatUpdateTimestamp = (isoString: string) => {
     try {
@@ -257,6 +257,21 @@ export const InventoryView: React.FC = () => {
       } else {
         await addProduct(payload, categoryId);
         alert('Produto cadastrado com sucesso!');
+      }
+
+      const addedQuantity = entryType === 'box'
+        ? boxAddedUnits
+        : (Number(formData.stock) || 0);
+
+      if (finalCostPrice > 0 && addedQuantity > 0) {
+        await addCostEntry({
+          product_id: targetExisting?.id,
+          product_name: formData.name.trim(),
+          product_code: formData.code.trim(),
+          quantity: addedQuantity,
+          unit_cost: finalCostPrice,
+          total_cost: Number((addedQuantity * finalCostPrice).toFixed(2))
+        });
       }
       
       handleCloseModal();
