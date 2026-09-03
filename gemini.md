@@ -41,6 +41,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Refatoração completa da estrutura de dados para garantir uso estrito da coluna `barcode` na tabela `products` em toda a aplicação (BD, store e views), garantindo a integridade dos dados, sem inserção de dados especulativos em scripts.
 - Inclusão do logotipo `gate.png` no cabeçalho do Totem (`ClientTotemView.tsx`) e na barra superior de gestão (`Header.tsx`), posicionado à direita do título, preservando proporção óptica e espaçamento idêntico ao logotipo `negociacao.png`.
 - Criação e integração do componente de rodapé institucional `AppFooter.tsx` fixado na base do layout com flex-grow (visível tanto no Totem quanto no Painel Administrativo).
+- Remoção do ícone decorativo de loja/casinha (`Store`) do topo da barra lateral (`Sidebar.tsx`), simplificando a navegação apenas para itens funcionais.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
 - Testes em produção e homologação final com os usuários.

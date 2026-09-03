@@ -566,7 +566,7 @@ export const DashboardView: React.FC = () => {
         <div className="glass-effect bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden w-full flex flex-col shadow-lg shadow-black/20 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-in-out">
           <div className="p-4 sm:p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Vendas Recentes</h2>
+              <h2 className="text-base sm:text-lg font-bold text-white font-jakarta">Vendas Realizadas</h2>
               <p className="text-xs text-white/50">Histórico detalhado de transações realizadas no período selecionado</p>
             </div>
             <span className="text-xs text-white/60 bg-white/5 border border-white/10 px-3 py-1 rounded-xl">
