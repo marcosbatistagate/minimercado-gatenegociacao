@@ -1,4 +1,4 @@
-import { Package, BarChart3, Store, MonitorSmartphone, ClipboardCheck } from 'lucide-react';
+import { Package, BarChart3, MonitorSmartphone, ClipboardCheck } from 'lucide-react';
 import { useMarketStore } from '../../store/useMarketStore';
 
 export type TabType = 'inventory' | 'dashboard' | 'audit';
@@ -14,12 +14,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar (Left) */}
-      <aside className="hidden md:flex w-24 flex-col items-center py-8 gap-8 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl h-full shadow-[0_0_30px_rgba(139,92,246,0.1)] relative">
-        <div className="text-white/80 hover:text-white transition-colors cursor-pointer shadow-[0_0_15px_rgba(139,92,246,0.4)] bg-white/10 p-3 rounded-xl border border-white/20">
-          <Store size={28} />
-        </div>
-
-        <nav className="flex flex-col gap-6 mt-4 w-full items-center flex-1">
+      <aside className="hidden md:flex w-24 flex-col items-center py-8 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl h-full shadow-[0_0_30px_rgba(139,92,246,0.1)] relative">
+        <nav className="flex flex-col gap-6 w-full items-center flex-1">
           {/* 1. Conferência Diária de Estoque */}
           <button 
             onClick={() => onTabChange('audit')}
