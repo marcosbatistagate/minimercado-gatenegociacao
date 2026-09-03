@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useMarketStore, type Sale, type Product } from '../store/useMarketStore';
-import { TrendingUp, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingBag, AlertTriangle, Receipt, X, Award, Percent, Eye, EyeOff } from 'lucide-react';
 import { FadeIn } from '../components/ui/FadeIn';
 import { supabaseService } from '../services/supabaseService';
 
@@ -274,6 +274,43 @@ export const DashboardView: React.FC = () => {
   }, 0), [filteredSales]);
 
   const totalProfit = totalRevenue - totalCost;
+  const profitMarginPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+  // Agrupamento diário para os 3 gráficos analíticos independentes
+  const analyticsTimeline = useMemo(() => {
+    const dailyMap: Record<string, { dateStr: string; label: string; cost: number; revenue: number; profit: number }> = {};
+
+    // 1. Custos de aquisição (Entradas / Mercadorias)
+    (filteredCostEntries || []).forEach(entry => {
+      const d = new Date(entry.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!dailyMap[key]) {
+        dailyMap[key] = { dateStr: key, label, cost: 0, revenue: 0, profit: 0 };
+      }
+      dailyMap[key].cost += Number(entry.total_cost) || 0;
+    });
+
+    // 2. Vendas e lucros operacionais realizados
+    (filteredSales || []).forEach(sale => {
+      const d = new Date(sale.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!dailyMap[key]) {
+        dailyMap[key] = { dateStr: key, label, cost: 0, revenue: 0, profit: 0 };
+      }
+      dailyMap[key].revenue += Number(sale.total_amount) || 0;
+      const saleCost = sale.items.reduce((sum, item) => sum + ((item.product?.cost_price || 0) * item.quantity), 0);
+      dailyMap[key].profit += (sale.total_amount - saleCost);
+    });
+
+    const sorted = Object.values(dailyMap).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+    return sorted;
+  }, [filteredCostEntries, filteredSales]);
+
+  const costDays = useMemo(() => analyticsTimeline.filter(d => d.cost > 0), [analyticsTimeline]);
+  const revenueDays = useMemo(() => analyticsTimeline.filter(d => d.revenue > 0), [analyticsTimeline]);
+  const profitDays = useMemo(() => analyticsTimeline.filter(d => d.revenue > 0 || d.cost > 0), [analyticsTimeline]);
 
   const totalSales = filteredSales.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
@@ -1128,6 +1165,228 @@ export const DashboardView: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Seção com 3 Gráficos Analíticos Independentes */}
+      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Gráfico 1: Total de Custos do Mês (Entradas / Mercadorias) */}
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-lg shadow-black/20 transition-colors duration-200">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[11px] font-medium text-rose-400 uppercase tracking-wider">Entradas / Mercadorias</span>
+              <h3 className="text-base font-bold text-white font-jakarta mt-0.5">Total de Custos do Mês</h3>
+            </div>
+            <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
+              <TrendingDown size={20} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-2xl sm:text-3xl font-bold font-jakarta text-rose-400 tracking-tight">
+              {formatCurrency(totalPeriodCost)}
+            </div>
+            <p className="text-[11px] text-white/50 mt-1">
+              {filteredCostEntries.length > 0 
+                ? `${filteredCostEntries.length} registro(s) de entrada no período` 
+                : 'Nenhum custo registrado no período'}
+            </p>
+          </div>
+
+          <div className="w-full h-32 flex items-center justify-center pt-2">
+            {costDays.length > 0 ? (
+              <svg viewBox="0 0 320 110" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="costCardGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.15" />
+                  </linearGradient>
+                </defs>
+                <line x1="10" y1="85" x2="310" y2="85" stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                {costDays.map((d, i) => {
+                  const step = 300 / costDays.length;
+                  const barW = Math.min(26, Math.max(10, step * 0.55));
+                  const x = 10 + (i * step) + (step - barW) / 2;
+                  const maxVal = Math.max(...costDays.map(item => item.cost), 1);
+                  const barH = Math.max(6, (d.cost / maxVal) * 58);
+                  const y = 85 - barH;
+                  return (
+                    <g key={`cost-bar-${i}`}>
+                      <rect 
+                        x={x} 
+                        y={y} 
+                        width={barW} 
+                        height={barH} 
+                        rx="4" 
+                        fill="url(#costCardGradient)" 
+                        stroke="#f43f5e" 
+                        strokeWidth="1"
+                        className="transition-all duration-200 hover:brightness-125"
+                      />
+                      <text x={x + barW / 2} y={Math.max(16, y - 5)} textAnchor="middle" className="fill-rose-300 text-[9px] font-mono font-medium">
+                        {formatCurrency(d.cost).replace(',00', '')}
+                      </text>
+                      <text x={x + barW / 2} y="100" textAnchor="middle" className="fill-slate-400 text-[10px] font-mono">
+                        {d.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1.5 text-white/40 text-xs py-4">
+                <span className="w-12 h-0.5 bg-slate-800 rounded-full mb-1"></span>
+                <span>Sem movimentação no período</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Gráfico 2: Total de Dinheiro de Vendas (Faturamento Bruto) */}
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-lg shadow-black/20 transition-colors duration-200">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[11px] font-medium text-cyan-400 uppercase tracking-wider">Faturamento Bruto</span>
+              <h3 className="text-base font-bold text-white font-jakarta mt-0.5">Faturamento Total (Vendas)</h3>
+            </div>
+            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
+              <TrendingUp size={20} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-2xl sm:text-3xl font-bold font-jakarta text-cyan-400 tracking-tight">
+              {formatCurrency(totalRevenue)}
+            </div>
+            <p className="text-[11px] text-white/50 mt-1">
+              {filteredSales.length > 0 
+                ? `${filteredSales.length} venda(s) computada(s)` 
+                : 'Nenhuma venda no período'}
+            </p>
+          </div>
+
+          <div className="w-full h-32 flex items-center justify-center pt-2">
+            {revenueDays.length > 0 ? (
+              <svg viewBox="0 0 320 110" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="revenueCardGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.2" />
+                  </linearGradient>
+                </defs>
+                <line x1="10" y1="85" x2="310" y2="85" stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                {revenueDays.map((d, i) => {
+                  const step = 300 / revenueDays.length;
+                  const barW = Math.min(26, Math.max(10, step * 0.55));
+                  const x = 10 + (i * step) + (step - barW) / 2;
+                  const maxVal = Math.max(...revenueDays.map(item => item.revenue), 1);
+                  const barH = Math.max(6, (d.revenue / maxVal) * 58);
+                  const y = 85 - barH;
+                  return (
+                    <g key={`rev-bar-${i}`}>
+                      <rect 
+                        x={x} 
+                        y={y} 
+                        width={barW} 
+                        height={barH} 
+                        rx="4" 
+                        fill="url(#revenueCardGradient)" 
+                        stroke="#06b6d4" 
+                        strokeWidth="1"
+                        className="transition-all duration-200 hover:brightness-125"
+                      />
+                      <text x={x + barW / 2} y={Math.max(16, y - 5)} textAnchor="middle" className="fill-cyan-300 text-[9px] font-mono font-medium">
+                        {formatCurrency(d.revenue).replace(',00', '')}
+                      </text>
+                      <text x={x + barW / 2} y="100" textAnchor="middle" className="fill-slate-400 text-[10px] font-mono">
+                        {d.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1.5 text-white/40 text-xs py-4">
+                <span className="w-12 h-0.5 bg-slate-800 rounded-full mb-1"></span>
+                <span>Sem movimentação no período</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Gráfico 3: Total de Lucro Bruto do Mês */}
+        <div className="glass-effect bg-white/5 backdrop-blur-md border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-lg shadow-black/20 transition-colors duration-200">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[11px] font-medium text-emerald-400 uppercase tracking-wider">Resultado Operacional</span>
+              <h3 className="text-base font-bold text-white font-jakarta mt-0.5">Lucro Estimado do Mês</h3>
+            </div>
+            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
+              <Percent size={20} />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-baseline gap-2.5">
+              <span className="text-2xl sm:text-3xl font-bold font-jakarta text-emerald-400 tracking-tight">
+                {formatCurrency(totalProfit)}
+              </span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                {profitMarginPercent >= 0 ? '+' : ''}{profitMarginPercent.toFixed(1)}% margem
+              </span>
+            </div>
+            <p className="text-[11px] text-white/50 mt-1">
+              Receita de vendas deduzida dos custos de produtos vendidos
+            </p>
+          </div>
+
+          <div className="w-full h-32 flex items-center justify-center pt-2">
+            {profitDays.length > 0 ? (
+              <svg viewBox="0 0 320 110" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="profitCardGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#059669" stopOpacity="0.2" />
+                  </linearGradient>
+                </defs>
+                <line x1="10" y1="85" x2="310" y2="85" stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                {profitDays.map((d, i) => {
+                  const step = 300 / profitDays.length;
+                  const barW = Math.min(26, Math.max(10, step * 0.55));
+                  const x = 10 + (i * step) + (step - barW) / 2;
+                  const maxVal = Math.max(...profitDays.map(item => Math.abs(item.profit)), 1);
+                  const barH = Math.max(6, (Math.abs(d.profit) / maxVal) * 58);
+                  const y = 85 - barH;
+                  return (
+                    <g key={`profit-bar-${i}`}>
+                      <rect 
+                        x={x} 
+                        y={y} 
+                        width={barW} 
+                        height={barH} 
+                        rx="4" 
+                        fill="url(#profitCardGradient)" 
+                        stroke="#10b981" 
+                        strokeWidth="1"
+                        className="transition-all duration-200 hover:brightness-125"
+                      />
+                      <text x={x + barW / 2} y={Math.max(16, y - 5)} textAnchor="middle" className="fill-emerald-300 text-[9px] font-mono font-medium">
+                        {formatCurrency(d.profit).replace(',00', '')}
+                      </text>
+                      <text x={x + barW / 2} y="100" textAnchor="middle" className="fill-slate-400 text-[10px] font-mono">
+                        {d.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1.5 text-white/40 text-xs py-4">
+                <span className="w-12 h-0.5 bg-slate-800 rounded-full mb-1"></span>
+                <span>Sem movimentação no período</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

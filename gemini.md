@@ -43,6 +43,7 @@ Foco: UX/UI intuitiva, operabilidade por atalhos de teclado, responsividade e ar
 - Criação e integração do componente de rodapé institucional `AppFooter.tsx` fixado na base do layout com flex-grow (visível tanto no Totem quanto no Painel Administrativo).
 - Remoção do ícone decorativo de loja/casinha (`Store`) do topo da barra lateral (`Sidebar.tsx`), simplificando a navegação apenas para itens funcionais.
 - Criação e integração da seção de auditoria de custos detalhada de mercadorias no `DashboardView.tsx` (`cost_entries`), com card de resumo do custo total acumulado, tabela discriminada (Data/Hora, Produto, Qtd, Custo Unitário e Total), sincronização estrita com o seletor de período e estado vazio.
+- Implementação de seção analítica com 3 gráficos vetoriais independentes no `DashboardView.tsx` (Total de Custos com tema Rose/Coral, Faturamento Total de Vendas com tema Cyan/Indigo e Lucro Estimado com tema Emerald e badge percentual), com agregação temporal dinâmica, sincronização ao seletor de período e tratamento de estados vazios.
 
 ## ⏳ Próximos Passos (Aguardando Validação)
 - Testes em produção e homologação final com os usuários.
