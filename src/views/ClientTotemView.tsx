@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { generatePixPayload } from '../utils/pixGenerator';
 import { findProductByBarcode } from '../utils/productSearch';
 import { CustomerHistoryModal } from '../components/CustomerHistoryModal';
+import { AppFooter } from '../components/layout/AppFooter';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -408,11 +409,20 @@ export const ClientTotemView: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"></div>
 
         <div className="flex-none p-4 sm:p-6 relative z-20 w-full">
-          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-3 px-4 sm:px-6 py-3 sm:py-4 w-full max-w-md sm:max-w-xl mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
-            <img src="/negociacao.png" alt="Logo Negociação" className="w-10 h-10 sm:w-14 sm:h-14 object-contain mx-auto sm:mx-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-            <h1 className="text-base sm:text-xl font-bold tracking-tight text-white text-center sm:text-left font-jakarta">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 w-fit max-w-full mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg shadow-black/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
+            <img 
+              src="/negociacao.png" 
+              alt="Logo Negociação" 
+              className="w-10 h-10 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
+            />
+            <h1 className="text-sm sm:text-xl font-bold tracking-tight text-white text-center font-jakarta">
               Minimercado Gremio Negociação
             </h1>
+            <img 
+              src="/gate.png" 
+              alt="Logo GATE" 
+              className="h-7 w-auto sm:h-9 object-contain shrink-0 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
+            />
           </div>
         </div>
 
@@ -486,10 +496,7 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative z-10 w-full mt-auto">
-          <span className="text-xs text-white/30 font-medium text-center sm:text-left">
-            Desenvolvido por: Delta Negociação - 2026
-          </span>
+        <div className="px-4 sm:px-6 py-2 flex justify-end items-center relative z-10 w-full mt-auto">
           <button 
             onClick={handleOpenAdminModal}
             className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-black/40 border border-white/10 rounded-xl text-white/80 hover:text-white hover:border-violet-500/50 hover:bg-violet-500/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300 text-xs sm:text-sm"
@@ -498,6 +505,8 @@ export const ClientTotemView: React.FC = () => {
             <span className="font-medium">Área de Gestão</span>
           </button>
         </div>
+
+        <AppFooter />
 
         {/* Modal de Acesso à Área de Gestão / Admin */}
         {showAdminModal && (
@@ -632,7 +641,7 @@ export const ClientTotemView: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-900 pb-20 sm:pb-0 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-slate-900 overflow-x-hidden">
       {/* Header */}
       <header className="glass-effect bg-white/5 border-b border-white/10 px-4 py-3 md:px-8 md:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
@@ -766,9 +775,7 @@ export const ClientTotemView: React.FC = () => {
           </div>
         </div>
       </div>
-      <footer className="text-center py-4 text-xs text-white/30 font-medium w-full">
-        Desenvolvido por: Delta Negociação - 2026
-      </footer>
+      <AppFooter />
 
       {/* History and Dashboard Modal */}
       {showHistoryModal && currentCustomer && (

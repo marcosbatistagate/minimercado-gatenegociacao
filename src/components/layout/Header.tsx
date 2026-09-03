@@ -16,6 +16,7 @@ export function Header() {
           <h1 className="text-sm sm:text-base md:text-2xl font-jakarta font-bold tracking-tight text-white truncate drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
             Minimercado Gremio Negociação
           </h1>
+          <img src="/gate.png" alt="GATE" className="h-7 md:h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] shrink-0" />
         </div>
       </div>
 
